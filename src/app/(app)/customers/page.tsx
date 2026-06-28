@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, Upload } from "lucide-react";
 import { RequirePermission } from "@/components/auth/Guard";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useCustomers } from "@/lib/db/repositories/customers";
@@ -90,11 +90,18 @@ function CustomersList() {
         description="People and organisations shipping with Liberty Cargo Movers."
         actions={
           can("customers.create") && (
-            <Link href="/customers/new">
-              <Button>
-                <Plus className="h-4 w-4" /> Add Customer
-              </Button>
-            </Link>
+            <>
+              <Link href="/customers/import">
+                <Button variant="outline">
+                  <Upload className="h-4 w-4" /> Import CSV
+                </Button>
+              </Link>
+              <Link href="/customers/new">
+                <Button>
+                  <Plus className="h-4 w-4" /> Add Customer
+                </Button>
+              </Link>
+            </>
           )
         }
       />

@@ -48,6 +48,8 @@ export async function notify(
     }).catch(() => {});
   }
 
+  const context = { customerName: target.name, ...ctx };
+
   // 2. Email + SMS via the API.
   const wantEmail = channels.includes("email") && target.email;
   const wantSms = channels.includes("sms") && target.phone;
@@ -58,10 +60,23 @@ export async function notify(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           event,
-          context: { customerName: target.name, ...ctx },
+          context,
           email: wantEmail ? target.email : undefined,
           phone: wantSms ? target.phone : undefined,
         }),
+      });
+    } catch {
+      // Non-blocking.
+    }
+  }
+
+  // 3. WhatsApp via the Cloud API (opt-in channel).
+  if (channels.includes("whatsapp") && target.phone) {
+    try {
+      await fetch("/api/notifications/whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: target.phone, event, context }),
       });
     } catch {
       // Non-blocking.

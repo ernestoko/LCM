@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, BadgeCheck, ShieldAlert, Pencil, ShieldCheck } from "lucide-react";
+import { ArrowLeft, BadgeCheck, ShieldAlert, Pencil, ShieldCheck, FileText } from "lucide-react";
 import { RequirePermission } from "@/components/auth/Guard";
 import { useAuth, useActor } from "@/lib/auth/AuthProvider";
 import {
@@ -115,11 +115,18 @@ function CustomerDetail() {
         title={customer.fullName}
         description={`${CUSTOMER_TYPE_LABELS[customer.customerType]} · ${customer.customerCode}`}
         actions={
-          can("customers.edit") && (
-            <Button variant="outline" onClick={() => setEditing(true)}>
-              <Pencil className="h-4 w-4" /> Edit
-            </Button>
-          )
+          <>
+            <Link href={`/customers/${customer.id}/statement`}>
+              <Button variant="outline">
+                <FileText className="h-4 w-4" /> Statement
+              </Button>
+            </Link>
+            {can("customers.edit") && (
+              <Button variant="outline" onClick={() => setEditing(true)}>
+                <Pencil className="h-4 w-4" /> Edit
+              </Button>
+            )}
+          </>
         }
       />
 

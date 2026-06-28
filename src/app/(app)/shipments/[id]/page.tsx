@@ -10,6 +10,7 @@ import {
   RefreshCw,
   FileText,
   AlertTriangle,
+  Tag,
 } from "lucide-react";
 import type {
   Shipment,
@@ -258,6 +259,11 @@ export default function ShipmentDetailPage() {
                 <Lock className="h-3 w-3" /> Locked
               </Badge>
             )}
+            <Link href={`/shipments/${shipment.id}/label`}>
+              <Button variant="outline" size="sm">
+                <Tag className="h-4 w-4" /> Print label
+              </Button>
+            </Link>
           </div>
         }
       />
