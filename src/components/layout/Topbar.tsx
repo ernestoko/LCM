@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import { ROLE_LABELS } from "@/constants/roles";
 import { Avatar } from "@/components/ui";
 import { NotificationsBell } from "./NotificationsBell";
+import { SearchTrigger } from "@/components/search/SearchTrigger";
 
 export function Topbar({ onMenu }: { onMenu: () => void }) {
   const { user, role, signOut } = useAuth();
@@ -18,6 +19,10 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
       <button onClick={onMenu} className="rounded-lg p-2 text-navy-500 hover:bg-navy-100 lg:hidden">
         <Menu className="h-5 w-5" />
       </button>
+
+      <div className="hidden sm:block">
+        <SearchTrigger />
+      </div>
 
       <div className="flex-1" />
 

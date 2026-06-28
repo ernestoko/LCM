@@ -7,6 +7,7 @@ import type {
   CommissionRule,
   CurrencyCode,
   CustomerSource,
+  PayoutAccount,
   PlatformSettings,
 } from "@/types";
 import { RequirePermission } from "@/components/auth/Guard";
@@ -38,6 +39,14 @@ import { CUSTOMER_SOURCE_LABELS } from "@/constants/statuses";
 
 const CURRENCIES: CurrencyCode[] = ["USD", "GHS", "NGN", "EUR", "GBP"];
 const CUSTOMER_SOURCES = Object.keys(CUSTOMER_SOURCE_LABELS) as CustomerSource[];
+
+const PAYOUT_TYPES: { value: PayoutAccount["type"]; label: string }[] = [
+  { value: "mobile_money", label: "Mobile Money" },
+  { value: "bank_transfer", label: "Bank Transfer" },
+  { value: "zelle", label: "Zelle" },
+  { value: "cashapp", label: "Cash App" },
+  { value: "other", label: "Other" },
+];
 
 type DispatchGuardKey = keyof PlatformSettings["dispatchGuards"];
 
@@ -78,6 +87,7 @@ function SettingsForm() {
     requireManifest: true,
   });
   const [paymentInstructions, setPaymentInstructions] = useState("");
+  const [payoutAccounts, setPayoutAccounts] = useState<PayoutAccount[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -91,7 +101,27 @@ function SettingsForm() {
     setServiceFeeByRoute({ ...settings.serviceFeeByRoute });
     setDispatchGuards({ ...settings.dispatchGuards });
     setPaymentInstructions(settings.paymentInstructions);
+    setPayoutAccounts((settings.payoutAccounts ?? []).map((a) => ({ ...a })));
   }, [settings]);
+
+  // --- Payout account editors ---------------------------------------------
+  function updateAccount(index: number, patch: Partial<PayoutAccount>) {
+    setPayoutAccounts((accts) => accts.map((a, i) => (i === index ? { ...a, ...patch } : a)));
+  }
+  function addAccount() {
+    setPayoutAccounts((accts) => [
+      ...accts,
+      {
+        id: `acct-${accts.length + 1}-${Math.random().toString(36).slice(2, 7)}`,
+        type: "mobile_money",
+        label: "",
+        enabled: true,
+      },
+    ]);
+  }
+  function removeAccount(index: number) {
+    setPayoutAccounts((accts) => accts.filter((_, i) => i !== index));
+  }
 
   // --- Commission rule editors --------------------------------------------
   function updateRule(index: number, patch: Partial<CommissionRule>) {
@@ -140,6 +170,18 @@ function SettingsForm() {
         serviceFeeByRoute,
         dispatchGuards,
         paymentInstructions: paymentInstructions.trim(),
+        payoutAccounts: payoutAccounts
+          .filter((a) => a.label.trim())
+          .map((a) => ({
+            id: a.id,
+            type: a.type,
+            label: a.label.trim(),
+            enabled: a.enabled,
+            ...(a.accountName ? { accountName: a.accountName } : {}),
+            ...(a.accountNumber ? { accountNumber: a.accountNumber } : {}),
+            ...(a.bankOrProvider ? { bankOrProvider: a.bankOrProvider } : {}),
+            ...(a.instructions ? { instructions: a.instructions } : {}),
+          })),
       };
       await savePlatformSettings(partial, actor);
       success("Settings saved.");
@@ -436,6 +478,103 @@ function SettingsForm() {
               className="min-h-[120px]"
             />
           </Field>
+        </CardBody>
+      </Card>
+
+      {/* Payout accounts */}
+      <Card>
+        <CardHeader
+          title="Payout Accounts"
+          subtitle="Bank, mobile-money and Zelle accounts appended to every invoice's payment instructions."
+          action={
+            <Button variant="outline" size="sm" onClick={addAccount}>
+              <Plus className="h-4 w-4" /> Add Account
+            </Button>
+          }
+        />
+        <CardBody className="space-y-4">
+          {payoutAccounts.length === 0 ? (
+            <EmptyState
+              title="No payout accounts"
+              description="Add a mobile-money, bank or Zelle account so customers know where to pay."
+              action={
+                <Button variant="outline" size="sm" onClick={addAccount}>
+                  <Plus className="h-4 w-4" /> Add Account
+                </Button>
+              }
+            />
+          ) : (
+            payoutAccounts.map((acct, i) => (
+              <div key={acct.id} className="rounded-lg border border-navy-100 p-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <Field label="Label" htmlFor={`acct-label-${i}`} required>
+                    <Input
+                      id={`acct-label-${i}`}
+                      value={acct.label}
+                      placeholder="MTN MoMo (Ghana)"
+                      onChange={(e) => updateAccount(i, { label: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Type" htmlFor={`acct-type-${i}`}>
+                    <Select
+                      id={`acct-type-${i}`}
+                      value={acct.type}
+                      onChange={(e) => updateAccount(i, { type: e.target.value as PayoutAccount["type"] })}
+                    >
+                      {PAYOUT_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Account name" htmlFor={`acct-name-${i}`}>
+                    <Input
+                      id={`acct-name-${i}`}
+                      value={acct.accountName ?? ""}
+                      onChange={(e) => updateAccount(i, { accountName: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Account number / handle" htmlFor={`acct-number-${i}`}>
+                    <Input
+                      id={`acct-number-${i}`}
+                      value={acct.accountNumber ?? ""}
+                      onChange={(e) => updateAccount(i, { accountNumber: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Bank / provider" htmlFor={`acct-provider-${i}`}>
+                    <Input
+                      id={`acct-provider-${i}`}
+                      value={acct.bankOrProvider ?? ""}
+                      onChange={(e) => updateAccount(i, { bankOrProvider: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Extra instructions" htmlFor={`acct-instr-${i}`}>
+                    <Input
+                      id={`acct-instr-${i}`}
+                      value={acct.instructions ?? ""}
+                      onChange={(e) => updateAccount(i, { instructions: e.target.value })}
+                    />
+                  </Field>
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <Checkbox
+                    checked={acct.enabled}
+                    onChange={(e) => updateAccount(i, { enabled: e.target.checked })}
+                    label="Show on invoices"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeAccount(i)}
+                    aria-label="Remove account"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" /> Remove
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
         </CardBody>
       </Card>
 

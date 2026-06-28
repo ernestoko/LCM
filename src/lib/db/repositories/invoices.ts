@@ -58,6 +58,23 @@ export async function generateInvoice(
   const seq = await nextSequence("invoice");
   const invoiceNumber = formatInvoiceNumber(seq);
 
+  // Compose payment instructions + a snapshot of enabled payout accounts so the
+  // invoice (and its emailed copy) always show how to pay, reproducibly.
+  const baseInstructions = opts.paymentInstructions ?? settings.paymentInstructions;
+  const accountLines = (settings.payoutAccounts ?? [])
+    .filter((a) => a.enabled)
+    .map((a) => {
+      const parts = [a.label];
+      if (a.accountName) parts.push(`Name: ${a.accountName}`);
+      if (a.accountNumber) parts.push(`Acct: ${a.accountNumber}`);
+      if (a.bankOrProvider) parts.push(a.bankOrProvider);
+      if (a.instructions) parts.push(a.instructions);
+      return `• ${parts.join(" — ")}`;
+    });
+  const paymentInstructions = accountLines.length
+    ? `${baseInstructions}\n\nPay to:\n${accountLines.join("\n")}`
+    : baseInstructions;
+
   const invoice: Partial<Invoice> = {
     invoiceNumber,
     shipmentId: shipment.id,
@@ -77,7 +94,7 @@ export async function generateInvoice(
     rateCardId: pricing.rateCardId,
     rateCardName: pricing.rateCardName,
     rateCardEffectiveDate: pricing.rateCardEffectiveDate,
-    paymentInstructions: opts.paymentInstructions ?? settings.paymentInstructions,
+    paymentInstructions,
     generatedBy: actor.uid,
     generatedByName: actor.name,
     commission: pricing.commission,

@@ -141,6 +141,25 @@ async function main() {
       serviceFeeAmount: SEED_SERVICE_FEE.amount,
       paymentInstructions:
         "Pay via Mobile Money or Bank transfer. Use your tracking number as the payment reference. Contact support for assistance.",
+      payoutAccounts: [
+        {
+          id: "momo-gh",
+          type: "mobile_money",
+          label: "MTN Mobile Money (Ghana)",
+          accountName: "Liberty Cargo Movers",
+          accountNumber: "024 000 0000",
+          bankOrProvider: "MTN MoMo",
+          enabled: true,
+        },
+        {
+          id: "zelle-us",
+          type: "zelle",
+          label: "Zelle (USA)",
+          accountName: "Liberty Cargo Movers",
+          accountNumber: "pay@libertycargomovers.com",
+          enabled: true,
+        },
+      ],
       dispatchGuards: {
         requirePhoto: true,
         requireWeight: true,

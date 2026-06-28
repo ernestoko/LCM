@@ -12,6 +12,7 @@ import { COLLECTIONS } from "@/lib/db/collections";
 import { recordPayment } from "@/lib/db/repositories/payments";
 import { notify } from "@/lib/notifications/service";
 import { InvoiceDocument } from "@/components/invoices/InvoiceDocument";
+import { EmailInvoiceButton } from "@/components/invoices/EmailInvoiceButton";
 import {
   Button,
   Card,
@@ -129,6 +130,7 @@ export default function InvoiceDetailPage() {
           <Button variant="outline" onClick={() => window.print()}>
             <Printer className="h-4 w-4" /> Print / Download
           </Button>
+          {showCommission && <EmailInvoiceButton invoiceId={invoice.id} />}
           {can("payments.record") && invoice.balanceDue > 0 && (
             <Button onClick={() => openPayModal(invoice)}>
               <CreditCard className="h-4 w-4" /> Record Payment

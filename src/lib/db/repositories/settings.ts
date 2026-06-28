@@ -21,6 +21,7 @@ export function defaultPlatformSettings(): PlatformSettings {
     serviceFeeAmount: 30,
     paymentInstructions:
       "Pay via Mobile Money / Bank transfer. Use your tracking number as the payment reference. Contact support for assistance.",
+    payoutAccounts: [],
     dispatchGuards: {
       requirePhoto: true,
       requireWeight: true,

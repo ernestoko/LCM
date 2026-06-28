@@ -594,6 +594,18 @@ export interface CommissionRule {
   note?: string;
 }
 
+/** A payout destination shown on invoices so customers can pay. */
+export interface PayoutAccount {
+  id: string;
+  type: "mobile_money" | "bank_transfer" | "zelle" | "cashapp" | "other";
+  label: string; // e.g. "MTN MoMo (Ghana)"
+  accountName?: string;
+  accountNumber?: string;
+  bankOrProvider?: string;
+  instructions?: string;
+  enabled: boolean;
+}
+
 export interface PlatformSettings extends AuditStamp {
   id: "platform"; // single document
   companyName: string;
@@ -606,6 +618,8 @@ export interface PlatformSettings extends AuditStamp {
   serviceFeeByRoute: Record<string, boolean>;
   serviceFeeAmount: number;
   paymentInstructions: string;
+  /** Bank / mobile-money / Zelle accounts rendered on invoices. */
+  payoutAccounts: PayoutAccount[];
   dispatchGuards: {
     requirePhoto: boolean;
     requireWeight: boolean;
