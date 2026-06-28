@@ -1,30 +1,56 @@
 /**
- * Liberty Cargo Movers — Seed Script
- * ----------------------------------------------------------------------------
- * Bootstraps a fresh Firebase project with:
- *   • A Liberty Super Admin account (+ custom claims)
- *   • Optional demo staff & a demo customer
- *   • Platform settings + commission rules + service-fee config
- *   • LCM Operations' approved rate cards (item-based + per-route weight + service fee)
- *   • Country routes (multi-directional: USA↔country lanes; Ghana active, others draft)
- *   • The 6-month pilot tracker
+ * Liberty & Liberty Logistics — Base Seed Script
+ * ============================================================================
+ * Bootstraps a Firebase project with the minimum data needed to run the
+ * platform. Safe to re-run: every document is written to a fixed id with
+ * `{ merge: true }`, so seeding is idempotent — it updates in place and never
+ * creates duplicates.
  *
- * Run:  npm run seed
- * Requires FIREBASE_ADMIN_* env vars in .env.local. Optional:
- *   SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD, SEED_DEMO=true
+ * What it writes
+ *   1. Super Admin auth account + custom claims (plus optional demo staff)
+ *   2. Platform settings — currency, commission rules, service fee, payout
+ *      accounts and dispatch guards
+ *   3. The 6-month pilot tracker
+ *   4. Country routes — USA <-> country lanes (Ghana active, the rest draft)
+ *   5. Approved rate cards — item-based, per-route weight, per-route sea
+ *      (CBM + drum/box units) and the service fee
+ *   6. Sequence counters (customer, invoice, manifest, payment, ticket)
+ *
+ * Usage
+ *   npm run seed                 # seed the configured Firebase project
+ *   SEED_DEMO=true npm run seed   # also create demo staff accounts
+ *
+ * Target selection
+ *   Connects to the Firebase Emulator Suite automatically when
+ *   FIRESTORE_EMULATOR_HOST is set (no credentials needed); otherwise uses the
+ *   FIREBASE_ADMIN_* service account.
+ *
+ * Environment (.env.local or the real environment)
+ *   FIREBASE_ADMIN_PROJECT_ID / _CLIENT_EMAIL / _PRIVATE_KEY   production creds
+ *   FIRESTORE_EMULATOR_HOST  (+ optional GCLOUD_PROJECT)        emulator mode
+ *   SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD                      admin overrides
+ *   SEED_DEMO=true                                              create demo staff
+ *
+ * For rich sample data (customers, shipments, invoices, payments, manifests,
+ * complaints) run the demo seeder instead:  npm run seed:demo
+ * ============================================================================
  */
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore } from "firebase-admin/firestore";
 
 import { SEED_ITEM_RATES, SEED_ROUTES, SEED_SERVICE_FEE, SEED_SEA_RATE } from "../src/constants/seed-data";
 import { SEA_UNIT_DEFS } from "../src/constants/seaUnits";
 import { defaultCommissionRules } from "../src/lib/pricing/commission";
 
-// --- Load .env.local (no dotenv dependency) --------------------------------
+/**
+ * Minimal `.env.local` loader (avoids a dotenv dependency). Reads simple
+ * `KEY=value` lines and sets any that aren't already defined in `process.env`.
+ * Missing file is non-fatal — values may come from the real environment.
+ */
 function loadEnv() {
   try {
     const file = readFileSync(resolve(process.cwd(), ".env.local"), "utf8");
@@ -41,8 +67,16 @@ function loadEnv() {
 }
 loadEnv();
 
+/** Current timestamp as an ISO-8601 string — the platform's canonical date format. */
 const nowISO = () => new Date().toISOString();
 
+/**
+ * Initialise the Firebase Admin SDK exactly once.
+ * - Emulator: when FIRESTORE_EMULATOR_HOST is set, connect with a project id
+ *   only — no service-account credentials are required.
+ * - Production: use the FIREBASE_ADMIN_* service account; exits with a clear
+ *   message if any of the three values are missing.
+ */
 function initAdmin() {
   // Emulator mode: no real credentials needed (FIRESTORE_EMULATOR_HOST set).
   if (process.env.FIRESTORE_EMULATOR_HOST) {
@@ -73,6 +107,12 @@ function initAdmin() {
   }
 }
 
+/**
+ * Create or update a Firebase Auth user, set its custom claims (role + org, and
+ * an optional customerId for portal users), and mirror the profile into the
+ * `users` collection. Idempotent — re-running updates the existing account
+ * (including its password) rather than failing. Returns the user's uid.
+ */
 async function ensureUser(opts: {
   email: string;
   password: string;
@@ -119,6 +159,7 @@ async function ensureUser(opts: {
   return uid;
 }
 
+/** Run every seed phase in order, then print the admin login and exit. */
 async function main() {
   initAdmin();
   const db = getFirestore();
@@ -374,6 +415,3 @@ main().catch((err) => {
   console.error("❌ Seed failed:", err);
   process.exit(1);
 });
-
-// Touch imports that may otherwise be tree-shaken in some tsx configs.
-void FieldValue;
