@@ -18,6 +18,17 @@ function hasCode(err: unknown): err is { code: string } {
   return typeof err === "object" && err !== null && "code" in err;
 }
 
+const VALID_CUSTOMER_TYPES: CustomerType[] = [
+  "individual",
+  "trader",
+  "student",
+  "church",
+  "institution",
+  "business",
+  "online_seller",
+];
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function POST(req: Request) {
   if (!isAdminConfigured) {
     return NextResponse.json(
@@ -47,6 +58,15 @@ export async function POST(req: Request) {
       { ok: false, error: "Missing required fields." },
       { status: 400 },
     );
+  }
+
+  if (!EMAIL_RE.test(email)) {
+    return NextResponse.json({ ok: false, error: "Enter a valid email address." }, { status: 400 });
+  }
+
+  // Never trust the client's customer type — must be a known value.
+  if (!VALID_CUSTOMER_TYPES.includes(customerType)) {
+    return NextResponse.json({ ok: false, error: "Invalid customer type." }, { status: 400 });
   }
 
   if (password.length < 6) {
@@ -127,28 +147,44 @@ export async function POST(req: Request) {
       throw err;
     }
 
-    // 4. Custom claims drive Firestore security rules.
-    await auth.setCustomUserClaims(userRecord.uid, {
-      role: "customer",
-      org: "customer",
-      customerId,
-    });
-
-    // 5. Create the linked user document.
-    await db
-      .collection("users")
-      .doc(userRecord.uid)
-      .set({
-        email,
-        displayName: fullName,
+    // 4 + 5. Custom claims (drive Firestore rules) + the linked user document.
+    // If either fails, roll back the Auth user AND customer doc so we never
+    // leave an orphaned account that can sign in but has no profile/role.
+    try {
+      await auth.setCustomUserClaims(userRecord.uid, {
         role: "customer",
-        organization: "customer",
+        org: "customer",
         customerId,
-        phone,
-        active: true,
-        createdAt: now,
-        createdBy: "self_registration",
       });
+
+      await db
+        .collection("users")
+        .doc(userRecord.uid)
+        .set({
+          email,
+          displayName: fullName,
+          role: "customer",
+          organization: "customer",
+          customerId,
+          phone,
+          active: true,
+          createdAt: now,
+          createdBy: "self_registration",
+        });
+    } catch (err) {
+      try {
+        await auth.deleteUser(userRecord.uid);
+      } catch {
+        /* best effort */
+      }
+      try {
+        await customerRef.delete();
+      } catch {
+        /* best effort */
+      }
+      customerId = null;
+      throw err;
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

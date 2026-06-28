@@ -1,6 +1,6 @@
 "use client";
 
-import { orderBy, where } from "firebase/firestore";
+import { orderBy, where, increment } from "firebase/firestore";
 import { create, update, getOne, nextSequence, type WithId } from "../firestore";
 import { useCollection } from "../hooks";
 import { COLLECTIONS } from "../collections";
@@ -53,18 +53,21 @@ export function getCustomer(id: string) {
   return getOne<Customer>(COLLECTIONS.customers, id);
 }
 
-/** Increment denormalised counters when a shipment is created / paid. */
+/**
+ * Atomically adjust denormalised counters when a shipment is created/cancelled
+ * or a payment is recorded. Uses Firestore `increment` so concurrent writes
+ * can't lose updates (the previous read-then-write drifted under contention).
+ */
 export async function bumpCustomerStats(
   id: string,
   deltaShipments: number,
   deltaSpend: number,
 ): Promise<void> {
-  const existing = await getOne<Customer>(COLLECTIONS.customers, id);
-  if (!existing) return;
-  await update<Customer>(COLLECTIONS.customers, id, {
-    shipmentCount: Math.max(0, (existing.shipmentCount ?? 0) + deltaShipments),
-    totalSpend: Math.max(0, (existing.totalSpend ?? 0) + deltaSpend),
-  });
+  const patch: Record<string, unknown> = {};
+  if (deltaShipments) patch.shipmentCount = increment(deltaShipments);
+  if (deltaSpend) patch.totalSpend = increment(deltaSpend);
+  if (Object.keys(patch).length === 0) return;
+  await update<Customer>(COLLECTIONS.customers, id, patch as Partial<Customer>);
 }
 
 export function useCustomers(): { data: WithId<Customer>[]; loading: boolean; error: Error | null } {

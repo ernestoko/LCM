@@ -121,10 +121,14 @@ export async function changeShipmentStatus(
   };
   const history = [...(shipment.statusHistory ?? []), event];
 
-  // Keep payment status in sync with key milestones.
+  // Keep payment + handling statuses in sync with key milestones.
   const patch: Partial<Shipment> = { status: next, statusHistory: history };
   if (next === "payment_confirmed") patch.paymentStatus = "confirmed";
-  if (next === "delivered") patch.actualDeliveryDate = new Date().toISOString();
+  if (next === "delivered") {
+    patch.actualDeliveryDate = new Date().toISOString();
+    patch.sealHandlingStatus = "delivered";
+    patch.libertyHandlingStatus = "completed";
+  }
 
   await update<Shipment>(COLLECTIONS.shipments, id, patch, actor);
   await logAudit(actor, {

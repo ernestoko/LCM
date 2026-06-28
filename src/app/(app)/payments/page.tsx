@@ -124,6 +124,11 @@ function PaymentsWorkspace() {
       error("Enter a valid payment amount.");
       return;
     }
+    // Never record more than the outstanding balance (small rounding tolerance).
+    if (value > inv.balanceDue + 0.005) {
+      error(`Amount exceeds the balance due (${formatMoney(inv.balanceDue, inv.currency)}).`);
+      return;
+    }
     setBusy(true);
     try {
       await recordPayment(

@@ -10,6 +10,8 @@ import { calculatePricing, selectActiveRateCard } from "@/lib/pricing/engine";
 import type {
   Invoice,
   Shipment,
+  ShipmentStatus,
+  ShipmentStatusEvent,
   RateCard,
   CountryRoute,
   PlatformSettings,
@@ -119,6 +121,16 @@ export async function generateInvoice(
   return id;
 }
 
+/** Statuses from which a fully-paid invoice should advance the shipment. */
+const PRE_PAYMENT_STATUSES: ShipmentStatus[] = [
+  "draft",
+  "awaiting_package",
+  "received_by_seal",
+  "inspected",
+  "invoice_generated",
+  "payment_pending",
+];
+
 /** Apply a payment amount to an invoice, updating balance + status. */
 export async function applyPaymentToInvoice(
   invoiceId: string,
@@ -129,11 +141,36 @@ export async function applyPaymentToInvoice(
   if (!inv) return;
   const amountPaid = Math.min(inv.total, (inv.amountPaid ?? 0) + amount);
   const balanceDue = Math.max(0, inv.total - amountPaid);
-  const paymentStatus: Invoice["paymentStatus"] =
-    balanceDue <= 0 ? "paid" : amountPaid > 0 ? "partial" : "unpaid";
-  await update<Invoice>(COLLECTIONS.invoices, invoiceId, { amountPaid, balanceDue, paymentStatus }, actor);
-  // Mirror onto the shipment.
-  await update<Shipment>(COLLECTIONS.shipments, inv.shipmentId, { paymentStatus });
+  const fullyPaid = balanceDue <= 0;
+  const invoiceStatus: Invoice["paymentStatus"] =
+    fullyPaid ? "paid" : amountPaid > 0 ? "partial" : "unpaid";
+  await update<Invoice>(
+    COLLECTIONS.invoices,
+    invoiceId,
+    { amountPaid, balanceDue, paymentStatus: invoiceStatus },
+    actor,
+  );
+
+  // Mirror onto the shipment. A fully-settled invoice CONFIRMS payment and
+  // advances the lifecycle to `payment_confirmed` (with a history event) when
+  // the shipment is still in a pre-payment stage.
+  const shipment = await getOne<Shipment>(COLLECTIONS.shipments, inv.shipmentId);
+  if (!shipment) return;
+  const patch: Partial<Shipment> = {
+    paymentStatus: fullyPaid ? "confirmed" : invoiceStatus,
+  };
+  if (fullyPaid && PRE_PAYMENT_STATUSES.includes(shipment.status)) {
+    const event: ShipmentStatusEvent = {
+      status: "payment_confirmed",
+      at: new Date().toISOString(),
+      by: actor.uid,
+      byName: actor.name,
+      note: "Payment received in full",
+    };
+    patch.status = "payment_confirmed";
+    patch.statusHistory = [...(shipment.statusHistory ?? []), event];
+  }
+  await update<Shipment>(COLLECTIONS.shipments, inv.shipmentId, patch, actor);
 }
 
 export function getInvoice(id: string) {

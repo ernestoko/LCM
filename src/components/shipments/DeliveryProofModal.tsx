@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Eraser, Upload, X } from "lucide-react";
 import { Button, Field, Input, Modal, Textarea, useToast } from "@/components/ui";
 import { uploadFiles } from "@/lib/firebase/storage";
@@ -38,6 +38,22 @@ export function DeliveryProofModal({
   const drawingRef = useRef(false);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
   const [hasSignature, setHasSignature] = useState(false);
+
+  // Reset the form each time the modal opens so a previous capture never leaks
+  // into the next shipment's proof.
+  useEffect(() => {
+    if (!open) return;
+    setRecipientName("");
+    setPhotoUrls([]);
+    setNote("");
+    setUploading(false);
+    setHasSignature(false);
+    drawingRef.current = false;
+    lastPointRef.current = null;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (canvas && ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }, [open]);
 
   function getContext(): CanvasRenderingContext2D | null {
     const canvas = canvasRef.current;

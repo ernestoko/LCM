@@ -20,6 +20,7 @@ interface EmailInvoiceBody {
 
 interface StaffCaller {
   uid: string;
+  isSuperAdmin: boolean;
 }
 
 /** Verify the caller is signed-in Liberty/Finance staff or a Super Admin. */
@@ -32,7 +33,7 @@ async function requireStaff(req: Request): Promise<StaffCaller | null> {
     const isLiberty = decoded.org === "liberty";
     const isSuperAdmin = decoded.role === "liberty_super_admin";
     if (!isLiberty && !isSuperAdmin) return null;
-    return { uid: decoded.uid };
+    return { uid: decoded.uid, isSuperAdmin };
   } catch {
     return null;
   }
@@ -304,8 +305,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
     const invoice = { id: invoiceSnap.id, ...(invoiceSnap.data() as Omit<Invoice, "id">) };
 
-    // Resolve recipient: explicit `to` wins, else the customer's email on file.
-    let recipient = typeof body.to === "string" ? body.to.trim() : "";
+    // Resolve recipient. A custom `to` is honoured ONLY for a Super Admin —
+    // other staff can only send to the customer's email on file, so a low-
+    // privilege user cannot exfiltrate an invoice to an arbitrary address.
+    let recipient = caller.isSuperAdmin && typeof body.to === "string" ? body.to.trim() : "";
     if (!recipient && invoice.customerId) {
       const customerSnap = await db
         .collection(COLLECTIONS.customers)

@@ -171,9 +171,15 @@ service cloud.firestore {
     }
 
     // ---- counters (gap-free sequence numbers) -----------------------------
+    // Any signed-in user may read and increment (customers need the ticket
+    // counter for complaints; SEAL needs the manifest counter) — but a write
+    // may ONLY move the value up by exactly one, so no one can reset or jump a
+    // sequence and forge duplicate invoice / customer / manifest numbers.
     match /counters/{id} {
-      allow read: if isStaff();
-      allow write: if isStaff(); // transactional increments only
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.value == 1;
+      allow update: if signedIn() && request.resource.data.value == resource.data.value + 1;
+      allow delete: if false;
     }
 
     // Deny everything else by default.

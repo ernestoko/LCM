@@ -14,6 +14,9 @@ import {
   sealConfirmManifest,
   dispatchManifest,
 } from "@/lib/db/repositories/manifests";
+import { getShipment } from "@/lib/db/repositories/shipments";
+import { getCustomer } from "@/lib/db/repositories/customers";
+import { channelsForCustomer } from "@/lib/notifications/channels";
 import {
   Button,
   Card,
@@ -105,18 +108,26 @@ function ManifestDetail() {
     setBusy("dispatch");
     try {
       await dispatchManifest(id, actor);
-      // Best-effort dispatch notifications to each package's customer.
+      // Best-effort dispatch notifications using each customer's real contact
+      // details + their preferred channels (resolved via the linked shipment).
       await Promise.all(
-        manifest.packages.map((pkg) =>
-          notify(
+        manifest.packages.map(async (pkg) => {
+          const shipment = await getShipment(pkg.shipmentId);
+          const customer = shipment?.customerId ? await getCustomer(shipment.customerId) : null;
+          await notify(
             "dispatched",
-            { name: pkg.customerName },
+            {
+              userId: customer?.id,
+              name: pkg.customerName,
+              email: customer?.email,
+              phone: customer?.phone,
+            },
             { trackingNumber: pkg.trackingNumber, manifestNumber: manifest.manifestNumber },
-            { shipmentId: pkg.shipmentId },
-          ),
-        ),
+            { shipmentId: pkg.shipmentId, channels: channelsForCustomer(customer) },
+          );
+        }),
       ).catch(() => {});
-      success("Manifest dispatched. Customers have been notified.");
+      success("Manifest dispatched.");
     } catch (err) {
       toastError(err instanceof Error ? err.message : "Failed to dispatch manifest.");
     } finally {

@@ -68,6 +68,10 @@ export default function InvoiceDetailPage() {
       error("Enter a valid payment amount.");
       return;
     }
+    if (value > invoice.balanceDue + 0.005) {
+      error(`Amount exceeds the balance due (${formatMoney(invoice.balanceDue, invoice.currency)}).`);
+      return;
+    }
     setBusy(true);
     try {
       await recordPayment(

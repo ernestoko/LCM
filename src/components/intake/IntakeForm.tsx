@@ -18,6 +18,9 @@ import {
   updateShipment,
   changeShipmentStatus,
 } from "@/lib/db/repositories/shipments";
+import { getCustomer } from "@/lib/db/repositories/customers";
+import { notify } from "@/lib/notifications/service";
+import { channelsForCustomer } from "@/lib/notifications/channels";
 import { uploadFiles } from "@/lib/firebase/storage";
 import type { PackageCondition, PlatformSettings, Shipment } from "@/types";
 
@@ -137,6 +140,24 @@ export function IntakeForm({
       if (!result.ok) {
         toastError(result.reason ?? "Could not update shipment status.");
         return;
+      }
+
+      // Tell the customer their package has been received by SEAL.
+      try {
+        const customer = shipment.customerId ? await getCustomer(shipment.customerId) : null;
+        await notify(
+          "package_received",
+          {
+            userId: customer?.id,
+            name: customer?.fullName ?? shipment.customerName,
+            email: customer?.email,
+            phone: customer?.phone,
+          },
+          { trackingNumber: shipment.trackingNumber },
+          { shipmentId: shipment.id, channels: channelsForCustomer(customer) },
+        );
+      } catch {
+        // Notification is best-effort.
       }
 
       success(`Intake complete for ${shipment.trackingNumber}.`);
