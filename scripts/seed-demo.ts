@@ -88,6 +88,18 @@ const PHOTO_URL =
   "https://images.unsplash.com/photo-1605902711622-cfb43c4437b5?auto=format&fit=crop&w=640&q=60";
 
 function initAdmin() {
+  if (process.env.FIRESTORE_EMULATOR_HOST) {
+    const projectId =
+      process.env.GCLOUD_PROJECT || process.env.FIREBASE_ADMIN_PROJECT_ID || "demo-lcm";
+    if (!getApps().length) initializeApp({ projectId });
+    try {
+      getFirestore().settings({ ignoreUndefinedProperties: true });
+    } catch {
+      /* settings() can only be called once */
+    }
+    return;
+  }
+
   const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n");

@@ -134,6 +134,40 @@ dashboard and it builds automatically.
 
 ---
 
+## Local emulator preview (no cloud project)
+
+Want to see the full app immediately without creating a Firebase project? Run the
+**Firebase Local Emulator Suite** (needs Java 17+ for the Firestore emulator).
+
+```bash
+# 1. .env.local — demo config + emulator flags (apiKey can be any non-empty string)
+NEXT_PUBLIC_FIREBASE_API_KEY=demo-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=demo-lcm.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=demo-lcm
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=demo-lcm.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=000000000000
+NEXT_PUBLIC_FIREBASE_APP_ID=1:000000000000:web:demo
+NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true
+NEXT_PUBLIC_FIREBASE_EMULATOR_HOST=127.0.0.1
+
+# 2. Start the emulators (separate terminal)
+npx firebase-tools emulators:start --project demo-lcm --only auth,firestore,storage
+
+# 3. Seed (point the Admin SDK at the emulators — no real credentials needed)
+#    PowerShell:
+$env:FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"; $env:FIREBASE_AUTH_EMULATOR_HOST="127.0.0.1:9099"; $env:GCLOUD_PROJECT="demo-lcm"; $env:SEED_DEMO="true"
+npm run seed
+npm run seed:demo
+#    bash:  FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 GCLOUD_PROJECT=demo-lcm SEED_DEMO=true npm run seed
+
+# 4. Run the app
+npm run build && npm run start   # or: npm run dev
+```
+
+Sign in with `admin@libertycargomovers.com` / `Liberty@2026!`. Emulator data is
+in-memory — re-run the seeds after restarting the emulators. Inspect data at the
+Emulator UI (http://127.0.0.1:4000).
+
 ## Creating other users
 
 User accounts are provisioned by a **Super Admin** in the app:

@@ -43,6 +43,20 @@ loadEnv();
 const nowISO = () => new Date().toISOString();
 
 function initAdmin() {
+  // Emulator mode: no real credentials needed (FIRESTORE_EMULATOR_HOST set).
+  if (process.env.FIRESTORE_EMULATOR_HOST) {
+    const projectId =
+      process.env.GCLOUD_PROJECT || process.env.FIREBASE_ADMIN_PROJECT_ID || "demo-lcm";
+    if (!getApps().length) initializeApp({ projectId });
+    try {
+      getFirestore().settings({ ignoreUndefinedProperties: true });
+    } catch {
+      /* settings() can only be called once */
+    }
+    console.log(`🧪 Targeting Firebase emulators (project ${projectId}).`);
+    return;
+  }
+
   const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n");
