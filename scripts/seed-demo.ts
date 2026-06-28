@@ -1,27 +1,36 @@
 /**
- * Liberty Cargo Movers — Demo Data Generator
- * ----------------------------------------------------------------------------
- * Populates a freshly-seeded platform with realistic, end-to-end demo data so
- * the owner sees a fully-working dashboard immediately:
- *   • ~12 customers (mixed types / sources / destinations)
- *   • ~30 shipments spread across the whole lifecycle
- *   • Invoices (priced via the real pricing engine) for invoiced+ shipments
- *   • Payments for confirmed / delivered shipments
- *   • 2 manifests (one dispatched, one approved)
- *   • 3–4 complaints linked to shipments
- *   • Denormalised customer counters refreshed at the end
+ * Liberty & Liberty Logistics — Demo Data Generator
+ * ============================================================================
+ * Populates an already-seeded platform with realistic, end-to-end demo data so
+ * a fresh install shows a fully-working dashboard immediately:
+ *   • 12 customers (mixed types, sources and destinations)
+ *   • 33 shipments spread across the whole lifecycle (draft -> delivered, plus
+ *     issue_reported, and a few inbound "country -> USA" lanes)
+ *   • Invoices priced through the REAL pricing engine for invoiced+ shipments
+ *   • Payments for confirmed / dispatched / delivered shipments
+ *   • 2 manifests (one dispatched, one approved) linked back to their shipments
+ *   • 4 complaints linked to issue / delivered shipments
+ *   • Denormalised customer counters (shipmentCount / totalSpend) at the end
  *
- * Deterministic & idempotent: every document uses a fixed `demo-*` id and is
- * written with `{ merge: true }`, so re-running simply refreshes the data.
+ * Deterministic & idempotent: every document uses a fixed `demo-*` id written
+ * with `{ merge: true }`, so re-running simply refreshes the data in place.
  *
- * Run:  npm run seed:demo   (after `npm run seed`)
- * Requires FIREBASE_ADMIN_* env vars in .env.local.
+ * Prerequisite: run the base seeder first (`npm run seed`) — this script READS
+ * the seeded settings, rate cards and routes to price and route each shipment.
+ *
+ * Usage
+ *   npm run seed:demo
+ *
+ * Target selection: connects to the Firebase Emulator Suite automatically when
+ * FIRESTORE_EMULATOR_HOST is set (no credentials needed); otherwise uses the
+ * FIREBASE_ADMIN_* service account from .env.local.
+ * ============================================================================
  */
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore } from "firebase-admin/firestore";
 
 import {
   formatInvoiceNumber,
@@ -61,7 +70,11 @@ import type {
   PlatformSettings,
 } from "../src/types";
 
-// --- Load .env.local (no dotenv dependency) --------------------------------
+/**
+ * Minimal `.env.local` loader (avoids a dotenv dependency). Reads simple
+ * `KEY=value` lines and sets any not already defined in `process.env`. A
+ * missing file is non-fatal — values may come from the real environment.
+ */
 function loadEnv() {
   try {
     const file = readFileSync(resolve(process.cwd(), ".env.local"), "utf8");
@@ -78,15 +91,22 @@ function loadEnv() {
 }
 loadEnv();
 
+/** Current timestamp as an ISO-8601 string. */
 const nowISO = () => new Date().toISOString();
-/** ISO timestamp `n` days ago (deterministic spread over the pilot window). */
+/** ISO timestamp `n` days ago — used to spread demo records over the pilot window. */
 const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
 
+/** The actor stamped onto every demo write, plus shared constants. */
 const ACTOR = { uid: "seed-demo", name: "Liberty Operations" };
 const SEAL_OFFICE = "Minnesota Hub";
 const PHOTO_URL =
   "https://images.unsplash.com/photo-1605902711622-cfb43c4437b5?auto=format&fit=crop&w=640&q=60";
 
+/**
+ * Initialise the Firebase Admin SDK exactly once — emulator (project id only)
+ * when FIRESTORE_EMULATOR_HOST is set, otherwise the FIREBASE_ADMIN_* service
+ * account. Exits with a clear message if production credentials are missing.
+ */
 function initAdmin() {
   if (process.env.FIRESTORE_EMULATOR_HOST) {
     const projectId =
@@ -171,7 +191,7 @@ interface DemoShipmentDef {
   ageDays: number; // how many days ago it was created
 }
 
-// Item helper — keys are SEED_ITEM_RATES keys.
+/** Concise builder for a ShipmentItem; `rateKey` references a SEED_ITEM_RATES key. */
 const item = (
   rateKey: string,
   itemType: string,
@@ -251,13 +271,19 @@ const STATUS_ORDER: ShipmentStatus[] = [
   "delivered",
 ];
 
+/** Position of a status within STATUS_ORDER; off-path statuses rank as earliest. */
 function rank(s: ShipmentStatus): number {
   const i = STATUS_ORDER.indexOf(s);
   return i === -1 ? 0 : i; // issue_reported / cancelled treated as early
 }
 
+/** True when status `s` has reached or passed `ref` in the lifecycle. */
 const atOrAfter = (s: ShipmentStatus, ref: ShipmentStatus) => rank(s) >= rank(ref);
 
+// The next three helpers derive the per-shipment sub-states (payment + the two
+// handling tracks) implied by a lifecycle status, so demo records stay consistent.
+
+/** Payment status implied by a lifecycle status. */
 function paymentStatusFor(s: ShipmentStatus): PaymentStatus {
   if (s === "payment_confirmed") return "confirmed";
   if (atOrAfter(s, "added_to_manifest")) return "paid";
@@ -265,6 +291,7 @@ function paymentStatusFor(s: ShipmentStatus): PaymentStatus {
   return "unpaid";
 }
 
+/** Operations (SEAL) handling status implied by a lifecycle status. */
 function sealHandlingFor(s: ShipmentStatus): SealHandlingStatus {
   if (s === "delivered") return "delivered";
   if (atOrAfter(s, "in_transit")) return "dispatched";
@@ -274,6 +301,7 @@ function sealHandlingFor(s: ShipmentStatus): SealHandlingStatus {
   return "not_started";
 }
 
+/** Liberty-side handling status implied by a lifecycle status. */
 function libertyHandlingFor(s: ShipmentStatus): LibertyHandlingStatus {
   if (s === "delivered") return "completed";
   if (atOrAfter(s, "in_transit")) return "ghana_delivery_prep";
@@ -335,11 +363,16 @@ const pad2 = (n: number) => String(n).padStart(2, "0");
 // Main
 // ---------------------------------------------------------------------------
 
+/**
+ * Generate the full demo dataset in dependency order: read the seeded platform
+ * data, then write customers -> shipments (+ invoices + payments) -> manifests
+ * -> complaints, and finally refresh the denormalised customer counters.
+ */
 async function main() {
   initAdmin();
   const db = getFirestore();
 
-  console.log("\n🎬 Generating Liberty Cargo Movers DEMO data…\n");
+  console.log("\n🎬 Generating Liberty & Liberty Logistics DEMO data…\n");
   console.log("────────────────────────────────────────────");
 
   // 1. Load prerequisite seeded data ----------------------------------------
@@ -597,6 +630,7 @@ async function main() {
   console.log("\n🚚 Manifests");
   const ghanaRoute = routeByCode.get("USA-GHANA") ?? null;
 
+  /** Project a shipment down to the snapshot fields a manifest stores per package. */
   function toPackage(s: Shipment): ManifestPackage {
     return {
       shipmentId: s.id,
@@ -609,6 +643,7 @@ async function main() {
     };
   }
 
+  /** Sum package count, weight and declared value for a manifest (2-dp rounded). */
   function manifestTotals(pkgs: ManifestPackage[]) {
     return {
       totalPackages: pkgs.length,
@@ -617,6 +652,10 @@ async function main() {
     };
   }
 
+  /**
+   * Build and persist one manifest from its member shipments, stamping the
+   * approval / SEAL-confirmation fields appropriate to its status.
+   */
   async function writeManifest(opts: {
     id: string;
     seq: number;
@@ -815,6 +854,3 @@ main().catch((err) => {
   console.error("❌ Demo seed failed:", err);
   process.exit(1);
 });
-
-// Touch imports that may otherwise be tree-shaken in some tsx configs.
-void FieldValue;
