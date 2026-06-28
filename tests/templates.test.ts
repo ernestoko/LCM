@@ -17,12 +17,14 @@ function fullCtx(): TemplateContext {
     ticketNumber: "LCM-TKT-000123",
     supportPhone: "024 123 4567",
     supportEmail: "support@libertycargo.test",
+    trackUrl: "https://libertycargo.test/track/LCM-2606-AB12CD",
+    senderName: "Ama Mensah",
   };
 }
 
 describe("renderTemplate — every NotificationEvent", () => {
-  it("covers all 12 declared events", () => {
-    expect(EVENTS).toHaveLength(12);
+  it("covers all 13 declared events", () => {
+    expect(EVENTS).toHaveLength(13);
   });
 
   for (const event of EVENTS) {
@@ -72,5 +74,19 @@ describe("renderTemplate — channel content", () => {
     delete ctx.customerName;
     const r = renderTemplate("package_received", ctx);
     expect(r.sms).toContain("Hi there");
+  });
+
+  it("dispatched gives the SENDER a track link", () => {
+    const r = renderTemplate("dispatched", fullCtx());
+    expect(r.sms).toContain("https://libertycargo.test/track/LCM-2606-AB12CD");
+    expect(r.email).toContain("https://libertycargo.test/track/LCM-2606-AB12CD");
+  });
+
+  it("recipient_incoming names the sender and gives the RECIPIENT a track link", () => {
+    const r = renderTemplate("recipient_incoming", fullCtx());
+    expect(r.sms).toContain("Ama Mensah");
+    expect(r.email).toContain("Ama Mensah");
+    expect(r.sms).toContain("https://libertycargo.test/track/LCM-2606-AB12CD");
+    expect(r.subject).toContain("LCM-2606-AB12CD");
   });
 });

@@ -11,7 +11,7 @@ import { logAudit, type AuditActor } from "../audit";
 export function defaultPlatformSettings(): PlatformSettings {
   return {
     id: SETTINGS_DOC_ID,
-    companyName: "Liberty Cargo Movers",
+    companyName: "Liberty & Liberty Logistics",
     defaultCurrency: "USD",
     defaultCommissionPercent: 10,
     defaultPlatformFeePerShipment: 0,

@@ -1,13 +1,19 @@
 {
-  "name": "Liberty Cargo Movers — Logistics Platform",
-  "short_name": "Liberty Cargo",
-  "description": "Cargo logistics management for Liberty Cargo Movers and the SEAL Logistics pilot.",
-  "start_url": "/dashboard",
+  "id": "/",
+  "name": "Liberty & Liberty Logistics",
+  "short_name": "Liberty",
+  "description": "Global logistics and international shipping — air & ocean freight, express parcel, door-to-door delivery, customs clearance and warehousing, with real-time tracking.",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0f1b3d",
+  "background_color": "#0a1230",
   "theme_color": "#0f1b3d",
   "orientation": "portrait-primary",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "logistics"],
   "icons": [
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
   ]
 }

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAdminDb, isAdminConfigured } from "@/lib/firebase/admin";
 import { COLLECTIONS } from "@/lib/db/collections";
-import { SHIPMENT_STATUS_ORDER } from "@/constants/statuses";
-import type { Shipment, ShipmentStatus, ShipmentStatusEvent } from "@/types";
+import { shipmentStatusOrder } from "@/constants/statuses";
+import type { Shipment, ShipmentStatus, ShipmentStatusEvent, CargoType } from "@/types";
 
 /**
  * Public package-tracking endpoint.
@@ -24,6 +24,7 @@ export interface PublicTimelineMilestone {
 export interface PublicShipment {
   trackingNumber: string;
   status: ShipmentStatus;
+  cargoType?: CargoType;
   routeCode: string;
   originCountry: string;
   destinationCountry: string;
@@ -69,10 +70,11 @@ function maskName(raw: string | undefined | null): string {
  * lifecycle order. Terminal/off-pipeline statuses (issue_reported, cancelled)
  * are not in the order array, so they resolve to 0.
  */
-function computeProgressPercent(status: ShipmentStatus): number {
-  const index = SHIPMENT_STATUS_ORDER.indexOf(status);
+function computeProgressPercent(status: ShipmentStatus, cargoType?: CargoType): number {
+  const order = shipmentStatusOrder(cargoType);
+  const index = order.indexOf(status);
   if (index < 0) return 0;
-  const last = SHIPMENT_STATUS_ORDER.length - 1;
+  const last = order.length - 1;
   if (last <= 0) return 0;
   return Math.round((index / last) * 100);
 }
@@ -100,7 +102,9 @@ export async function GET(
     );
   }
 
-  const trackingNumber = params.trackingNumber?.trim();
+  // Tracking numbers are stored uppercase — normalise so lookup is
+  // case-insensitive and tolerant of stray whitespace from copy/paste.
+  const trackingNumber = params.trackingNumber?.trim().toUpperCase();
   if (!trackingNumber) {
     return NextResponse.json(
       { ok: false, error: "No shipment found for that tracking number." },
@@ -127,6 +131,7 @@ export async function GET(
     const shipment: PublicShipment = {
       trackingNumber: data.trackingNumber,
       status: data.status,
+      ...(data.cargoType ? { cargoType: data.cargoType } : {}),
       routeCode: data.routeCode,
       originCountry: data.originCountry,
       destinationCountry: data.destinationCountry,
@@ -137,7 +142,7 @@ export async function GET(
       ...(data.actualDeliveryDate
         ? { actualDeliveryDate: data.actualDeliveryDate }
         : {}),
-      progressPercent: computeProgressPercent(data.status),
+      progressPercent: computeProgressPercent(data.status, data.cargoType),
       timeline: toPublicTimeline(data.statusHistory),
     };
 

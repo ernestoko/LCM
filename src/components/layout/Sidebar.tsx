@@ -32,7 +32,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
       {/* Mobile backdrop */}
       <div
         className={cn(
-          "fixed inset-0 z-30 bg-navy-950/40 transition-opacity lg:hidden",
+          "fixed inset-0 z-30 bg-navy-950/40 transition-opacity lg:hidden print:hidden",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
         onClick={onClose}
@@ -40,7 +40,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-navy-100 bg-white transition-transform lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-navy-100 bg-white transition-transform lg:translate-x-0 print:hidden",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -72,16 +72,26 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
                         <Link
                           href={item.href}
                           onClick={onClose}
+                          aria-current={active ? "page" : undefined}
                           className={cn(
-                            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                            "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                             active
-                              ? "bg-brand-50 text-brand-700"
-                              : "text-navy-600 hover:bg-navy-50 hover:text-navy-900",
+                              ? "bg-brand-50 font-semibold text-brand-700"
+                              : "font-medium text-navy-600 hover:bg-navy-50 hover:text-navy-900",
                           )}
                         >
+                          {active && (
+                            <span
+                              className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand-600"
+                              aria-hidden="true"
+                            />
+                          )}
                           <Icon
                             name={item.icon}
-                            className={cn("h-4.5 w-4.5 shrink-0", active ? "text-brand-600" : "text-navy-400")}
+                            className={cn(
+                              "h-4.5 w-4.5 shrink-0 transition-colors",
+                              active ? "text-brand-600" : "text-navy-400 group-hover:text-navy-600",
+                            )}
                           />
                           {item.label}
                         </Link>
@@ -94,13 +104,10 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
           })}
         </nav>
 
-        <div className="border-t border-navy-100 p-3">
-          <div className="rounded-lg bg-gradient-to-br from-navy-900 to-brand-800 p-3 text-white">
-            <p className="text-xs font-semibold">6-Month Pilot</p>
-            <p className="mt-0.5 text-[11px] text-navy-200">
-              Global logistics network for pricing & cargo ops. Liberty owns the platform & records.
-            </p>
-          </div>
+        <div className="border-t border-navy-100 px-4 py-3">
+          <p className="text-[11px] text-navy-400">
+            &copy; {new Date().getFullYear()} Liberty &amp; Liberty Logistics
+          </p>
         </div>
       </aside>
     </>

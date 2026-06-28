@@ -87,7 +87,7 @@ function CustomersList() {
     <div>
       <PageHeader
         title="Customers"
-        description="People and organisations shipping with Liberty Cargo Movers."
+        description="People and organisations shipping with Liberty & Liberty Logistics."
         actions={
           can("customers.create") && (
             <>

@@ -22,7 +22,9 @@ import { getCustomer } from "@/lib/db/repositories/customers";
 import { notify } from "@/lib/notifications/service";
 import { channelsForCustomer } from "@/lib/notifications/channels";
 import { uploadFiles } from "@/lib/firebase/storage";
-import type { PackageCondition, PlatformSettings, Shipment } from "@/types";
+import { SeaCargoEditor } from "@/components/shipments/SeaCargoEditor";
+import { totalCbm, totalSeaPieces } from "@/lib/utils/cbm";
+import type { PackageCondition, PlatformSettings, Shipment, SeaCargo } from "@/types";
 
 const CONDITION_OPTIONS: { value: PackageCondition; label: string }[] = [
   { value: "new", label: "New" },
@@ -49,6 +51,9 @@ export function IntakeForm({
   const [weightLb, setWeightLb] = useState<string>(
     shipment.weightLb != null ? String(shipment.weightLb) : "",
   );
+  const [pieces, setPieces] = useState<string>(
+    shipment.pieces != null ? String(shipment.pieces) : "1",
+  );
   const [lengthIn, setLengthIn] = useState<string>(
     shipment.dimensions?.lengthIn != null ? String(shipment.dimensions.lengthIn) : "",
   );
@@ -65,6 +70,10 @@ export function IntakeForm({
     shipment.packageDescription ?? "",
   );
   const [contentsConfirmed, setContentsConfirmed] = useState(false);
+  const isSea = shipment.cargoType === "sea";
+  const [seaCargo, setSeaCargo] = useState<SeaCargo>(
+    shipment.seaCargo ?? { volumetric: [], units: [] },
+  );
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -72,12 +81,17 @@ export function IntakeForm({
   const weightValue = useMemo(() => Number.parseFloat(weightLb), [weightLb]);
   const hasPhoto = photoUrls.length > 0;
   const hasWeight = Number.isFinite(weightValue) && weightValue > 0;
-  const canSubmit = hasPhoto && hasWeight && !uploading && !saving;
+  const seaCbm = totalCbm(seaCargo);
+  const hasSeaCargo = seaCbm > 0 || seaCargo.units.length > 0;
+  const measured = isSea ? hasSeaCargo : hasWeight;
+  const canSubmit = hasPhoto && measured && !uploading && !saving;
 
   const blockMessage = !hasPhoto
     ? "At least one package photo is required before intake can be completed."
-    : !hasWeight
-      ? "A package weight (lb) greater than zero is required before intake can be completed."
+    : !measured
+      ? isSea
+        ? "Add measured cargo (CBM) or at least one standard unit before completing intake."
+        : "A package weight (lb) greater than zero is required before intake can be completed."
       : null;
 
   async function handleFiles(files: FileList | null) {
@@ -110,24 +124,28 @@ export function IntakeForm({
     if (!canSubmit) return;
     setSaving(true);
     try {
-      const dimensions = {
-        lengthIn: parseNum(lengthIn),
-        widthIn: parseNum(widthIn),
-        heightIn: parseNum(heightIn),
+      const update: Partial<Shipment> = {
+        photoUrls,
+        packageCondition,
+        packageDescription: packageDescription.trim(),
+        sealHandlingStatus: "intake_complete",
       };
+      if (isSea) {
+        update.seaCargo = seaCargo;
+        update.totalCbm = seaCbm;
+        update.pieces = Math.max(1, totalSeaPieces(seaCargo));
+        if (hasWeight) update.weightLb = weightValue;
+      } else {
+        update.weightLb = weightValue;
+        update.pieces = Math.max(1, Number.parseInt(pieces, 10) || 1);
+        update.dimensions = {
+          lengthIn: parseNum(lengthIn),
+          widthIn: parseNum(widthIn),
+          heightIn: parseNum(heightIn),
+        };
+      }
 
-      await updateShipment(
-        shipment.id,
-        {
-          photoUrls,
-          weightLb: weightValue,
-          dimensions,
-          packageCondition,
-          packageDescription: packageDescription.trim(),
-          sealHandlingStatus: "intake_complete",
-        },
-        actor,
-      );
+      await updateShipment(shipment.id, update, actor);
 
       const result = await changeShipmentStatus(
         shipment.id,
@@ -244,8 +262,44 @@ export function IntakeForm({
         )}
       </Field>
 
-      {/* Weight + dimensions */}
+      {/* Sea cargo — measured pieces (CBM) + standard units */}
+      {isSea && (
+        <div className="space-y-4">
+          <SeaCargoEditor value={seaCargo} onChange={setSeaCargo} />
+          <Field
+            label="Weight (lb) — optional"
+            htmlFor="intake-weight-sea"
+            hint="Optional for sea cargo — pricing uses CBM / units."
+          >
+            <Input
+              id="intake-weight-sea"
+              type="number"
+              min={0}
+              step="0.01"
+              inputMode="decimal"
+              value={weightLb}
+              onChange={(e) => setWeightLb(e.target.value)}
+              placeholder="0.00"
+            />
+          </Field>
+        </div>
+      )}
+
+      {/* Packages + weight + dimensions (air) */}
+      {!isSea && (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Field label="Packages" required htmlFor="intake-pieces" hint="Number of boxes">
+          <Input
+            id="intake-pieces"
+            type="number"
+            min={1}
+            step="1"
+            inputMode="numeric"
+            value={pieces}
+            onChange={(e) => setPieces(e.target.value)}
+            placeholder="1"
+          />
+        </Field>
         <Field label="Weight (lb)" required htmlFor="intake-weight">
           <Input
             id="intake-weight"
@@ -295,6 +349,7 @@ export function IntakeForm({
           />
         </Field>
       </div>
+      )}
 
       {/* Condition + description */}
       <div className="grid gap-4 sm:grid-cols-2">

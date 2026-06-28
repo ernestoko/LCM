@@ -11,6 +11,7 @@ export const COLLECTIONS = {
   countryRoutes: "countryRoutes",
   commissions: "commissions",
   complaints: "complaints",
+  requests: "requests",
   notifications: "notifications",
   auditLogs: "auditLogs",
   settings: "settings",

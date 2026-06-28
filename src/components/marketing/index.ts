@@ -1,5 +1,6 @@
 // Brand / wordmark
-export { LcmWordmark, LcmMark } from "./Brand";
+export { LibertyWordmark, LibertyMark } from "./Brand";
+export { LibertyAcronym } from "./LibertyAcronym";
 
 // Layout chrome
 export { MarketingNav } from "./MarketingNav";
@@ -10,6 +11,10 @@ export { Container } from "./Container";
 export { Section } from "./Section";
 export { SectionHeading } from "./SectionHeading";
 export { MButton } from "./MButton";
+
+// Media
+export { Photo, type PhotoOverlay } from "./Photo";
+export { ImageFeature } from "./ImageFeature";
 
 // Interactive
 export { TrackingBar } from "./TrackingBar";
@@ -25,3 +30,5 @@ export { TestimonialGrid } from "./TestimonialGrid";
 export { CTASection } from "./CTASection";
 export { CoverageStrip } from "./CoverageStrip";
 export { LogoCloud } from "./LogoCloud";
+export { CargoUnits } from "./CargoUnits";
+export { DeliveryBand } from "./DeliveryBand";

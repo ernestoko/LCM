@@ -62,6 +62,11 @@ export type Permission =
   | "complaints.view"
   | "complaints.create"
   | "complaints.manage"
+  // Customer self-service requests (pickup / ship-to-warehouse)
+  | "requests.view" // staff queue
+  | "requests.view.own" // customer: only own requests
+  | "requests.create" // customer creates a request
+  | "requests.manage" // staff triage / schedule / convert
   // Notifications
   | "notifications.send";
 
@@ -79,6 +84,7 @@ const LIBERTY_SUPER_ADMIN: Permission[] = [
   "commission.view", "commission.manage",
   "reports.view", "reports.export",
   "complaints.view", "complaints.create", "complaints.manage",
+  "requests.view", "requests.create", "requests.manage",
   "notifications.send",
 ];
 
@@ -95,6 +101,7 @@ const LIBERTY_ADMIN: Permission[] = [
   "commission.view",
   "reports.view",
   "complaints.view", "complaints.create", "complaints.manage",
+  "requests.view", "requests.create", "requests.manage",
   "notifications.send",
 ];
 
@@ -106,12 +113,14 @@ const SEAL_ADMIN: Permission[] = [
   "routes.view",
   "invoices.view", // only assigned operational invoices (enforced by query scope)
   "complaints.view", "complaints.create",
+  "requests.view", "requests.manage",
 ];
 
 const SEAL_STAFF: Permission[] = [
-  "shipments.view.assigned",
+  "shipments.view.assigned", "shipments.status.update",
   "intake.manage", "seal.operate",
   "manifests.view",
+  "requests.view",
 ];
 
 const FINANCE_USER: Permission[] = [
@@ -129,6 +138,7 @@ const CUSTOMER: Permission[] = [
   "shipments.view.own",
   "invoices.view.own",
   "complaints.view", "complaints.create",
+  "requests.view.own", "requests.create",
 ];
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {

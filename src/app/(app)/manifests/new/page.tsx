@@ -12,6 +12,9 @@ import {
   createManifest,
   shipmentToManifestPackage,
 } from "@/lib/db/repositories/manifests";
+import { getCustomer } from "@/lib/db/repositories/customers";
+import { notify } from "@/lib/notifications/service";
+import { channelsForCustomer } from "@/lib/notifications/channels";
 import {
   PageHeader,
   Button,
@@ -36,8 +39,10 @@ import {
   useToast,
 } from "@/components/ui";
 import { PAYMENT_STATUS_META } from "@/constants/statuses";
+import { CONTAINER_SPECS, containerSpec, LOAD_TYPE_LABEL } from "@/constants/containers";
 import { formatMoney, formatWeight, round2 } from "@/lib/utils/format";
-import type { CountryRoute, Shipment } from "@/types";
+import { round3 } from "@/lib/utils/cbm";
+import type { CountryRoute, Shipment, ContainerType } from "@/types";
 
 export default function NewManifestPage() {
   return (
@@ -78,6 +83,10 @@ function NewManifest() {
   const [expectedArrivalDate, setExpectedArrivalDate] = useState("");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
+  // Sea container details (shown when sea shipments are selected).
+  const [containerType, setContainerType] = useState<ContainerType>("40ft");
+  const [loadType, setLoadType] = useState<"fcl" | "lcl">("lcl");
+  const [containerNumber, setContainerNumber] = useState("");
 
   const route = useMemo(
     () => activeRoutes.find((r) => r.id === routeId),
@@ -106,9 +115,11 @@ function NewManifest() {
       count: chosen.length,
       weight: round2(chosen.reduce((sum, s) => sum + (s.weightLb || 0), 0)),
       declaredValue: round2(chosen.reduce((sum, s) => sum + (s.declaredValue || 0), 0)),
+      cbm: round3(chosen.reduce((sum, s) => sum + (s.totalCbm || 0), 0)),
     }),
     [chosen],
   );
+  const isSea = useMemo(() => chosen.some((s) => s.cargoType === "sea"), [chosen]);
 
   function toggle(id: string) {
     setSelected((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -138,7 +149,7 @@ function NewManifest() {
     try {
       const { origin, destination } = originDestination(route);
       const packages = chosen.map((s) => shipmentToManifestPackage(s));
-      const id = await createManifest(
+      const { id, manifestNumber } = await createManifest(
         {
           routeCode: route.code,
           origin,
@@ -149,10 +160,38 @@ function NewManifest() {
             ? new Date(expectedArrivalDate).toISOString()
             : undefined,
           packages,
+          // Sea container details (cargoType + totalCbm are derived from packages).
+          ...(isSea
+            ? {
+                loadType,
+                containerType,
+                capacityCbm: containerSpec(containerType).capacityCbm,
+                containerNumber: containerNumber.trim() || undefined,
+              }
+            : {}),
           status: "draft",
         },
         actor,
       );
+      // Best-effort: tell each sender their package is now on a manifest. This is
+      // the primary path shipments reach "added_to_manifest", so the notification
+      // must fire here (the manual status path on the shipment page also covers it).
+      await Promise.all(
+        chosen.map(async (s) => {
+          const customer = s.customerId ? await getCustomer(s.customerId) : null;
+          await notify(
+            "added_to_manifest",
+            {
+              userId: customer?.id,
+              name: s.customerName,
+              email: customer?.email,
+              phone: customer?.phone,
+            },
+            { trackingNumber: s.trackingNumber, manifestNumber, route: s.routeCode },
+            { shipmentId: s.id, channels: channelsForCustomer(customer) },
+          );
+        }),
+      ).catch(() => {});
       success(`Manifest created with ${packages.length} package${packages.length === 1 ? "" : "s"}.`);
       router.push(`/manifests/${id}`);
     } catch (err) {
@@ -300,6 +339,73 @@ function NewManifest() {
           </Card>
         )}
 
+        {route && isSea && (
+          <Card>
+            <CardHeader
+              title="Sea container"
+              subtitle="Container details for this ocean-freight load (FCL or LCL groupage)."
+            />
+            <CardBody className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field label="Load type">
+                  <Select
+                    value={loadType}
+                    onChange={(e) => setLoadType(e.target.value as "fcl" | "lcl")}
+                  >
+                    <option value="lcl">{LOAD_TYPE_LABEL.lcl}</option>
+                    <option value="fcl">{LOAD_TYPE_LABEL.fcl}</option>
+                  </Select>
+                </Field>
+                <Field label="Container size">
+                  <Select
+                    value={containerType}
+                    onChange={(e) => setContainerType(e.target.value as ContainerType)}
+                  >
+                    {CONTAINER_SPECS.map((c) => (
+                      <option key={c.type} value={c.type}>
+                        {c.label} · {c.capacityCbm} CBM
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Container number" hint="Optional">
+                  <Input
+                    value={containerNumber}
+                    onChange={(e) => setContainerNumber(e.target.value)}
+                    placeholder="e.g. MSKU 123456-7"
+                  />
+                </Field>
+              </div>
+              {(() => {
+                const cap = containerSpec(containerType).capacityCbm;
+                const pct = cap > 0 ? Math.min(100, Math.round((totals.cbm / cap) * 100)) : 0;
+                const over = totals.cbm > cap;
+                return (
+                  <div>
+                    <div className="mb-1 flex items-center justify-between text-sm">
+                      <span className="text-navy-600">Container fill</span>
+                      <span className="font-semibold text-navy-900">
+                        {totals.cbm} / {cap} CBM ({pct}%)
+                      </span>
+                    </div>
+                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-navy-100">
+                      <div
+                        className={`h-full rounded-full ${over ? "bg-red-500" : "bg-brand-600"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    {over && (
+                      <p className="mt-1 text-xs text-red-600">
+                        Exceeds container capacity — split across containers or upsize.
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
+            </CardBody>
+          </Card>
+        )}
+
         {route && (
           <Card>
             <CardBody className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -309,9 +415,11 @@ function NewManifest() {
                   <p className="text-lg font-semibold text-navy-900">{totals.count}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-navy-400">Total weight</p>
+                  <p className="text-xs uppercase tracking-wide text-navy-400">
+                    {isSea ? "Total volume" : "Total weight"}
+                  </p>
                   <p className="text-lg font-semibold text-navy-900">
-                    {formatWeight(totals.weight)}
+                    {isSea ? `${totals.cbm} CBM` : formatWeight(totals.weight)}
                   </p>
                 </div>
                 <div>

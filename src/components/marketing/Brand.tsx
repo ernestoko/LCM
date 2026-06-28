@@ -1,80 +1,67 @@
 import { cn } from "@/lib/utils/cn";
+import { Eagle } from "@/components/brand/Eagle";
+
+const GOLD = "#b8860b";
+const GOLD_BRIGHT = "#e6c44d";
+const NAVY = "#0a1230";
 
 /**
- * The LCM Logistics glyph — a stylized navigation/forward-arrow mark inside a
- * rounded badge with a gold accent stroke. Purely presentational; pass a
- * `className` to size it (defaults to a 36px square).
+ * Liberty & Liberty Logistics eagle mark. Pass `light` for dark backgrounds.
  */
-export function LcmMark({ className }: { className?: string }) {
+export function LibertyMark({
+  className,
+  light = false,
+}: {
+  className?: string;
+  light?: boolean;
+}) {
   return (
-    <svg
-      viewBox="0 0 40 40"
-      role="img"
-      aria-label="LCM Logistics mark"
+    <Eagle
       className={cn("h-9 w-9", className)}
-    >
-      <defs>
-        <linearGradient id="lcm-mark-bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#1d40f5" />
-          <stop offset="100%" stopColor="#0f1b3d" />
-        </linearGradient>
-      </defs>
-      <rect width="40" height="40" rx="11" fill="url(#lcm-mark-bg)" />
-      {/* Forward motion chevrons */}
-      <path
-        d="M11 13.5 19 20l-8 6.5"
-        fill="none"
-        stroke="#ffffff"
-        strokeWidth="2.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* Gold accent chevron — the "lift" / premium accent */}
-      <path
-        d="M20 13.5 28 20l-8 6.5"
-        fill="none"
-        stroke="#d6a541"
-        strokeWidth="2.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+      fill={light ? GOLD_BRIGHT : GOLD}
+      eyeFill={light ? NAVY : "#ffffff"}
+    />
   );
 }
 
 /**
- * Full LCM Logistics wordmark: the mark + "LCM Logistics" with a gold accent on
- * the "LCM". Use `light` for dark backgrounds (nav-on-scroll / footer).
+ * Full Liberty & Liberty Logistics wordmark: the eagle + bold-italic name.
+ * Use `light` for dark backgrounds (footer / dark nav).
  */
-export function LcmWordmark({
+export function LibertyWordmark({
   className,
   light = false,
   markClassName,
+  subtitle = "Logistics",
 }: {
   className?: string;
   light?: boolean;
   markClassName?: string;
+  subtitle?: string;
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <LcmMark className={markClassName} />
+      <Eagle
+        className={cn("h-9 w-9 shrink-0", markClassName)}
+        fill={light ? GOLD_BRIGHT : GOLD}
+        eyeFill={light ? NAVY : "#ffffff"}
+      />
       <span className="flex flex-col leading-none">
         <span
           className={cn(
-            "text-lg font-extrabold tracking-tight",
+            "text-[15px] font-extrabold italic tracking-tight sm:text-base",
             light ? "text-white" : "text-navy-900",
           )}
         >
-          <span className="text-gold-500">LCM</span>{" "}
-          <span className={light ? "text-white" : "text-navy-900"}>Logistics</span>
+          Liberty &amp; Liberty
         </span>
         <span
           className={cn(
-            "mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em]",
-            light ? "text-navy-200" : "text-navy-500",
+            "mt-1 text-[10px] font-bold uppercase tracking-[0.26em]",
+            light ? "text-gold-300" : "text-brand-600",
           )}
         >
-          Global Shipping
+          {subtitle}
         </span>
       </span>
     </span>

@@ -1,11 +1,15 @@
 "use client";
 
 import { orderBy, where } from "firebase/firestore";
-import { create, update, getOne, type WithId } from "../firestore";
+import { create, update, getOne, nextSequence, type WithId } from "../firestore";
 import { useCollection } from "../hooks";
 import { COLLECTIONS } from "../collections";
 import { logAudit, type AuditActor } from "../audit";
-import { generateTrackingNumber, routeCode as makeRouteCode } from "@/lib/utils/ids";
+import {
+  generateTrackingNumber,
+  routeCode as makeRouteCode,
+  formatConsolidationNumber,
+} from "@/lib/utils/ids";
 import { bumpCustomerStats } from "./customers";
 import type {
   Shipment,
@@ -79,6 +83,119 @@ export async function createShipment(
   if (data.customerId) await bumpCustomerStats(data.customerId, 1, 0);
 
   return { id, trackingNumber };
+}
+
+/** Statuses from which a package may still be consolidated (pre-invoice/manifest). */
+const CONSOLIDATABLE_STATUSES: ShipmentStatus[] = [
+  "draft",
+  "awaiting_package",
+  "received_by_seal",
+  "inspected",
+];
+
+/** Whether a single package is eligible to be folded into a consolidation. */
+export function isConsolidatable(s: Shipment): boolean {
+  return (
+    CONSOLIDATABLE_STATUSES.includes(s.status) &&
+    !s.invoiceId &&
+    !s.manifestId &&
+    !s.consolidatedInto &&
+    !s.isConsolidated &&
+    !s.locked
+  );
+}
+
+/**
+ * Merge several pre-shipment packages (same customer + destination route) into a
+ * single consolidated shipment. Sources are marked "consolidated" and linked to
+ * the new parent; the parent carries the combined items/pieces/weight and is
+ * invoiced once — a single consolidated invoice.
+ */
+export async function consolidateShipments(
+  sources: Shipment[],
+  actor: AuditActor,
+): Promise<{ id: string; trackingNumber: string; consolidationNumber: string }> {
+  if (sources.length < 2) {
+    throw new Error("Select at least two packages to consolidate.");
+  }
+  const primary = sources[0];
+  if (sources.some((s) => s.customerId !== primary.customerId)) {
+    throw new Error("All packages must belong to the same customer.");
+  }
+  if (
+    sources.some(
+      (s) => s.routeCode !== primary.routeCode || s.destinationCountry !== primary.destinationCountry,
+    )
+  ) {
+    throw new Error("All packages must share the same destination route.");
+  }
+  if (sources.some((s) => !isConsolidatable(s))) {
+    throw new Error(
+      "One or more packages can no longer be consolidated (already invoiced, manifested or consolidated).",
+    );
+  }
+
+  const items = sources.flatMap((s) => s.items ?? []);
+  const pieces = sources.reduce((n, s) => n + (s.pieces ?? 1), 0);
+  const weightSum = sources.reduce((w, s) => w + (s.weightLb ?? 0), 0);
+  const valueSum = sources.reduce((v, s) => v + (s.declaredValue ?? 0), 0);
+
+  const seq = await nextSequence("consolidation");
+  const consolidationNumber = formatConsolidationNumber(seq);
+  const trackings = sources.map((s) => s.trackingNumber);
+
+  const created = await createShipment(
+    {
+      customerId: primary.customerId,
+      customerName: primary.customerName,
+      sender: primary.sender,
+      receiver: primary.receiver,
+      originCountry: primary.originCountry,
+      destinationCountry: primary.destinationCountry,
+      routeCode: primary.routeCode,
+      pricingMode: primary.pricingMode,
+      items,
+      pieces,
+      weightLb: weightSum > 0 ? weightSum : undefined,
+      declaredValue: valueSum > 0 ? valueSum : undefined,
+      packageDescription: `Consolidated ${consolidationNumber} — ${sources.length} packages (${trackings.join(", ")})`,
+      assignedSealOffice: primary.assignedSealOffice,
+      isConsolidated: true,
+      consolidationNumber,
+      consolidatedFrom: sources.map((s) => s.id),
+      status: "received_by_seal",
+    },
+    actor,
+  );
+
+  for (const s of sources) {
+    const event: ShipmentStatusEvent = {
+      status: "consolidated",
+      at: new Date().toISOString(),
+      by: actor.uid,
+      byName: actor.name,
+      note: `Consolidated into ${created.trackingNumber}`,
+    };
+    await update<Shipment>(
+      COLLECTIONS.shipments,
+      s.id,
+      {
+        status: "consolidated",
+        consolidatedInto: created.id,
+        statusHistory: [...(s.statusHistory ?? []), event],
+      },
+      actor,
+    );
+  }
+
+  await logAudit(actor, {
+    action: "shipment_create",
+    entity: COLLECTIONS.shipments,
+    entityId: created.id,
+    newValue: consolidationNumber,
+  });
+
+  return { ...created, consolidationNumber };
 }
 
 export async function updateShipment(

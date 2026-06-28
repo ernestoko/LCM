@@ -11,6 +11,9 @@ import type {
   PricingType,
   RouteDirection,
   PaymentMethod,
+  RequestStatus,
+  RequestType,
+  CargoType,
 } from "@/types";
 
 /** Tailwind badge tone keyed by a small semantic vocabulary. */
@@ -32,6 +35,7 @@ export interface StatusMeta {
 // Shipment status — ordered lifecycle used by the status flow component.
 // ---------------------------------------------------------------------------
 
+/** Air freight (default) lifecycle. */
 export const SHIPMENT_STATUS_ORDER: ShipmentStatus[] = [
   "draft",
   "awaiting_package",
@@ -51,6 +55,36 @@ export const SHIPMENT_STATUS_ORDER: ShipmentStatus[] = [
   "delivered",
 ];
 
+/**
+ * Dedicated ocean-freight lifecycle. Shares the intake/invoice/payment front
+ * half, then diverges into container loading, sailing and port arrival before
+ * customs and delivery.
+ */
+export const SEA_SHIPMENT_STATUS_ORDER: ShipmentStatus[] = [
+  "draft",
+  "awaiting_package",
+  "received_by_seal",
+  "inspected",
+  "invoice_generated",
+  "payment_pending",
+  "payment_confirmed",
+  "added_to_manifest",
+  "loaded_into_container",
+  "container_sealed",
+  "vessel_departed",
+  "at_sea",
+  "arrived_at_port",
+  "customs_clearing",
+  "ready_for_pickup",
+  "out_for_delivery",
+  "delivered",
+];
+
+/** The lifecycle order for a shipment's cargo type (sea or air/default). */
+export function shipmentStatusOrder(cargoType?: CargoType): ShipmentStatus[] {
+  return cargoType === "sea" ? SEA_SHIPMENT_STATUS_ORDER : SHIPMENT_STATUS_ORDER;
+}
+
 export const SHIPMENT_STATUS_META: Record<ShipmentStatus, StatusMeta> = {
   draft: { label: "Draft", tone: "neutral" },
   awaiting_package: { label: "Awaiting Package", tone: "warning" },
@@ -64,18 +98,25 @@ export const SHIPMENT_STATUS_META: Record<ShipmentStatus, StatusMeta> = {
   dispatched: { label: "Dispatched", tone: "info" },
   in_transit: { label: "In Transit", tone: "info" },
   arrived_ghana: { label: "Arrived in Ghana", tone: "info" },
+  // Sea-specific milestones
+  loaded_into_container: { label: "Loaded into Container", tone: "info" },
+  container_sealed: { label: "Container Sealed", tone: "purple" },
+  vessel_departed: { label: "Vessel Departed", tone: "info" },
+  at_sea: { label: "At Sea", tone: "info" },
+  arrived_at_port: { label: "Arrived at Port", tone: "info" },
   customs_clearing: { label: "Customs / Clearing", tone: "warning" },
   ready_for_pickup: { label: "Ready for Pickup", tone: "gold" },
   out_for_delivery: { label: "Out for Delivery", tone: "info" },
   delivered: { label: "Delivered", tone: "success" },
   issue_reported: { label: "Issue Reported", tone: "danger" },
   cancelled: { label: "Cancelled", tone: "danger" },
+  consolidated: { label: "Consolidated", tone: "purple" },
 };
 
-/** Statuses that count as "active" (in the pipeline, not closed). */
-export const ACTIVE_SHIPMENT_STATUSES: ShipmentStatus[] = SHIPMENT_STATUS_ORDER.filter(
-  (s) => s !== "delivered" && s !== "draft",
-);
+/** Statuses that count as "active" (in the pipeline, not closed) — across air & sea. */
+export const ACTIVE_SHIPMENT_STATUSES: ShipmentStatus[] = Array.from(
+  new Set([...SHIPMENT_STATUS_ORDER, ...SEA_SHIPMENT_STATUS_ORDER]),
+).filter((s) => s !== "delivered" && s !== "draft");
 
 export const PAYMENT_STATUS_META: Record<PaymentStatus, StatusMeta> = {
   unpaid: { label: "Unpaid", tone: "danger" },
@@ -128,6 +169,21 @@ export const COMPLAINT_TYPE_LABELS: Record<ComplaintType, string> = {
   customs_issue: "Customs Issue",
 };
 
+export const REQUEST_STATUS_META: Record<RequestStatus, StatusMeta> = {
+  submitted: { label: "Submitted", tone: "info" },
+  in_review: { label: "In Review", tone: "warning" },
+  scheduled: { label: "Scheduled", tone: "purple" },
+  received: { label: "Received", tone: "info" },
+  converted: { label: "Converted to Shipment", tone: "success" },
+  completed: { label: "Completed", tone: "success" },
+  cancelled: { label: "Cancelled", tone: "neutral" },
+};
+
+export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
+  pickup: "Pickup",
+  ship_to_warehouse: "Ship to Warehouse",
+};
+
 export const CUSTOMER_TYPE_LABELS: Record<CustomerType, string> = {
   individual: "Individual",
   trader: "Trader",
@@ -150,6 +206,7 @@ export const CUSTOMER_SOURCE_LABELS: Record<CustomerSource, string> = {
 export const PRICING_TYPE_LABELS: Record<PricingType, string> = {
   item_based: "Item-based",
   weight_based: "Weight-based",
+  sea_freight: "Sea freight (CBM / units)",
   service_fee: "Service Fee",
   special_handling: "Special Handling",
 };
@@ -166,6 +223,8 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   mobile_money: "Mobile Money",
   bank_transfer: "Bank Transfer",
   card: "Card",
+  paystack: "Paystack",
+  paypal: "PayPal",
   zelle: "Zelle",
   cashapp: "Cash App",
   other: "Other",

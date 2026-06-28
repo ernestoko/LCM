@@ -6,6 +6,7 @@ import { FirebaseError } from "firebase/app";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { Button, Field, Input, InfoBanner } from "@/components/ui";
 import { LogoWordmark } from "@/components/brand/Logo";
+import { BrandLoader } from "@/components/brand/BrandLoader";
 import { ShieldCheck, Truck, Globe2 } from "lucide-react";
 
 const AUTH_ERRORS: Record<string, string> = {
@@ -37,13 +38,21 @@ export default function LoginPage() {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    const startedAt = Date.now();
     try {
       await signIn(email.trim(), password);
+      // Hold the branded splash for a beat so it reads as a splash, not a flash.
+      const MIN_SPLASH_MS = 2000;
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < MIN_SPLASH_MS) {
+        await new Promise((r) => setTimeout(r, MIN_SPLASH_MS - elapsed));
+      }
       router.replace("/dashboard");
+      // Keep `busy` true through navigation so the splash stays until the
+      // dashboard mounts (no flash back to the form).
     } catch (err) {
       const code = err instanceof FirebaseError ? err.code : "";
       setError(AUTH_ERRORS[code] ?? "Unable to sign in. Please try again.");
-    } finally {
       setBusy(false);
     }
   };
@@ -62,18 +71,27 @@ export default function LoginPage() {
     }
   };
 
+  // Branded full-screen loader while the sign-in request is in flight and we
+  // hand off to the dashboard — the eagle fills to depict loading progress.
+  if (busy) return <BrandLoader label="Signing you in…" />;
+
   return (
     <div className="flex min-h-screen">
       {/* Brand panel */}
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-navy-900 via-navy-900 to-brand-800 p-12 text-white lg:flex">
-        <LogoWordmark className="[&_p]:text-white [&_p:last-child]:text-gold-300" />
-        <div>
-          <h1 className="max-w-md text-3xl font-bold leading-tight">
-            Transparent, accountable cargo logistics — USA to Ghana and beyond.
+        {/* gold signature accent */}
+        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-gold-400/10 blur-3xl" />
+        <LogoWordmark light className="relative" />
+        <div className="relative">
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">
+            Global Logistics &amp; Shipping
+          </span>
+          <h1 className="mt-3 max-w-md text-3xl font-bold leading-tight">
+            Transparent, accountable logistics — USA to Ghana and beyond.
           </h1>
           <p className="mt-4 max-w-md text-navy-200">
-            Liberty Cargo Movers connects you to a global logistics network — moving cargo reliably
-            from the USA to Ghana and beyond, all under controlled access.
+            Liberty &amp; Liberty Logistics connects you to a global logistics network — moving cargo
+            reliably from the USA to Ghana and beyond, all under controlled access.
           </p>
           <div className="mt-8 space-y-3 text-sm">
             <Feature icon={<ShieldCheck className="h-5 w-5 text-gold-300" />} text="Role-based access — Operations, Finance & Customers" />
@@ -81,7 +99,7 @@ export default function LoginPage() {
             <Feature icon={<Globe2 className="h-5 w-5 text-gold-300" />} text="Approved rate cards & gradual country onboarding" />
           </div>
         </div>
-        <p className="text-xs text-navy-300">© {new Date().getFullYear()} Liberty Cargo Movers. All rights reserved.</p>
+        <p className="relative text-xs text-navy-300">© {new Date().getFullYear()} Liberty &amp; Liberty Logistics. All rights reserved.</p>
       </div>
 
       {/* Form panel */}
@@ -91,7 +109,7 @@ export default function LoginPage() {
             <LogoWordmark />
           </div>
           <h2 className="text-2xl font-bold text-navy-900">Welcome back</h2>
-          <p className="mt-1 text-sm text-navy-500">Sign in to the Liberty Cargo Movers platform.</p>
+          <p className="mt-1 text-sm text-navy-500">Sign in to the Liberty &amp; Liberty Logistics platform.</p>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             {error && <InfoBanner tone="warning">{error}</InfoBanner>}

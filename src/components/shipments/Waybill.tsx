@@ -1,237 +1,168 @@
 "use client";
 
 import { StatusBadge } from "@/components/ui";
+import { Eagle } from "@/components/brand/Eagle";
+import { BUSINESS } from "@/constants/business";
 import { PAYMENT_STATUS_META } from "@/constants/statuses";
 import { formatMoney, formatWeight } from "@/lib/utils/format";
 import { formatDate } from "@/lib/utils/dates";
 import type { Shipment, ContactParty } from "@/types";
-import { Barcode } from "./Barcode";
 
 export interface WaybillProps {
   shipment: Shipment;
 }
 
 /**
- * Printable 4×6 shipping label (waybill) for SEAL staff to affix to packages.
- * Sized at 4in × 6in; the `.print-container` class strips card chrome at print.
+ * Full-page shipment Waybill (consignment note) — one per shipment. Travels
+ * with the consignment and is distinct from the per-box PackageLabel.
  */
 export function Waybill({ shipment }: WaybillProps) {
-  const description =
-    shipment.packageDescription?.trim() ||
-    shipment.items
-      .map((item) =>
-        item.quantity > 1 ? `${item.quantity}× ${item.itemType}` : item.itemType,
-      )
-      .filter(Boolean)
-      .join(", ") ||
-    "General cargo";
+  const pieces = shipment.pieces ?? 1;
+  const totalDeclared =
+    shipment.items?.reduce((sum, it) => sum + (it.declaredValue ?? 0) * (it.quantity ?? 1), 0) ||
+    shipment.declaredValue ||
+    0;
 
   return (
-    <div
-      className="print-container bg-white text-navy-900"
-      style={{
-        width: "4in",
-        height: "6in",
-        boxSizing: "border-box",
-        border: "1.5px solid #0f172a",
-        borderRadius: 6,
-        padding: "0.18in",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        fontSize: 11,
-        lineHeight: 1.25,
-      }}
-    >
+    <div className="print-container rounded-xl border border-navy-100 bg-white p-6 shadow-card sm:p-8">
+      {/* Brand accent stripe */}
+      <div
+        className="-mx-6 -mt-6 mb-6 h-1.5 rounded-t-xl bg-gradient-to-r from-brand-600 via-brand-500 to-gold-400 sm:-mx-8 sm:-mt-8"
+        aria-hidden="true"
+      />
+
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          borderBottom: "1.5px solid #0f172a",
-          paddingBottom: 6,
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "0.01em" }}>
-            Liberty Cargo Movers
-          </div>
-          <div
-            style={{
-              fontSize: 9,
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.14em",
-              color: "#475569",
-            }}
-          >
-            LCM Logistics — Pilot
+      <div className="flex flex-col gap-5 border-b border-navy-100 pb-6 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <Eagle className="h-12 w-12 shrink-0" fill="#b8860b" eyeFill="#ffffff" />
+          <div>
+            <h1 className="text-xl font-extrabold italic tracking-tight text-navy-900">{BUSINESS.name}</h1>
+            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-brand-600">{BUSINESS.tagline}</p>
+            <div className="mt-2 space-y-0.5 text-xs leading-relaxed text-navy-500">
+              <p>{BUSINESS.addresses.usa}</p>
+              <p>{BUSINESS.phone} · {BUSINESS.email}</p>
+            </div>
           </div>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div
-            style={{
-              fontSize: 8,
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              color: "#64748b",
-            }}
-          >
-            Route
-          </div>
-          <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "monospace" }}>
-            {shipment.routeCode || "—"}
+        <div className="shrink-0 sm:text-right">
+          <p className="text-2xl font-extrabold uppercase tracking-tight text-navy-900">Waybill</p>
+          <p className="font-mono text-base font-semibold text-brand-700">{shipment.trackingNumber}</p>
+          <p className="mt-1 text-sm text-navy-500">Issued {formatDate(shipment.createdAt)}</p>
+          <div className="mt-2 flex sm:justify-end">
+            <StatusBadge meta={PAYMENT_STATUS_META[shipment.paymentStatus]} fallback={shipment.paymentStatus} />
           </div>
         </div>
       </div>
 
-      {/* Barcode */}
-      <div style={{ padding: "8px 0 4px", textAlign: "center" }}>
-        <Barcode value={shipment.trackingNumber} height={72} />
+      {/* Shipper / Consignee */}
+      <div className="grid gap-6 border-b border-navy-100 py-6 sm:grid-cols-2">
+        <PartyBlock title="Shipper (From)" party={shipment.sender} fallbackCountry={shipment.originCountry} />
+        <PartyBlock title="Consignee (To)" party={shipment.receiver} fallbackCountry={shipment.destinationCountry} />
       </div>
 
-      {/* FROM / TO */}
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          borderTop: "1px solid #cbd5e1",
-          borderBottom: "1px solid #cbd5e1",
-          padding: "6px 0",
-        }}
-      >
-        <PartyBlock label="From (Sender)" party={shipment.sender} fallbackCountry={shipment.originCountry} />
-        <div style={{ width: 1, background: "#cbd5e1" }} />
-        <PartyBlock label="To (Receiver)" party={shipment.receiver} fallbackCountry={shipment.destinationCountry} />
+      {/* Shipment details */}
+      <div className="grid gap-x-8 gap-y-4 border-b border-navy-100 py-6 sm:grid-cols-3">
+        <Field label="Route" value={shipment.routeCode} mono />
+        <Field label="Origin → Destination" value={`${shipment.originCountry} → ${shipment.destinationCountry}`} />
+        <Field label="Operations hub" value={shipment.assignedSealOffice ?? "—"} />
+        <Field label="Packages" value={`${pieces} ${pieces === 1 ? "piece" : "pieces"}`} />
+        <Field label="Total weight" value={formatWeight(shipment.weightLb)} />
+        <Field label="Declared value" value={formatMoney(totalDeclared)} />
+        <Field label="Expected delivery" value={formatDate(shipment.expectedDeliveryDate)} />
+        <Field label="Created" value={formatDate(shipment.createdAt)} />
+        <Field label="Tracking" value={shipment.trackingNumber} mono />
       </div>
 
-      {/* Route line */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "6px 0 4px",
-          fontSize: 11,
-          fontWeight: 700,
-        }}
-      >
-        <span>
-          {shipment.originCountry || "—"} <span style={{ color: "#94a3b8" }}>→</span>{" "}
-          {shipment.destinationCountry || "—"}
-        </span>
-        <StatusBadge meta={PAYMENT_STATUS_META[shipment.paymentStatus]} />
-      </div>
-
-      {/* Metrics grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "4px 10px",
-          padding: "4px 0",
-          borderTop: "1px solid #cbd5e1",
-        }}
-      >
-        <Metric label="Weight" value={formatWeight(shipment.weightLb)} />
-        <Metric label="Declared value" value={formatMoney(shipment.declaredValue ?? 0)} />
-        <Metric label="Created" value={formatDate(shipment.createdAt)} />
-        <Metric label="Operations hub" value={shipment.assignedSealOffice || "Unassigned"} />
-      </div>
-
-      {/* Package description */}
-      <div style={{ padding: "4px 0", borderTop: "1px solid #cbd5e1" }}>
-        <FieldLabel>Package contents</FieldLabel>
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 500,
-            overflow: "hidden",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-          }}
-        >
-          {description}
-        </div>
-      </div>
-
-      {/* Footer — customer + tracking restated */}
-      <div
-        style={{
-          marginTop: "auto",
-          borderTop: "1.5px solid #0f172a",
-          paddingTop: 6,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-        }}
-      >
-        <div>
-          <FieldLabel>Customer</FieldLabel>
-          <div style={{ fontSize: 11, fontWeight: 600 }}>{shipment.customerName}</div>
-        </div>
-        <div style={{ textAlign: "right" }}>
-          <FieldLabel>Tracking</FieldLabel>
-          <div style={{ fontFamily: "monospace", fontSize: 12, fontWeight: 800 }}>
-            {shipment.trackingNumber}
+      {/* Contents */}
+      <div className="py-6">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-navy-400">Description of goods</p>
+        {shipment.items && shipment.items.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead className="border-y border-navy-100 text-left text-xs uppercase tracking-wide text-navy-500">
+                <tr>
+                  <th className="px-3 py-2.5 font-medium">Item</th>
+                  <th className="px-3 py-2.5 font-medium">Condition</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Qty</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Declared value</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-navy-50">
+                {shipment.items.map((it, i) => (
+                  <tr key={i}>
+                    <td className="px-3 py-3 text-navy-800">{it.itemType || it.category}</td>
+                    <td className="px-3 py-3 capitalize text-navy-600">{it.condition}</td>
+                    <td className="px-3 py-3 text-right text-navy-700">{it.quantity}</td>
+                    <td className="px-3 py-3 text-right text-navy-700">{formatMoney(it.declaredValue ?? 0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
+        ) : (
+          <p className="text-sm text-navy-800">{shipment.packageDescription || "General cargo"}</p>
+        )}
+      </div>
+
+      {/* Handling note */}
+      <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
+        Goods accepted subject to our standard terms of carriage. The shipper warrants the contents
+        and declared value above are accurate and the consignment contains no prohibited items.
+      </div>
+
+      {/* Signatures */}
+      <div className="mt-8 grid gap-8 sm:grid-cols-3">
+        <Signature title="Shipped by" />
+        <Signature title="Received by (carrier)" />
+        <Signature title="Delivered to (consignee)" />
+      </div>
+
+      <div className="mt-6 border-t border-navy-100 pt-4 text-center text-xs text-navy-400">
+        {BUSINESS.name} · {BUSINESS.website} — this is a computer-generated waybill.
       </div>
     </div>
   );
 }
 
 function PartyBlock({
-  label,
+  title,
   party,
   fallbackCountry,
 }: {
-  label: string;
+  title: string;
   party: ContactParty;
   fallbackCountry?: string;
 }) {
-  const locationParts = [party.city, party.country ?? fallbackCountry].filter(Boolean);
-  return (
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <FieldLabel>{label}</FieldLabel>
-      <div style={{ fontSize: 11, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis" }}>
-        {party.name || "—"}
-      </div>
-      {party.address && (
-        <div style={{ fontSize: 9.5, color: "#475569", lineHeight: 1.2 }}>{party.address}</div>
-      )}
-      {locationParts.length > 0 && (
-        <div style={{ fontSize: 9.5, color: "#475569" }}>{locationParts.join(", ")}</div>
-      )}
-      {party.phone && <div style={{ fontSize: 9.5, color: "#475569" }}>{party.phone}</div>}
-    </div>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
+  const location = [party.city, party.country ?? fallbackCountry].filter(Boolean).join(", ");
   return (
     <div>
-      <FieldLabel>{label}</FieldLabel>
-      <div style={{ fontSize: 11, fontWeight: 600 }}>{value}</div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-navy-400">{title}</p>
+      <p className="mt-1 text-base font-bold text-navy-900">{party.name || "—"}</p>
+      {party.address && <p className="text-sm text-navy-600">{party.address}</p>}
+      {location && <p className="text-sm text-navy-600">{location}</p>}
+      {party.phone && <p className="text-sm text-navy-600">{party.phone}</p>}
+      {party.email && <p className="text-sm text-navy-600">{party.email}</p>}
     </div>
   );
 }
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div
-      style={{
-        fontSize: 8,
-        fontWeight: 600,
-        textTransform: "uppercase",
-        letterSpacing: "0.1em",
-        color: "#64748b",
-      }}
-    >
-      {children}
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-navy-400">{label}</p>
+      <p className={`mt-0.5 text-sm text-navy-800${mono ? " font-mono" : ""}`}>{value || "—"}</p>
+    </div>
+  );
+}
+
+function Signature({ title }: { title: string }) {
+  return (
+    <div>
+      <div className="h-12 border-b border-navy-300" />
+      <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-navy-500">{title}</p>
+      <p className="mt-3 text-xs text-navy-400">Name / Signature</p>
+      <div className="mt-4 h-px w-2/3 bg-navy-200" />
+      <p className="mt-1 text-xs text-navy-400">Date</p>
     </div>
   );
 }

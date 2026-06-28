@@ -81,7 +81,7 @@ export default function RegisterPage() {
             Ship from the USA to Ghana and beyond — with full visibility.
           </h1>
           <p className="mt-4 max-w-md text-navy-200">
-            Create your free Liberty Cargo Movers account to send packages, track every step,
+            Create your free Liberty &amp; Liberty Logistics account to send packages, track every step,
             and manage invoices and receipts in one place.
           </p>
           <div className="mt-8 space-y-3 text-sm">
@@ -100,7 +100,7 @@ export default function RegisterPage() {
           </div>
         </div>
         <p className="text-xs text-navy-300">
-          © {new Date().getFullYear()} Liberty Cargo Movers. All rights reserved.
+          © {new Date().getFullYear()} Liberty &amp; Liberty Logistics. All rights reserved.
         </p>
       </div>
 
@@ -119,7 +119,7 @@ export default function RegisterPage() {
               <h2 className="text-2xl font-bold text-navy-900">Account created</h2>
               <p className="mt-2 text-sm text-navy-500">
                 Your account is ready — you can now sign in to start shipping with Liberty
-                Cargo Movers.
+                &amp; Liberty Logistics.
               </p>
               <Link href="/login" className="mt-6 block">
                 <Button className="w-full" size="lg">
@@ -131,7 +131,7 @@ export default function RegisterPage() {
             <>
               <h2 className="text-2xl font-bold text-navy-900">Create your account</h2>
               <p className="mt-1 text-sm text-navy-500">
-                Register as a customer to ship with Liberty Cargo Movers.
+                Register as a customer to ship with Liberty &amp; Liberty Logistics.
               </p>
 
               <form onSubmit={onSubmit} className="mt-6 space-y-4">

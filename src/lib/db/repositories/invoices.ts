@@ -31,6 +31,7 @@ export async function generateInvoice(
     route?: CountryRoute | null;
     customer?: Customer | null;
     paymentInstructions?: string;
+    notes?: string;
   } = {},
 ): Promise<string> {
   const rateCards = opts.rateCards ?? (await getMany<RateCard>(COLLECTIONS.rateCards));
@@ -43,18 +44,21 @@ export async function generateInvoice(
 
   const itemRateCard = selectActiveRateCard(rateCards, "item_based", shipment.routeCode, shipment.destinationCountry);
   const weightRateCard = selectActiveRateCard(rateCards, "weight_based", shipment.routeCode, shipment.destinationCountry);
+  const seaRateCard = selectActiveRateCard(rateCards, "sea_freight", shipment.routeCode, shipment.destinationCountry);
 
   const pricing = calculatePricing(
     {
+      cargoType: shipment.cargoType,
       pricingMode: shipment.pricingMode,
       items: shipment.items,
       weightLb: shipment.weightLb,
+      seaCargo: shipment.seaCargo,
       routeCode: shipment.routeCode,
       destinationCountry: shipment.destinationCountry,
       customerId: shipment.customerId,
       customerSource: opts.customer?.source,
     },
-    { itemRateCard, weightRateCard, route, settings },
+    { itemRateCard, weightRateCard, seaRateCard, route, settings },
   );
 
   const seq = await nextSequence("invoice");
@@ -97,6 +101,11 @@ export async function generateInvoice(
     rateCardName: pricing.rateCardName,
     rateCardEffectiveDate: pricing.rateCardEffectiveDate,
     paymentInstructions,
+    notes: shipment.isConsolidated
+      ? `Consolidated invoice (${shipment.consolidationNumber ?? "—"}) covering ${
+          shipment.consolidatedFrom?.length ?? 0
+        } combined packages.`
+      : opts.notes,
     generatedBy: actor.uid,
     generatedByName: actor.name,
     commission: pricing.commission,

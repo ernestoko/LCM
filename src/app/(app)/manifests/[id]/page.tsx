@@ -27,9 +27,11 @@ import {
   useToast,
 } from "@/components/ui";
 import { MANIFEST_STATUS_META, PAYMENT_STATUS_META } from "@/constants/statuses";
+import { containerSpec, LOAD_TYPE_LABEL } from "@/constants/containers";
 import { formatMoney, formatWeight } from "@/lib/utils/format";
 import { formatDate, formatDateTime } from "@/lib/utils/dates";
 import { notify } from "@/lib/notifications/service";
+import { notifyRecipientIncoming, trackUrlFor } from "@/lib/notifications/shipment";
 import type { Manifest } from "@/types";
 
 export default function ManifestDetailPage() {
@@ -68,6 +70,7 @@ function ManifestDetail() {
   const isConfirmed =
     manifest.status === "confirmed_by_seal" || manifest.status === "dispatched";
   const isDispatched = manifest.status === "dispatched";
+  const isSea = manifest.cargoType === "sea";
 
   const canApproveNow =
     can("manifests.approve") &&
@@ -114,6 +117,7 @@ function ManifestDetail() {
         manifest.packages.map(async (pkg) => {
           const shipment = await getShipment(pkg.shipmentId);
           const customer = shipment?.customerId ? await getCustomer(shipment.customerId) : null;
+          // 1. Notify the SENDER (customer) their package shipped — with a track link.
           await notify(
             "dispatched",
             {
@@ -122,9 +126,16 @@ function ManifestDetail() {
               email: customer?.email,
               phone: customer?.phone,
             },
-            { trackingNumber: pkg.trackingNumber, manifestNumber: manifest.manifestNumber },
+            {
+              trackingNumber: pkg.trackingNumber,
+              manifestNumber: manifest.manifestNumber,
+              route: shipment?.routeCode,
+              trackUrl: trackUrlFor(pkg.trackingNumber),
+            },
             { shipmentId: pkg.shipmentId, channels: channelsForCustomer(customer) },
           );
+          // 2. Alert the RECIPIENT to standby + give them their own track link.
+          if (shipment) await notifyRecipientIncoming(shipment);
         }),
       ).catch(() => {});
       success("Manifest dispatched.");
@@ -189,7 +200,7 @@ function ManifestDetail() {
         <div className="p-6 sm:p-8">
           <header className="mb-6 border-b border-navy-200 pb-5">
             <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">
-              Liberty Cargo Movers
+              Liberty &amp; Liberty Logistics
             </p>
             <h2 className="mt-1 text-2xl font-bold text-navy-900">Cargo Manifest</h2>
             <p className="mt-1 font-mono text-sm text-navy-600">{manifest.manifestNumber}</p>
@@ -232,6 +243,42 @@ function ManifestDetail() {
             />
           </div>
 
+          {isSea && (
+            <div className="mb-6 rounded-lg border border-navy-200 bg-navy-50/50 p-4">
+              <div className="mb-3 grid gap-x-8 gap-y-3 sm:grid-cols-3">
+                <DocField
+                  label="Load type"
+                  value={manifest.loadType ? LOAD_TYPE_LABEL[manifest.loadType] : "—"}
+                />
+                <DocField label="Container" value={containerSpec(manifest.containerType ?? "40ft").label} />
+                <DocField label="Container no." value={manifest.containerNumber ?? "—"} mono />
+              </div>
+              {(() => {
+                const cap =
+                  manifest.capacityCbm ?? containerSpec(manifest.containerType ?? "40ft").capacityCbm;
+                const used = manifest.totalCbm ?? 0;
+                const pct = cap > 0 ? Math.min(100, Math.round((used / cap) * 100)) : 0;
+                const over = used > cap;
+                return (
+                  <div>
+                    <div className="mb-1 flex items-center justify-between text-sm">
+                      <span className="text-navy-600">Container fill</span>
+                      <span className="font-semibold text-navy-900">
+                        {used} / {cap} CBM ({pct}%)
+                      </span>
+                    </div>
+                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-navy-200">
+                      <div
+                        className={`h-full rounded-full ${over ? "bg-red-500" : "bg-brand-600"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead className="border-y border-navy-200 text-left text-xs uppercase tracking-wide text-navy-500">
@@ -240,7 +287,7 @@ function ManifestDetail() {
                   <th className="px-3 py-2 font-medium">Tracking</th>
                   <th className="px-3 py-2 font-medium">Customer</th>
                   <th className="px-3 py-2 font-medium">Description</th>
-                  <th className="px-3 py-2 text-right font-medium">Weight</th>
+                  <th className="px-3 py-2 text-right font-medium">{isSea ? "Volume" : "Weight"}</th>
                   <th className="px-3 py-2 text-right font-medium">Declared value</th>
                   <th className="px-3 py-2 font-medium">Payment</th>
                 </tr>
@@ -255,7 +302,7 @@ function ManifestDetail() {
                     <td className="px-3 py-2.5 text-navy-800">{pkg.customerName}</td>
                     <td className="px-3 py-2.5 text-navy-600">{pkg.description}</td>
                     <td className="px-3 py-2.5 text-right text-navy-700">
-                      {formatWeight(pkg.weightLb)}
+                      {pkg.cargoType === "sea" ? `${pkg.cbm ?? 0} CBM` : formatWeight(pkg.weightLb)}
                     </td>
                     <td className="px-3 py-2.5 text-right text-navy-700">
                       {formatMoney(pkg.declaredValue)}
@@ -279,7 +326,9 @@ function ManifestDetail() {
                     Totals — {manifest.totalPackages} package
                     {manifest.totalPackages === 1 ? "" : "s"}
                   </td>
-                  <td className="px-3 py-3 text-right">{formatWeight(manifest.totalWeightLb)}</td>
+                  <td className="px-3 py-3 text-right">
+                    {isSea ? `${manifest.totalCbm ?? 0} CBM` : formatWeight(manifest.totalWeightLb)}
+                  </td>
                   <td className="px-3 py-3 text-right">
                     {formatMoney(manifest.totalDeclaredValue)}
                   </td>

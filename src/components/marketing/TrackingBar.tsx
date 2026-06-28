@@ -17,7 +17,7 @@ export function TrackingBar({
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const trimmed = value.trim();
+    const trimmed = value.trim().toUpperCase();
     if (!trimmed) return;
     router.push(`/track/${encodeURIComponent(trimmed)}`);
   }

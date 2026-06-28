@@ -56,14 +56,13 @@ export default function GlobalError({
             }}
           >
             <svg width={32} height={32} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-              <rect width="48" height="48" rx="11" fill="#0f1b3d" />
-              <path d="M9 30h30l-3 6H12l-3-6Z" fill="#c78d2c" />
-              <rect x="14" y="14" width="20" height="14" rx="2" fill="#fff" />
-              <path d="M14 19h20M19 14v14M24 14v14M29 14v14" stroke="#0f1b3d" strokeWidth="1.4" />
-              <path d="M8 24h4M36 24h4" stroke="#598bff" strokeWidth="2" strokeLinecap="round" />
+              <rect width="48" height="48" rx="13" fill="#0f1b3d" />
+              <rect x="15" y="13.2" width="5.5" height="21.6" rx="1.9" fill="#ffffff" />
+              <rect x="15" y="29.3" width="12.7" height="5.5" rx="1.9" fill="#ffffff" />
+              <path d="M27.1 27.4 L36 32 L27.1 36.7 Z" fill="#d9a738" />
             </svg>
             <span style={{ fontSize: 14, fontWeight: 700, color: "#0f1b3d" }}>
-              Liberty Cargo Movers
+              Liberty &amp; Liberty Logistics
             </span>
           </div>
 

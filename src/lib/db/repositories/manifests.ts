@@ -12,6 +12,7 @@ import { checkDispatchReadiness } from "@/lib/shipments/guards";
 import { getPlatformSettings } from "./settings";
 import type { Manifest, ManifestPackage, Shipment } from "@/types";
 import { round2 } from "@/lib/utils/format";
+import { totalCbm as cbmOfCargo, round3 } from "@/lib/utils/cbm";
 
 /** A status-history event with undefined fields already stripped (arrayUnion-safe). */
 function statusEvent(status: Shipment["status"], actor: AuditActor, note: string) {
@@ -38,10 +39,13 @@ export type NewManifest = Omit<
 > & { status?: Manifest["status"] };
 
 function totals(packages: ManifestPackage[]) {
+  const isSea = packages.some((p) => p.cargoType === "sea");
   return {
     totalPackages: packages.length,
     totalWeightLb: round2(packages.reduce((s, p) => s + (p.weightLb || 0), 0)),
     totalDeclaredValue: round2(packages.reduce((s, p) => s + (p.declaredValue || 0), 0)),
+    totalCbm: round3(packages.reduce((s, p) => s + (p.cbm || 0), 0)),
+    cargoType: isSea ? ("sea" as const) : ("air" as const),
   };
 }
 
@@ -52,13 +56,19 @@ export function shipmentToManifestPackage(s: Shipment): ManifestPackage {
     customerName: s.customerName,
     description: s.packageDescription || s.items.map((i) => i.itemType).join(", ") || "—",
     weightLb: s.weightLb || 0,
+    cbm: s.cargoType === "sea" ? (s.totalCbm ?? cbmOfCargo(s.seaCargo)) : undefined,
+    cargoType: s.cargoType,
     declaredValue: s.declaredValue || 0,
     paymentStatus: s.paymentStatus,
   };
 }
 
-export async function createManifest(data: NewManifest, actor: AuditActor): Promise<string> {
+export async function createManifest(
+  data: NewManifest,
+  actor: AuditActor,
+): Promise<{ id: string; manifestNumber: string }> {
   const seq = await nextSequence("manifest");
+  const manifestNumber = formatManifestNumber(seq);
   const t = totals(data.packages);
   const db = getDb();
   const nowISO = new Date().toISOString();
@@ -72,7 +82,7 @@ export async function createManifest(data: NewManifest, actor: AuditActor): Prom
     cleanForWrite({
       ...data,
       ...t,
-      manifestNumber: formatManifestNumber(seq),
+      manifestNumber,
       preparedBy: actor.uid,
       preparedByName: actor.name,
       status: data.status ?? "draft",
@@ -89,7 +99,7 @@ export async function createManifest(data: NewManifest, actor: AuditActor): Prom
         sealHandlingStatus: "manifested",
         status: "added_to_manifest",
         statusHistory: arrayUnion(
-          statusEvent("added_to_manifest", actor, `Added to manifest ${formatManifestNumber(seq)}`),
+          statusEvent("added_to_manifest", actor, `Added to manifest ${manifestNumber}`),
         ),
         updatedAt: nowISO,
         updatedBy: actor.uid,
@@ -99,7 +109,7 @@ export async function createManifest(data: NewManifest, actor: AuditActor): Prom
   await batch.commit();
 
   await logAudit(actor, { action: "manifest_create", entity: COLLECTIONS.manifests, entityId: ref.id });
-  return ref.id;
+  return { id: ref.id, manifestNumber };
 }
 
 export async function setManifestPackages(

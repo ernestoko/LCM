@@ -10,7 +10,7 @@ export interface BarChartDatum {
   color?: string;
 }
 
-const DEFAULT_BAR = "#3463ff"; // brand-500
+const DEFAULT_BAR = "#b6881a"; // brand-500 (gold)
 const AXIS = "#cdd9ec"; // navy-200
 const GRID = "#e3eaf5"; // navy-100
 const LABEL = "#3d5283"; // navy-700

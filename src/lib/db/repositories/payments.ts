@@ -8,6 +8,7 @@ import { logAudit, type AuditActor } from "../audit";
 import { formatPaymentNumber } from "@/lib/utils/ids";
 import { applyPaymentToInvoice } from "./invoices";
 import { bumpCustomerStats } from "./customers";
+import { GATEWAY_METHODS } from "@/types";
 import type { Payment } from "@/types";
 
 export type NewPayment = Omit<
@@ -27,7 +28,10 @@ export async function recordPayment(
       receiptNumber: formatPaymentNumber(seq),
       recordedBy: actor.uid,
       recordedByName: actor.name,
-      reconciliationStatus: data.reconciliationStatus ?? "unreconciled",
+      // Paystack/PayPal confirm payment at the gateway, so they auto-reconcile.
+      reconciliationStatus:
+        data.reconciliationStatus ??
+        (GATEWAY_METHODS.includes(data.method) ? "reconciled" : "unreconciled"),
     },
     actor,
   );

@@ -1,27 +1,58 @@
 import { cn } from "@/lib/utils/cn";
+import { Eagle } from "./Eagle";
 
-/** Liberty Cargo Movers mark — a stylised cargo container + ship motion lines. */
+const GOLD = "#b8860b";
+const GOLD_BRIGHT = "#e6c44d";
+const NAVY = "#0a1230";
+
+/** App eagle mark — the Liberty & Liberty Logistics falcon (gold). */
 export function Logo({ className, size = 36 }: { className?: string; size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className} aria-hidden>
-      <rect width="48" height="48" rx="11" fill="#0f1b3d" />
-      <path d="M9 30h30l-3 6H12l-3-6Z" fill="#c78d2c" />
-      <rect x="14" y="14" width="20" height="14" rx="2" fill="#fff" />
-      <path d="M14 19h20M19 14v14M24 14v14M29 14v14" stroke="#0f1b3d" strokeWidth="1.4" />
-      <path d="M8 24h4M36 24h4" stroke="#598bff" strokeWidth="2" strokeLinecap="round" />
-    </svg>
+    <Eagle
+      className={cn(className)}
+      fill={GOLD}
+      eyeFill="#ffffff"
+    />
   );
 }
 
-export function LogoWordmark({ className, compact }: { className?: string; compact?: boolean }) {
+/**
+ * App brand lockup: eagle + "Liberty & Liberty Logistics". `compact` shows the
+ * mark only; `light` flips colours for dark surfaces.
+ */
+export function LogoWordmark({
+  className,
+  compact,
+  light,
+}: {
+  className?: string;
+  compact?: boolean;
+  light?: boolean;
+}) {
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
-      <Logo size={32} />
+      <Eagle
+        className="h-8 w-8 shrink-0"
+        fill={light ? GOLD_BRIGHT : GOLD}
+        eyeFill={light ? NAVY : "#ffffff"}
+      />
       {!compact && (
-        <div className="leading-tight">
-          <p className="text-sm font-bold text-navy-900">Liberty Cargo Movers</p>
-          <p className="text-[10px] font-medium uppercase tracking-wider text-gold-600">
-            Logistics Platform
+        <div className="leading-none">
+          <p
+            className={cn(
+              "text-[15px] font-extrabold italic tracking-tight",
+              light ? "text-white" : "text-navy-900",
+            )}
+          >
+            Liberty &amp; Liberty
+          </p>
+          <p
+            className={cn(
+              "mt-1 text-[10px] font-bold uppercase tracking-[0.26em]",
+              light ? "text-gold-300" : "text-brand-600",
+            )}
+          >
+            Logistics
           </p>
         </div>
       )}

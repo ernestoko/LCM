@@ -34,6 +34,7 @@ import {
   useToast,
 } from "@/components/ui";
 import { CustomerForm } from "@/components/customers/CustomerForm";
+import { AddressBook } from "@/components/customers/AddressBook";
 import { formatMoney } from "@/lib/utils/format";
 import { formatDate, formatDateTime } from "@/lib/utils/dates";
 import {
@@ -172,6 +173,13 @@ function CustomerDetail() {
             </CardBody>
           </Card>
 
+          <AddressBook
+            addresses={customer.addresses ?? []}
+            editable={can("customers.edit")}
+            onSave={(next) => updateCustomer(id, { addresses: next }, actor)}
+            subtitle="Multiple delivery / pickup locations for this customer."
+          />
+
           <ShipmentHistoryCard customerId={id} />
         </div>
 
@@ -194,11 +202,11 @@ function CustomerDetail() {
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
               <div>
                 <p className="text-sm font-semibold text-navy-900">
-                  Owned by Liberty Cargo Movers
+                  Owned by Liberty &amp; Liberty Logistics
                 </p>
                 <p className="mt-0.5 text-xs text-navy-500">
-                  This customer record is owned and managed by Liberty Cargo Movers. Ownership is
-                  immutable.
+                  This customer record is owned and managed by Liberty &amp; Liberty Logistics.
+                  Ownership is immutable.
                 </p>
               </div>
             </CardBody>

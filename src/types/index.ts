@@ -1,5 +1,5 @@
 /**
- * Liberty Cargo Movers — Domain Model
+ * Liberty & Liberty Logistics — Domain Model
  * ----------------------------------------------------------------------------
  * Single source of truth for every Firestore document shape in the platform.
  * Each interface maps 1:1 to a collection in `src/lib/db/collections.ts`.
@@ -87,6 +87,20 @@ export interface ContactParty {
   city?: string;
 }
 
+/** A saved address in a customer's address book. */
+export interface CustomerAddress {
+  id: string;
+  label: string; // e.g. "Home", "Office", "Accra shop"
+  contactName?: string;
+  phone?: string;
+  line1: string;
+  city?: string;
+  region?: string;
+  postal?: string;
+  country: string;
+  isDefault?: boolean;
+}
+
 export interface Customer extends AuditStamp {
   id: string;
   customerCode: string; // human-friendly e.g. LCM-C-00123
@@ -96,6 +110,8 @@ export interface Customer extends AuditStamp {
   country: string;
   address?: string;
   city?: string;
+  /** Saved address book — multiple delivery / pickup addresses. */
+  addresses?: CustomerAddress[];
   /** Default sender & receiver, pre-filled when creating shipments. */
   defaultSender?: ContactParty;
   defaultReceiver?: ContactParty;
@@ -129,9 +145,13 @@ export interface Customer extends AuditStamp {
 // Rate Cards (SEAL controls pricing for the pilot)
 // ---------------------------------------------------------------------------
 
+/** Mode of carriage. Air = weight/item priced (legacy default). Sea = volume (CBM) + standard units. */
+export type CargoType = "air" | "sea";
+
 export type PricingType =
   | "item_based"
   | "weight_based"
+  | "sea_freight"
   | "service_fee"
   | "special_handling";
 
@@ -148,8 +168,12 @@ export interface RateItem {
   label: string;
   condition?: "new" | "used" | "any";
   unitPrice: number;
-  /** For weight pricing this is price PER POUND. */
-  perUnit?: "item" | "lb" | "kg";
+  /**
+   * Unit the price is expressed in: "lb"/"kg" for weight, "cbm" for sea volume,
+   * "unit" for a defined box/drum, "item" otherwise. For weight pricing this is
+   * price PER POUND.
+   */
+  perUnit?: "item" | "lb" | "kg" | "cbm" | "unit";
 }
 
 export interface RateChangeLogEntry {
@@ -174,6 +198,10 @@ export interface RateCard extends AuditStamp {
   items: RateItem[];
   /** Weight pricing convenience: price per lb when pricingType is weight_based. */
   pricePerLb?: number;
+  /** Sea pricing convenience: price per CBM (m³) when pricingType is sea_freight. */
+  pricePerCbm?: number;
+  /** Minimum billable CBM for sea_freight (e.g. bill at least 1 CBM). */
+  minimumCbm?: number;
   /** Service-fee config when pricingType is service_fee. */
   serviceFee?: {
     amount: number;
@@ -213,7 +241,11 @@ export interface CountryRoute extends AuditStamp {
   countryCode: string; // ISO-2, e.g. "GH"
   direction: RouteDirection;
   pricingType: PricingType;
+  /** Air or sea route. Undefined = air (legacy). Sea routes carry CBM/unit pricing + long transit. */
+  cargoType?: CargoType;
   defaultRate?: number;
+  /** Sea routes: fallback price per CBM when no sea rate card matches. */
+  defaultRatePerCbm?: number;
   currency: CurrencyCode;
   transitTimeDays?: number;
   prohibitedItems: string[];
@@ -248,12 +280,19 @@ export type ShipmentStatus =
   | "dispatched"
   | "in_transit"
   | "arrived_ghana"
+  // --- Sea-specific milestones (dedicated ocean-freight lifecycle) ---
+  | "loaded_into_container"
+  | "container_sealed"
+  | "vessel_departed"
+  | "at_sea"
+  | "arrived_at_port"
   | "customs_clearing"
   | "ready_for_pickup"
   | "out_for_delivery"
   | "delivered"
   | "issue_reported"
-  | "cancelled";
+  | "cancelled"
+  | "consolidated"; // a source package merged into a consolidated shipment
 
 export type SealHandlingStatus =
   | "not_started"
@@ -289,6 +328,38 @@ export interface ShipmentItem {
   declaredValue?: number;
 }
 
+// ---------------------------------------------------------------------------
+// Sea cargo composition (CBM-measured loose cargo + standard units)
+// ---------------------------------------------------------------------------
+
+/** A loose piece measured by dimensions; CBM = L×W×H (cm) ÷ 1,000,000 × quantity. */
+export interface SeaVolumetricPiece {
+  id: string;
+  label?: string; // e.g. "Wooden crate"
+  lengthCm: number;
+  widthCm: number;
+  heightCm: number;
+  quantity: number; // number of identical pieces
+}
+
+/** A standard unit (box / drum / barrel) priced at a flat per-unit rate. */
+export interface SeaUnitPiece {
+  id: string;
+  /** References a sea RateItem.key, e.g. "drum_200l". */
+  unitKey: string;
+  label: string; // snapshot label, e.g. "200L Drum"
+  quantity: number;
+}
+
+/**
+ * Sea cargo for a shipment. A single shipment may MIX loose (volumetric) cargo
+ * priced by CBM and standard units priced per box/drum — both bill on one invoice.
+ */
+export interface SeaCargo {
+  volumetric: SeaVolumetricPiece[];
+  units: SeaUnitPiece[];
+}
+
 export interface ShipmentStatusEvent {
   status: ShipmentStatus;
   at: ISODate;
@@ -308,12 +379,20 @@ export interface Shipment extends AuditStamp {
   originCountry: string;
   destinationCountry: string;
   routeCode: string;
+  /** Air (weight/item priced) or Sea (CBM + units). Undefined = air (legacy). */
+  cargoType?: CargoType;
   pricingMode: "item_based" | "weight_based";
   items: ShipmentItem[];
   /** Physical measurements (entered at intake by SEAL). */
   weightLb?: number;
+  /** Number of physical packages/boxes — drives how many labels are printed. */
+  pieces?: number;
   dimensions?: { lengthIn?: number; widthIn?: number; heightIn?: number };
   volumetricWeightLb?: number;
+  /** Sea cargo composition (when cargoType === "sea"). */
+  seaCargo?: SeaCargo;
+  /** Total chargeable volume in CBM, computed from seaCargo at intake. */
+  totalCbm?: number;
   declaredValue?: number;
   packageDescription?: string;
   packageCondition?: PackageCondition;
@@ -326,6 +405,12 @@ export interface Shipment extends AuditStamp {
   assignedSealOffice?: string;
   manifestId?: string;
   invoiceId?: string;
+  /** Consolidation — set on the consolidated parent shipment. */
+  isConsolidated?: boolean;
+  consolidationNumber?: string; // e.g. LCM-CON-000123
+  consolidatedFrom?: string[]; // source shipment ids merged into this one
+  /** Set on each source package, pointing at the consolidated parent. */
+  consolidatedInto?: string;
   expectedDeliveryDate?: ISODate;
   actualDeliveryDate?: ISODate;
   statusHistory: ShipmentStatusEvent[];
@@ -346,12 +431,88 @@ export interface Shipment extends AuditStamp {
 }
 
 // ---------------------------------------------------------------------------
+// Customer self-service requests (pickup / ship-to-warehouse)
+// ---------------------------------------------------------------------------
+
+/** What the customer is asking us to do. */
+export type RequestType = "pickup" | "ship_to_warehouse";
+
+export type RequestStatus =
+  | "submitted" // customer just created it
+  | "in_review" // staff are looking at it
+  | "scheduled" // pickup booked / awaiting parcel at the warehouse
+  | "received" // parcel collected or arrived at the hub
+  | "converted" // turned into a tracked shipment
+  | "completed"
+  | "cancelled";
+
+export interface RequestStatusEvent {
+  status: RequestStatus;
+  at: ISODate;
+  by: string;
+  byName?: string;
+  note?: string;
+}
+
+/**
+ * A lightweight, customer-initiated request. Customers can create these with a
+ * short form; staff triage them in a queue and convert them into full
+ * Shipments. Kept deliberately separate from the strict Shipment lifecycle so
+ * the customer experience stays simple.
+ */
+export interface ShipmentRequest extends AuditStamp {
+  id: string;
+  requestNumber: string; // e.g. LCM-REQ-000123
+  type: RequestType;
+  customerId: string;
+  customerName: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  status: RequestStatus;
+
+  // What is being moved
+  /** Preferred mode of carriage. Undefined = air (default). */
+  cargoType?: CargoType;
+  packageDescription: string;
+  pieces?: number;
+  approxWeightLb?: number;
+  declaredValue?: number;
+  destinationCountry?: string;
+  receiver?: ContactParty;
+
+  // Pickup-specific (type === "pickup")
+  pickup?: {
+    address: string;
+    city?: string;
+    country: string;
+    contactPhone?: string;
+    preferredDate?: ISODate;
+    preferredWindow?: "morning" | "afternoon" | "evening";
+  };
+
+  // Ship-to-warehouse specific (type === "ship_to_warehouse")
+  inbound?: {
+    warehouse: string; // hub key, e.g. "usa" | "ghana"
+    carrier?: string; // UPS / USPS / Amazon / etc.
+    carrierTracking?: string;
+    expectedArrival?: ISODate;
+  };
+
+  notes?: string;
+  photoUrls: string[];
+  linkedShipmentId?: string;
+  statusHistory: RequestStatusEvent[];
+  handledBy?: string;
+  handledByName?: string;
+}
+
+// ---------------------------------------------------------------------------
 // Invoices
 // ---------------------------------------------------------------------------
 
 export interface InvoiceLine {
   description: string;
-  type: "item" | "weight" | "service_fee" | "special_handling" | "adjustment";
+  type: "item" | "weight" | "cbm" | "unit" | "service_fee" | "special_handling" | "adjustment";
   quantity: number;
   unitPrice: number;
   amount: number;
@@ -412,12 +573,18 @@ export type ManifestStatus =
   | "arrived"
   | "closed";
 
+export type ContainerType = "20ft" | "40ft" | "40ft_hc";
+
 export interface ManifestPackage {
   shipmentId: string;
   trackingNumber: string;
   customerName: string;
   description: string;
   weightLb: number;
+  /** Sea cargo volume for this package (CBM); 0/undefined for air. */
+  cbm?: number;
+  /** Carriage mode of the source shipment (drives sea container totals). */
+  cargoType?: CargoType;
   declaredValue: number;
   paymentStatus: PaymentStatus;
 }
@@ -425,6 +592,14 @@ export interface ManifestPackage {
 export interface Manifest extends AuditStamp {
   id: string;
   manifestNumber: string; // e.g. LCM-MF-000045
+  /** Air manifest or sea container loading list. Undefined = air (legacy). */
+  cargoType?: CargoType;
+  /** Sea: container identity + capacity for FCL/LCL fill tracking. */
+  containerNumber?: string;
+  containerType?: ContainerType;
+  loadType?: "fcl" | "lcl";
+  capacityCbm?: number;
+  totalCbm?: number;
   routeCode: string;
   origin: string;
   destination: string;
@@ -455,9 +630,14 @@ export type PaymentMethod =
   | "mobile_money"
   | "bank_transfer"
   | "card"
+  | "paystack"
+  | "paypal"
   | "zelle"
   | "cashapp"
   | "other";
+
+/** Online gateways that confirm payment instantly and auto-reconcile. */
+export const GATEWAY_METHODS: PaymentMethod[] = ["paystack", "paypal"];
 
 export type ReconciliationStatus =
   | "unreconciled"
@@ -539,7 +719,8 @@ export type NotificationEvent =
   | "out_for_delivery"
   | "delivered"
   | "delay_notice"
-  | "complaint_update";
+  | "complaint_update"
+  | "recipient_incoming"; // to the consignee: a package is on its way to you
 
 export interface NotificationRecord extends AuditStamp {
   id: string;

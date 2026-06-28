@@ -48,7 +48,7 @@ function ImportCustomers() {
             <span className="font-mono">walk_in</span>.
           </p>
           <p className="mt-1">
-            Every imported record is owned by Liberty Cargo Movers. Use the “Download template”
+            Every imported record is owned by Liberty &amp; Liberty Logistics. Use the “Download template”
             button below for a ready-made starting point.
           </p>
         </InfoBanner>

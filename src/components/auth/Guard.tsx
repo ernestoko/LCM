@@ -20,9 +20,11 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     if (!loading && !firebaseUser) router.replace("/login");
   }, [loading, firebaseUser, configured, router]);
 
+  // A subtle in-app loader for session restore / route guards — the full branded
+  // splash is reserved for the actual sign-in on the login page.
   if (!configured) return null;
-  if (loading) return <LoadingState label="Signing you in…" />;
-  if (!firebaseUser) return <LoadingState label="Redirecting…" />;
+  if (loading) return <LoadingState label="Loading your workspace…" />;
+  if (!firebaseUser) return null;
 
   if (firebaseUser && !user) {
     return (
@@ -40,16 +42,24 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-/** Renders children only if the user holds the permission; otherwise a notice. */
+/**
+ * Renders children only if the user holds `permission` (or ANY of `anyOf`);
+ * otherwise a notice.
+ */
 export function RequirePermission({
   permission,
+  anyOf,
   children,
 }: {
-  permission: Permission;
+  permission?: Permission;
+  anyOf?: Permission[];
   children: React.ReactNode;
 }) {
   const { can } = useAuth();
-  if (!can(permission)) {
+  const allowed =
+    (permission ? can(permission) : false) ||
+    (anyOf ? anyOf.some((p) => can(p)) : false);
+  if (!allowed) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center px-6 text-center">
         <ShieldX className="mb-3 h-10 w-10 text-red-400" />

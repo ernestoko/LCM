@@ -2,7 +2,7 @@
   "name": "lcm-logistics-platform",
   "version": "1.0.0",
   "private": true,
-  "description": "Liberty Cargo Movers Logistics Platform — manages the 6-month outsourced cargo arrangement with SEAL Logistics.",
+  "description": "Liberty & Liberty Logistics — global logistics & international shipping platform.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -23,6 +23,7 @@
     "firebase-admin": "^12.5.0",
     "lucide-react": "^0.445.0",
     "next": "14.2.35",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.53.0",

@@ -17,12 +17,13 @@ import {
   SectionHeading,
   CoverageStrip,
   CTASection,
+  Photo,
 } from "@/components/marketing";
 
 export const metadata: Metadata = {
   title: "Coverage & Global Network",
   description:
-    "LCM Logistics connects the USA, Ghana, Africa and the world. Explore our trade lanes, typical transit times by mode, and how we handle customs clearance on every shipment.",
+    "Liberty & Liberty Logistics connects the USA, Ghana, Africa and the world. Explore our trade lanes, typical transit times by mode, and how we handle customs clearance on every shipment.",
 };
 
 type Lane = {
@@ -133,11 +134,20 @@ const routes: Route[] = [
 export default function CoveragePage() {
   return (
     <>
-      {/* Hero */}
-      <section className="relative isolate overflow-hidden bg-gradient-to-br from-navy-900 via-navy-900 to-brand-800">
+      {/* Hero — navy band over a real container-port photo */}
+      <section className="relative isolate overflow-hidden bg-navy-950">
+        <Photo
+          src="/images/hero-port.jpg"
+          alt="Aerial view of a global container terminal at work"
+          overlay="hero"
+          priority
+          sizes="100vw"
+          position="center"
+          className="absolute inset-0"
+        />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
           style={{
             backgroundImage:
               "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
@@ -148,26 +158,101 @@ export default function CoveragePage() {
           aria-hidden="true"
           className="pointer-events-none absolute -left-24 -top-32 h-96 w-96 rounded-full bg-brand-500/20 blur-3xl"
         />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-40 -right-24 h-96 w-96 rounded-full bg-gold-500/10 blur-3xl"
+        />
         <Container className="relative py-16 sm:py-24">
           <SectionHeading
             eyebrow="Global network"
             title="One partner, connected to the world"
-            subtitle="From our hubs in the USA and Ghana, LCM Logistics moves your cargo across Africa and around the globe. Explore the lanes we run, how long shipments take, and how we clear customs on both sides."
+            subtitle="From our hubs in the USA and Ghana, Liberty & Liberty Logistics moves your cargo across Africa and around the globe. Explore the lanes we run, how long shipments take, and how we clear customs on both sides."
             align="center"
             light
           />
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-navy-100">
+            <span className="inline-flex items-center gap-2">
+              <Plane className="h-4 w-4 text-gold-300" aria-hidden="true" />
+              USA &#8644; Ghana
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-gold-300" aria-hidden="true" />
+              Worldwide &#8594; USA
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <Globe2 className="h-4 w-4 text-gold-300" aria-hidden="true" />
+              USA &#8594; Africa &amp; beyond
+            </span>
+          </div>
         </Container>
       </section>
 
-      {/* Coverage strip */}
+      {/* Coverage strip — the global trade-lane network */}
       <Section className="bg-white">
         <Container>
           <CoverageStrip />
         </Container>
       </Section>
 
+      {/* Reach showcase — imagery paired with the network statement */}
+      <Section className="bg-navy-50 !pt-0">
+        <Container>
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
+            <div className="relative order-2 lg:order-1">
+              <Photo
+                src="/images/global-window.jpg"
+                alt="View of the earth from altitude, evoking worldwide reach"
+                overlay="feature"
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="aspect-[4/3] w-full rounded-3xl shadow-lift ring-1 ring-navy-900/5"
+              />
+              <span
+                className="pointer-events-none absolute -bottom-3 -right-3 h-16 w-16 rounded-2xl border-2 border-gold-400/60"
+                aria-hidden="true"
+              />
+            </div>
+            <div className="order-1 lg:order-2">
+              <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-gold-600">
+                <span className="h-px w-6 bg-gold-400" aria-hidden="true" />
+                Truly worldwide
+              </span>
+              <h2 className="mt-3 text-balance text-3xl font-bold tracking-tight text-navy-900 sm:text-4xl">
+                Two hubs, one network reaching every market
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-navy-600 sm:text-lg">
+                Our hubs in Houston, USA and Tema/Accra, Ghana anchor a network
+                that connects buyers, sellers and families on both sides of the
+                Atlantic. From there we link to ports, airports and last-mile
+                partners across Africa, Asia, Europe and the Gulf — so almost
+                anything can reach the USA, and from the USA we reach Ghana,
+                Africa and beyond.
+              </p>
+              <dl className="mt-8 grid grid-cols-3 gap-4 text-center">
+                {[
+                  { value: "14+", label: "Countries served" },
+                  { value: "2", label: "Continental hubs" },
+                  { value: "99%", label: "On-time delivery" },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-2xl border border-navy-100 bg-white p-4 shadow-card"
+                  >
+                    <dt className="text-2xl font-bold tracking-tight text-navy-900">
+                      {item.value}
+                    </dt>
+                    <dd className="mt-1 text-xs font-medium text-navy-600">
+                      {item.label}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+        </Container>
+      </Section>
+
       {/* Lanes we operate */}
-      <Section className="bg-navy-50">
+      <Section className="bg-white">
         <Container>
           <SectionHeading
             eyebrow="Lanes we operate"
@@ -208,7 +293,7 @@ export default function CoveragePage() {
       </Section>
 
       {/* Transit-time table */}
-      <Section className="bg-white">
+      <Section className="bg-navy-50">
         <Container>
           <SectionHeading
             eyebrow="Transit times"
@@ -284,8 +369,8 @@ export default function CoveragePage() {
         </Container>
       </Section>
 
-      {/* Customs / clearance note */}
-      <Section className="bg-navy-50">
+      {/* Customs / clearance note — anchor target for footer "Customs Guidance" */}
+      <Section id="customs" className="scroll-mt-24 bg-white">
         <Container>
           <div className="relative overflow-hidden rounded-3xl border border-navy-100 bg-white p-8 shadow-card sm:p-12">
             <span
@@ -328,6 +413,8 @@ export default function CoveragePage() {
         subtitle="Tell us your origin, destination and timeline and we'll recommend the best mode and a transparent price — anywhere to or from the USA, Ghana and the world."
         primary={{ label: "Get a quote", href: "/contact" }}
         secondary={{ label: "Explore services", href: "/services" }}
+        image="/images/ocean-freight.jpg"
+        imageAlt="Container ship carrying cargo across the ocean"
       />
     </>
   );

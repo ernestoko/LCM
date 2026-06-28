@@ -28,8 +28,16 @@ export function checkDispatchReadiness(
   if (g.requirePhoto && (!shipment.photoUrls || shipment.photoUrls.length === 0)) {
     blockers.push("No package photo has been uploaded.");
   }
-  if (g.requireWeight && !shipment.weightLb) {
-    blockers.push("Package weight has not been entered.");
+  if (g.requireWeight) {
+    if (shipment.cargoType === "sea") {
+      const cbm = shipment.totalCbm ?? 0;
+      const units = shipment.seaCargo?.units?.length ?? 0;
+      if (cbm <= 0 && units === 0) {
+        blockers.push("Sea cargo (CBM or standard units) has not been entered.");
+      }
+    } else if (!shipment.weightLb) {
+      blockers.push("Package weight has not been entered.");
+    }
   }
   if (!shipment.customerId) {
     blockers.push("No customer record is linked to this shipment.");
@@ -60,10 +68,13 @@ export function canMoveToStatus(
   if (shipment.locked) {
     return { ok: false, reason: "Record is locked by a Super Admin." };
   }
-  // Movement out of the warehouse requires passing the dispatch guards.
+  // Movement out of the warehouse requires passing the dispatch guards —
+  // for air at ready/dispatched, for sea at container loading / vessel departure.
   const dispatchPoint: Shipment["status"][] = [
     "ready_for_dispatch",
     "dispatched",
+    "loaded_into_container",
+    "vessel_departed",
   ];
   if (dispatchPoint.includes(next)) {
     const check = checkDispatchReadiness(shipment, settings);

@@ -17,7 +17,7 @@ export default function TrackLandingPage() {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const trackingNumber = value.trim();
+    const trackingNumber = value.trim().toUpperCase();
     if (!trackingNumber) return;
     router.push(`/track/${encodeURIComponent(trackingNumber)}`);
   };
@@ -27,7 +27,7 @@ export default function TrackLandingPage() {
       {/* Header */}
       <header className="border-b border-navy-100 bg-white">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-4">
-          <Link href="/track" aria-label="Liberty Cargo Movers — Track">
+          <Link href="/track" aria-label="Liberty & Liberty Logistics — Track">
             <LogoWordmark />
           </Link>
           <Link
@@ -77,7 +77,7 @@ export default function TrackLandingPage() {
       {/* Footer */}
       <footer className="border-t border-navy-100 bg-white">
         <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-between gap-2 px-4 py-5 text-xs text-navy-400 sm:flex-row">
-          <p>© {new Date().getFullYear()} Liberty Cargo Movers. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Liberty &amp; Liberty Logistics. All rights reserved.</p>
           <Link href="/login" className="font-medium text-navy-500 hover:text-brand-600">
             Staff sign in
           </Link>

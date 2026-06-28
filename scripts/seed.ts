@@ -20,7 +20,8 @@ import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
-import { SEED_ITEM_RATES, SEED_ROUTES, SEED_SERVICE_FEE } from "../src/constants/seed-data";
+import { SEED_ITEM_RATES, SEED_ROUTES, SEED_SERVICE_FEE, SEED_SEA_RATE } from "../src/constants/seed-data";
+import { SEA_UNIT_DEFS } from "../src/constants/seaUnits";
 import { defaultCommissionRules } from "../src/lib/pricing/commission";
 
 // --- Load .env.local (no dotenv dependency) --------------------------------
@@ -125,7 +126,7 @@ async function main() {
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@libertycargomovers.com";
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "Liberty@2026!";
 
-  console.log("\n🚢 Seeding Liberty Cargo Movers platform…\n");
+  console.log("\n🚢 Seeding Liberty & Liberty Logistics platform…\n");
 
   // 1. Super Admin -----------------------------------------------------------
   console.log("👤 Users");
@@ -141,8 +142,8 @@ async function main() {
   if (process.env.SEED_DEMO === "true") {
     await ensureUser({ email: "ops@libertycargomovers.com", password: adminPassword, displayName: "Liberty Operations", role: "liberty_admin", org: "liberty" });
     await ensureUser({ email: "finance@libertycargomovers.com", password: adminPassword, displayName: "Finance User", role: "finance_user", org: "liberty" });
-    await ensureUser({ email: "seal@seallogistics.com", password: adminPassword, displayName: "Operations Manager", role: "seal_admin", org: "seal" });
-    await ensureUser({ email: "warehouse@seallogistics.com", password: adminPassword, displayName: "Warehouse Staff", role: "seal_staff", org: "seal" });
+    await ensureUser({ email: "operations@libertylogistics.com", password: adminPassword, displayName: "Operations Manager", role: "seal_admin", org: "seal" });
+    await ensureUser({ email: "warehouse@libertylogistics.com", password: adminPassword, displayName: "Warehouse Staff", role: "seal_staff", org: "seal" });
   }
 
   // 2. Platform settings -----------------------------------------------------
@@ -299,6 +300,35 @@ async function main() {
     console.log(`   • Weight card — ${r.countryName} (${direction}) @ $${r.pricePerLb}/lb`);
   }
 
+  // Sea-freight card per route (CBM rate + minimum CBM + standard unit prices).
+  // PLACEHOLDER rates — edited on the active sea rate card as rates change.
+  for (const r of SEED_ROUTES) {
+    const direction = r.direction ?? "usa_to_country";
+    const cardCountry =
+      r.destination ?? (direction === "country_to_usa" ? "United States" : r.countryName);
+    await db.collection("rateCards").doc(`seed-sea-${r.code}`).set(
+      {
+        id: `seed-sea-${r.code}`,
+        name: `Sea Pricing — ${r.countryName} (${direction})`,
+        pricingType: "sea_freight",
+        route: r.code,
+        country: cardCountry,
+        pricePerCbm: SEED_SEA_RATE.pricePerCbm,
+        minimumCbm: SEED_SEA_RATE.minimumCbm,
+        items: SEA_UNIT_DEFS.map((d) => ({
+          key: d.key,
+          label: d.label,
+          condition: "any",
+          unitPrice: d.defaultPrice,
+          perUnit: "unit",
+        })),
+        ...baseCard,
+      },
+      { merge: true },
+    );
+    console.log(`   • Sea card — ${r.countryName} (${direction}) @ $${SEED_SEA_RATE.pricePerCbm}/CBM`);
+  }
+
   // Service-fee card
   await db.collection("rateCards").doc("seed-service-fee").set(
     {
@@ -332,8 +362,8 @@ async function main() {
     console.log("  Demo staff (same password):");
     console.log("    ops@libertycargomovers.com (Liberty Admin)");
     console.log("    finance@libertycargomovers.com (Finance)");
-    console.log("    seal@seallogistics.com (Operations Manager)");
-    console.log("    warehouse@seallogistics.com (Warehouse Staff)");
+    console.log("    operations@libertylogistics.com (Operations Manager)");
+    console.log("    warehouse@libertylogistics.com (Warehouse Staff)");
     console.log("────────────────────────────────────────────");
   }
   console.log("  ⚠️  Change these passwords after first login.\n");

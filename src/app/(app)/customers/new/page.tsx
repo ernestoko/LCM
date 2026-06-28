@@ -47,7 +47,7 @@ function NewCustomerForm() {
 
       <PageHeader
         title="New Customer"
-        description="Create a customer profile owned by Liberty Cargo Movers."
+        description="Create a customer profile owned by Liberty & Liberty Logistics."
       />
 
       <Card>

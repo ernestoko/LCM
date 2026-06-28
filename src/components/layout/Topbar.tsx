@@ -16,7 +16,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-navy-100 bg-white/90 px-4 backdrop-blur lg:px-6">
+    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-navy-100 bg-white/90 px-4 backdrop-blur lg:px-6 print:hidden">
       <button onClick={onMenu} className="rounded-lg p-2 text-navy-500 hover:bg-navy-100 lg:hidden">
         <Menu className="h-5 w-5" />
       </button>

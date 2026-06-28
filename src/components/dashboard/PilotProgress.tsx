@@ -16,7 +16,7 @@ export function PilotProgress({ pilot, metrics }: { pilot: PilotTracker; metrics
     <Card>
       <CardHeader
         title="6-Month Outsourcing Pilot"
-        subtitle={`${formatDate(pilot.startDate)} → ${formatDate(pilot.endDate)} · LCM Logistics`}
+        subtitle={`${formatDate(pilot.startDate)} → ${formatDate(pilot.endDate)} · Liberty & Liberty Logistics`}
         action={
           <Link href="/reports/pilot" className="text-xs font-medium text-brand-600 hover:underline">
             Full report

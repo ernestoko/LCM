@@ -1,12 +1,15 @@
-# Liberty Cargo Movers — Logistics Platform
+# Liberty & Liberty Logistics — Logistics Platform
 
-A production-ready logistics management platform for **Liberty Cargo Movers** to
-run its **6-month outsourced cargo operation with SEAL Logistics** (USA → Ghana,
-expanding to Liberia, Nigeria, Cameroon, Kenya & South Africa).
+A production-ready logistics management platform for **Liberty & Liberty
+Logistics** — global logistics and international shipping to and from the USA,
+to and from Ghana, and across Africa and the world (with multi-directional
+lanes for Liberia, Nigeria, Cameroon, Kenya, South Africa and beyond).
 
-Liberty **owns the platform, customer records and business intelligence**; SEAL
-**controls pricing** (via approved rate cards) and **performs cargo operations**
-through controlled, role-scoped access.
+Liberty **owns the platform, customer records and business intelligence**; an
+**operations partner performs cargo handling** (intake, manifests, dispatch)
+through controlled, role-scoped access, with pricing governed by approved rate
+cards. Customers self-serve — onboarding, pickup requests, ship-to-warehouse
+pre-alerts, package consolidation and tracking.
 
 > **New here? Read [`SETUP.md`](./SETUP.md) to install, configure Firebase, seed
 > data, and deploy.** ⚠️ Do not run `npm install` inside a Google Drive folder —

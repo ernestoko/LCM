@@ -1,5 +1,5 @@
 /**
- * Liberty Cargo Movers — Notification channel resolution
+ * Liberty & Liberty Logistics — Notification channel resolution
  * ----------------------------------------------------------------------------
  * ISOMORPHIC, pure module. Safe to import from both server and client code:
  * no React, no Firebase, no `"use client"`, no `server-only`. It only maps a

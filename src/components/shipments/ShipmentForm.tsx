@@ -1,11 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Trash2, AlertTriangle } from "lucide-react";
+import Link from "next/link";
+import { Plus, Trash2, AlertTriangle, Users, Plane, Ship } from "lucide-react";
 import type {
   ContactParty,
   ShipmentItem,
   Customer,
+  CargoType,
+  SeaCargo,
 } from "@/types";
 import type { NewShipment } from "@/lib/db/repositories/shipments";
 import { useCustomers } from "@/lib/db/repositories/customers";
@@ -13,6 +16,8 @@ import { useRateCards } from "@/lib/db/repositories/rateCards";
 import { useRoutes } from "@/lib/db/repositories/routes";
 import { usePlatformSettings } from "@/lib/db/repositories/settings";
 import { calculatePricing, selectActiveRateCard } from "@/lib/pricing/engine";
+import { SeaCargoEditor } from "@/components/shipments/SeaCargoEditor";
+import { totalCbm, totalSeaPieces } from "@/lib/utils/cbm";
 import { routeCode as makeRouteCode } from "@/lib/utils/ids";
 import { formatMoney } from "@/lib/utils/format";
 import {
@@ -33,6 +38,7 @@ import {
   Button,
   Label,
   InfoBanner,
+  EmptyState,
 } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 
@@ -91,10 +97,12 @@ export function ShipmentForm({
     SUPPORTED_COUNTRIES.find((c) => c === "Ghana") ?? SUPPORTED_COUNTRIES[0],
   );
 
-  // --- Pricing --------------------------------------------------------------
+  // --- Carriage & pricing ---------------------------------------------------
+  const [cargoType, setCargoType] = useState<CargoType>("air");
   const [pricingMode, setPricingMode] = useState<PricingMode>("item_based");
   const [items, setItems] = useState<ItemRow[]>([newItemRow()]);
   const [weightLb, setWeightLb] = useState("");
+  const [seaCargo, setSeaCargo] = useState<SeaCargo>({ volumetric: [], units: [] });
 
   // --- Misc -----------------------------------------------------------------
   const [declaredValue, setDeclaredValue] = useState("");
@@ -178,26 +186,31 @@ export function ShipmentForm({
   const pricing = useMemo(() => {
     const itemRateCard = selectActiveRateCard(rateCards, "item_based", routeCode, destinationCountry);
     const weightRateCard = selectActiveRateCard(rateCards, "weight_based", routeCode, destinationCountry);
+    const seaRateCard = selectActiveRateCard(rateCards, "sea_freight", routeCode, destinationCountry);
     const route = routes.find((r) => r.code === routeCode) ?? null;
     return calculatePricing(
       {
+        cargoType,
         pricingMode,
         items: shipmentItems,
         weightLb: pricingMode === "weight_based" ? Number(weightLb) || 0 : undefined,
+        seaCargo: cargoType === "sea" ? seaCargo : undefined,
         routeCode,
         destinationCountry,
         customerId,
         customerSource: selectedCustomer?.source,
       },
-      { itemRateCard, weightRateCard, route, settings },
+      { itemRateCard, weightRateCard, seaRateCard, route, settings },
     );
   }, [
     rateCards,
     routes,
     settings,
+    cargoType,
     pricingMode,
     shipmentItems,
     weightLb,
+    seaCargo,
     routeCode,
     destinationCountry,
     customerId,
@@ -221,7 +234,12 @@ export function ShipmentForm({
       setError("Receiver name is required.");
       return;
     }
-    if (pricingMode === "item_based") {
+    if (cargoType === "sea") {
+      if (totalCbm(seaCargo) <= 0 && seaCargo.units.length === 0) {
+        setError("Add measured cargo (CBM) or at least one standard unit.");
+        return;
+      }
+    } else if (pricingMode === "item_based") {
       if (shipmentItems.length === 0 || shipmentItems.some((i) => i.quantity <= 0)) {
         setError("Add at least one item with a quantity of 1 or more.");
         return;
@@ -231,6 +249,7 @@ export function ShipmentForm({
       return;
     }
 
+    const isSea = cargoType === "sea";
     const data: NewShipment = {
       customerId,
       customerName,
@@ -239,9 +258,14 @@ export function ShipmentForm({
       originCountry,
       destinationCountry,
       routeCode,
-      pricingMode,
-      items: shipmentItems,
-      weightLb: pricingMode === "weight_based" ? Number(weightLb) : undefined,
+      cargoType,
+      // Sea shipments still carry a nominal pricingMode (unused by sea pricing).
+      pricingMode: isSea ? "weight_based" : pricingMode,
+      items: isSea ? [] : shipmentItems,
+      weightLb: !isSea && pricingMode === "weight_based" ? Number(weightLb) : undefined,
+      seaCargo: isSea ? seaCargo : undefined,
+      totalCbm: isSea ? totalCbm(seaCargo) : undefined,
+      pieces: isSea ? totalSeaPieces(seaCargo) || 1 : undefined,
       declaredValue: declaredValue ? Number(declaredValue) : undefined,
       packageDescription: packageDescription || undefined,
       expectedDeliveryDate: expectedDeliveryDate
@@ -253,6 +277,28 @@ export function ShipmentForm({
   }
 
   const currency = pricing.currency;
+
+  // A shipment can only be created for a registered customer account.
+  if (!customersLoading && customers.length === 0) {
+    return (
+      <Card>
+        <CardBody>
+          <EmptyState
+            icon={Users}
+            title="Create a customer account first"
+            description="Every shipment must be linked to a registered customer. Onboard the customer, then create their shipment."
+            action={
+              <Link href="/customers/new">
+                <Button>
+                  <Plus className="h-4 w-4" /> Create customer
+                </Button>
+              </Link>
+            }
+          />
+        </CardBody>
+      </Card>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-3">
@@ -342,30 +388,60 @@ export function ShipmentForm({
         {/* Pricing */}
         <Card>
           <CardHeader
-            title="Pricing"
-            subtitle="Choose how this shipment is priced."
+            title="Carriage & Pricing"
+            subtitle={
+              cargoType === "sea"
+                ? "Sea freight — priced by volume (CBM) and standard units."
+                : "Air freight — priced by item or by weight."
+            }
             action={
               <div className="inline-flex rounded-lg border border-navy-200 p-0.5">
-                {(["item_based", "weight_based"] as PricingMode[]).map((mode) => (
+                {(
+                  [
+                    ["air", "Air", Plane],
+                    ["sea", "Sea", Ship],
+                  ] as [CargoType, string, typeof Plane][]
+                ).map(([mode, label, Icon]) => (
                   <button
                     key={mode}
                     type="button"
-                    onClick={() => setPricingMode(mode)}
+                    onClick={() => setCargoType(mode)}
                     className={cn(
-                      "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-                      pricingMode === mode
+                      "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                      cargoType === mode
                         ? "bg-brand-600 text-white"
                         : "text-navy-600 hover:bg-navy-50",
                     )}
                   >
-                    {PRICING_TYPE_LABELS[mode]}
+                    <Icon className="h-3.5 w-3.5" /> {label}
                   </button>
                 ))}
               </div>
             }
           />
           <CardBody className="space-y-4">
-            {pricingMode === "item_based" ? (
+            {cargoType === "sea" ? (
+              <SeaCargoEditor value={seaCargo} onChange={setSeaCargo} />
+            ) : (
+              <>
+                <div className="inline-flex rounded-lg border border-navy-200 p-0.5">
+                  {(["item_based", "weight_based"] as PricingMode[]).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setPricingMode(mode)}
+                      className={cn(
+                        "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                        pricingMode === mode
+                          ? "bg-brand-600 text-white"
+                          : "text-navy-600 hover:bg-navy-50",
+                      )}
+                    >
+                      {PRICING_TYPE_LABELS[mode]}
+                    </button>
+                  ))}
+                </div>
+                {pricingMode === "item_based" ? (
               <div className="space-y-3">
                 {items.map((row, idx) => {
                   const rateOptions = ratesForCategory(row.category);
@@ -452,6 +528,8 @@ export function ShipmentForm({
                   placeholder="0.00"
                 />
               </Field>
+                )}
+              </>
             )}
           </CardBody>
         </Card>

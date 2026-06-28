@@ -8,15 +8,16 @@ import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://libertylogistics.com"),
   title: {
-    default: "Liberty Cargo Movers — Logistics Platform",
-    template: "%s · Liberty Cargo Movers",
+    default: "Liberty & Liberty Logistics — Global Logistics & International Shipping",
+    template: "%s · Liberty & Liberty Logistics",
   },
   description:
-    "Liberty Cargo Movers logistics platform — customer onboarding, managed rate cards, shipment tracking, manifests, invoicing and reporting for the USA → Ghana cargo pilot.",
+    "Liberty & Liberty Logistics moves cargo to and from the USA, to and from Ghana, and across Africa and the world — air & ocean freight, express parcel, door-to-door delivery, customs clearance and warehousing, with real-time tracking and transparent pricing.",
   manifest: "/manifest.webmanifest",
-  applicationName: "Liberty Cargo Movers",
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "Liberty Cargo" },
+  applicationName: "Liberty & Liberty Logistics",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Liberty" },
   icons: { icon: "/favicon.svg", apple: "/favicon.svg" },
 };
 

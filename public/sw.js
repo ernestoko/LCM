@@ -1,5 +1,5 @@
 /*
- * Liberty Cargo Movers — service worker.
+ * Liberty & Liberty Logistics — service worker.
  * Dependency-free, vanilla JS. Bump CACHE_VERSION to invalidate old caches.
  *
  * Strategy:
@@ -9,7 +9,7 @@
  *               assets. API requests (/api/*) are NEVER cached — always network.
  */
 
-const CACHE_VERSION = "lcm-v1";
+const CACHE_VERSION = "liberty-v2";
 const CACHE_NAME = CACHE_VERSION;
 
 // Minimal app shell to keep core pages available offline.

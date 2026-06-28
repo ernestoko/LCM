@@ -11,6 +11,7 @@ import {
   FileText,
   AlertTriangle,
   Tag,
+  Layers,
 } from "lucide-react";
 import type {
   Shipment,
@@ -35,9 +36,10 @@ import { useRoutes } from "@/lib/db/repositories/routes";
 import { usePlatformSettings } from "@/lib/db/repositories/settings";
 import { checkDispatchReadiness } from "@/lib/shipments/guards";
 import { notify } from "@/lib/notifications/service";
+import { notifyRecipientIncoming, trackUrlFor } from "@/lib/notifications/shipment";
 import {
   SHIPMENT_STATUS_META,
-  SHIPMENT_STATUS_ORDER,
+  shipmentStatusOrder,
   PAYMENT_STATUS_META,
 } from "@/constants/statuses";
 import {
@@ -72,6 +74,7 @@ import { DeliveryProofCard } from "@/components/shipments/DeliveryProofCard";
 import { DocumentManager } from "@/components/shipments/DocumentManager";
 import { channelsForCustomer } from "@/lib/notifications/channels";
 import { formatMoney, formatWeight } from "@/lib/utils/format";
+import { pieceCbm } from "@/lib/utils/cbm";
 import { formatDate } from "@/lib/utils/dates";
 
 /** Map a target status to the customer lifecycle notification, where one exists. */
@@ -83,10 +86,17 @@ const STATUS_NOTIFICATION: Partial<Record<ShipmentStatus, NotificationEvent>> = 
   dispatched: "dispatched",
   in_transit: "in_transit",
   arrived_ghana: "arrived",
+  // Sea milestones reuse the closest customer-facing event.
+  vessel_departed: "dispatched",
+  at_sea: "in_transit",
+  arrived_at_port: "arrived",
   ready_for_pickup: "ready_for_pickup",
   out_for_delivery: "out_for_delivery",
   delivered: "delivered",
 };
+
+/** Statuses that mean "the shipment has left for the customer" — alert the recipient. */
+const SHIPPED_STATUSES: ShipmentStatus[] = ["dispatched", "vessel_departed"];
 
 export default function ShipmentDetailPage() {
   const params = useParams<{ id: string }>();
@@ -131,6 +141,7 @@ export default function ShipmentDetailPage() {
   }
 
   const route = routes.find((r) => r.code === shipment.routeCode) ?? null;
+  const isSea = shipment.cargoType === "sea";
 
   async function loadLinkedCustomer(): Promise<Customer | null> {
     if (!shipment?.customerId) return null;
@@ -138,25 +149,30 @@ export default function ShipmentDetailPage() {
   }
 
   async function maybeNotifyForStatus(target: ShipmentStatus) {
+    if (!shipment) return;
     const event = STATUS_NOTIFICATION[target];
-    if (!event || !shipment) return;
     const customer = await loadLinkedCustomer();
-    if (!customer) return;
-    await notify(
-      event,
-      {
-        userId: customer.id,
-        name: customer.fullName,
-        email: customer.email,
-        phone: customer.phone,
-      },
-      {
-        trackingNumber: shipment.trackingNumber,
-        route: shipment.routeCode,
-        status: SHIPMENT_STATUS_META[target].label,
-      },
-      { shipmentId: shipment.id, channels: channelsForCustomer(customer) },
-    );
+    // 1. Notify the sender/customer (with a track link).
+    if (event && customer) {
+      await notify(
+        event,
+        {
+          userId: customer.id,
+          name: customer.fullName,
+          email: customer.email,
+          phone: customer.phone,
+        },
+        {
+          trackingNumber: shipment.trackingNumber,
+          route: shipment.routeCode,
+          status: SHIPMENT_STATUS_META[target].label,
+          trackUrl: trackUrlFor(shipment.trackingNumber),
+        },
+        { shipmentId: shipment.id, channels: channelsForCustomer(customer) },
+      );
+    }
+    // 2. On dispatch / vessel departure, alert the recipient to standby + track link.
+    if (SHIPPED_STATUSES.includes(target)) await notifyRecipientIncoming(shipment);
   }
 
   async function handleStatusUpdate() {
@@ -311,12 +327,48 @@ export default function ShipmentDetailPage() {
             )}
             <Link href={`/shipments/${shipment.id}/label`}>
               <Button variant="outline" size="sm">
-                <Tag className="h-4 w-4" /> Print label
+                <Tag className="h-4 w-4" /> Package labels
+              </Button>
+            </Link>
+            <Link href={`/shipments/${shipment.id}/waybill`}>
+              <Button variant="outline" size="sm">
+                <FileText className="h-4 w-4" /> Waybill
               </Button>
             </Link>
           </div>
         }
       />
+
+      {shipment.consolidatedInto && (
+        <div className="mb-6 flex flex-col gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex items-center gap-2 text-sm text-violet-800">
+            <Layers className="h-4 w-4 shrink-0" /> This package was merged into a consolidated shipment.
+          </p>
+          <Link href={`/shipments/${shipment.consolidatedInto}`}>
+            <Button size="sm" variant="outline">View consolidated shipment</Button>
+          </Link>
+        </div>
+      )}
+
+      {shipment.isConsolidated && shipment.consolidatedFrom && (
+        <div className="mb-6 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3">
+          <p className="flex items-center gap-2 text-sm font-semibold text-violet-900">
+            <Layers className="h-4 w-4" /> Consolidated shipment {shipment.consolidationNumber} —{" "}
+            {shipment.consolidatedFrom.length} packages combined
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {shipment.consolidatedFrom.map((sid, i) => (
+              <Link
+                key={sid}
+                href={`/shipments/${sid}`}
+                className="rounded-lg border border-violet-200 bg-white px-2.5 py-1 text-xs font-medium text-violet-700 hover:bg-violet-100"
+              >
+                Package {i + 1} →
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main column */}
@@ -335,7 +387,53 @@ export default function ShipmentDetailPage() {
             <PartyCard title="Receiver" party={shipment.receiver} />
           </div>
 
-          {/* Items / weight */}
+          {/* Sea cargo */}
+          {isSea && (
+            <Card>
+              <CardHeader title="Sea cargo" subtitle="Priced by volume (CBM) + standard units" />
+              <CardBody className="space-y-4">
+                <div className="flex flex-wrap gap-x-10 gap-y-3">
+                  <KeyValue label="Total volume">{shipment.totalCbm ?? 0} CBM</KeyValue>
+                  <KeyValue label="Pieces">{shipment.pieces ?? 1}</KeyValue>
+                </div>
+                {shipment.seaCargo?.volumetric?.length ? (
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-navy-400">
+                      Measured pieces
+                    </p>
+                    <ul className="space-y-1 text-sm text-navy-700">
+                      {shipment.seaCargo.volumetric.map((p) => (
+                        <li key={p.id} className="flex justify-between gap-3">
+                          <span>
+                            {p.label || "Piece"} — {p.lengthCm}×{p.widthCm}×{p.heightCm} cm × {p.quantity}
+                          </span>
+                          <span className="font-medium text-navy-900">{pieceCbm(p)} CBM</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {shipment.seaCargo?.units?.length ? (
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-navy-400">
+                      Standard units
+                    </p>
+                    <ul className="space-y-1 text-sm text-navy-700">
+                      {shipment.seaCargo.units.map((u) => (
+                        <li key={u.id} className="flex justify-between gap-3">
+                          <span>{u.label}</span>
+                          <span className="font-medium text-navy-900">× {u.quantity}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </CardBody>
+            </Card>
+          )}
+
+          {/* Items / weight (air) */}
+          {!isSea && (
           <Card>
             <CardHeader
               title={shipment.pricingMode === "item_based" ? "Items" : "Weight"}
@@ -379,18 +477,26 @@ export default function ShipmentDetailPage() {
               </CardBody>
             )}
           </Card>
+          )}
 
           {/* Measurements */}
           <Card>
             <CardHeader title="Measurements" />
             <CardBody className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <KeyValue label="Weight">{formatWeight(shipment.weightLb)}</KeyValue>
-              <KeyValue label="Dimensions">
-                {dims && (dims.lengthIn || dims.widthIn || dims.heightIn)
-                  ? `${dims.lengthIn ?? "—"} × ${dims.widthIn ?? "—"} × ${dims.heightIn ?? "—"} in`
-                  : "—"}
+              <KeyValue label="Packages">{shipment.pieces ?? 1}</KeyValue>
+              <KeyValue label={isSea ? "Total CBM" : "Weight"}>
+                {isSea ? `${shipment.totalCbm ?? 0} CBM` : formatWeight(shipment.weightLb)}
               </KeyValue>
-              <KeyValue label="Volumetric">{formatWeight(shipment.volumetricWeightLb)}</KeyValue>
+              {!isSea && (
+                <KeyValue label="Dimensions">
+                  {dims && (dims.lengthIn || dims.widthIn || dims.heightIn)
+                    ? `${dims.lengthIn ?? "—"} × ${dims.widthIn ?? "—"} × ${dims.heightIn ?? "—"} in`
+                    : "—"}
+                </KeyValue>
+              )}
+              {!isSea && (
+                <KeyValue label="Volumetric">{formatWeight(shipment.volumetricWeightLb)}</KeyValue>
+              )}
               <KeyValue label="Declared value">
                 {shipment.declaredValue != null
                   ? formatMoney(shipment.declaredValue, settings.defaultCurrency)
@@ -533,7 +639,16 @@ export default function ShipmentDetailPage() {
                   <Button
                     variant="primary"
                     className="w-full"
-                    onClick={() => setStatusOpen(true)}
+                    onClick={() => {
+                      const order = shipmentStatusOrder(shipment.cargoType);
+                      const cur = order.indexOf(shipment.status);
+                      setNextStatus(
+                        cur >= 0 && cur + 1 < order.length
+                          ? order[cur + 1]
+                          : shipment.status,
+                      );
+                      setStatusOpen(true);
+                    }}
                     disabled={shipment.locked}
                   >
                     <RefreshCw className="h-4 w-4" /> Update status
@@ -587,9 +702,12 @@ export default function ShipmentDetailPage() {
         }
       >
         <div className="space-y-4">
-          <Field label="New status" required>
+          <Field label="New status" required hint="Only forward steps are shown — use Admin override to move backward.">
             <Select value={nextStatus} onChange={(e) => setNextStatus(e.target.value as ShipmentStatus)}>
-              {SHIPMENT_STATUS_ORDER.map((s) => (
+              {shipmentStatusOrder(shipment.cargoType).filter((_s, i) => {
+                const cur = shipmentStatusOrder(shipment.cargoType).indexOf(shipment.status);
+                return cur < 0 || i >= cur;
+              }).map((s) => (
                 <option key={s} value={s}>
                   {SHIPMENT_STATUS_META[s].label}
                 </option>

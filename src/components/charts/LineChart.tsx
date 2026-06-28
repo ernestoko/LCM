@@ -8,9 +8,9 @@ export interface LineChartDatum {
   value: number;
 }
 
-const LINE = "#3463ff"; // brand-500
-const AREA_FROM = "#3463ff"; // brand-500 (faded via gradient stops)
-const DOT = "#1d40f5"; // brand-600
+const LINE = "#b6881a"; // brand-500 (gold)
+const AREA_FROM = "#b6881a"; // brand-500 (faded via gradient stops)
+const DOT = "#946c12"; // brand-600 (gold)
 const AXIS = "#cdd9ec"; // navy-200
 const GRID = "#e3eaf5"; // navy-100
 const LABEL = "#3d5283"; // navy-700

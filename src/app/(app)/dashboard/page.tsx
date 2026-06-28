@@ -21,7 +21,7 @@ export default function DashboardPage() {
     <div>
       <PageHeader
         title={`${greeting}, ${firstName}`}
-        description={role ? `${ROLE_LABELS[role]} · Liberty Cargo Movers Logistics Platform` : undefined}
+        description={role ? `${ROLE_LABELS[role]} · Liberty & Liberty Logistics Platform` : undefined}
       />
       {isFinance(role) ? (
         <FinanceDashboard />

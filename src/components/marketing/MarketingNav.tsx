@@ -6,13 +6,14 @@ import { usePathname } from "next/navigation";
 import { Menu, X, PackageSearch, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Container } from "./Container";
-import { LcmWordmark } from "./Brand";
+import { LibertyWordmark } from "./Brand";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Services", href: "/services" },
   { label: "Coverage", href: "/coverage" },
   { label: "About", href: "/about" },
+  { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -62,9 +63,9 @@ export function MarketingNav() {
           <Link
             href="/"
             className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
-            aria-label="LCM Logistics home"
+            aria-label="Liberty & Liberty Logistics home"
           >
-            <LcmWordmark />
+            <LibertyWordmark />
           </Link>
 
           {/* Desktop links */}

@@ -17,6 +17,7 @@ import {
   Section,
   SectionHeading,
   TrackingBar,
+  Photo,
 } from "@/components/marketing";
 import { cn } from "@/lib/utils/cn";
 
@@ -74,15 +75,15 @@ function validate(values: FormState): FormErrors {
 
 const offices = [
   {
-    country: "United States Office",
+    country: "United States Hub",
     flag: "USA",
     lines: ["1200 Logistics Way, Suite 410", "Houston, TX 77032, USA"],
     phone: "+1 (713) 555-0192",
   },
   {
-    country: "Ghana Office",
+    country: "Ghana Hub",
     flag: "Ghana",
-    lines: ["18 Ring Road Industrial Area", "Accra, Greater Accra, Ghana"],
+    lines: ["18 Harbour Road, Industrial Area", "Tema / Accra, Ghana"],
     phone: "+233 30 255 0148",
   },
 ];
@@ -153,7 +154,7 @@ export default function ContactPage() {
         values.message,
       ].join("\n"),
     );
-    return `mailto:hello@lcmlogistics.com?subject=${subject}&body=${body}`;
+    return `mailto:hello@libertylogistics.com?subject=${subject}&body=${body}`;
   }, [values]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -187,10 +188,20 @@ export default function ContactPage() {
   return (
     <>
       {/* Hero */}
-      <section className="relative isolate overflow-hidden bg-gradient-to-br from-navy-900 via-navy-900 to-brand-800">
+      <section className="relative isolate overflow-hidden bg-navy-950">
+        {/* Real backdrop under a navy/brand wash */}
+        <Photo
+          src="/images/global-window.jpg"
+          alt="View at altitude over a global shipping network"
+          overlay="hero"
+          priority
+          sizes="100vw"
+          position="center"
+          className="absolute inset-0"
+        />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
           style={{
             backgroundImage:
               "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
@@ -200,6 +211,10 @@ export default function ContactPage() {
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -left-24 -top-32 h-96 w-96 rounded-full bg-brand-500/20 blur-3xl"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-gold-500/10 blur-3xl"
         />
         <Container className="relative py-16 sm:py-24">
           <SectionHeading
@@ -235,8 +250,8 @@ export default function ContactPage() {
                     Thank you, {values.name.split(" ")[0] || "there"}!
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-navy-700">
-                    Your request has been received. A member of the LCM Logistics
-                    team will reach out to{" "}
+                    Your request has been received. A member of the Liberty
+                    &amp; Liberty Logistics team will reach out to{" "}
                     <span className="font-semibold">{values.email}</span> shortly
                     with your quote and next steps.
                   </p>
@@ -448,6 +463,23 @@ export default function ContactPage() {
 
             {/* RIGHT: contact details */}
             <div className="space-y-8">
+              {/* Premium imagery panel */}
+              <div className="relative overflow-hidden rounded-2xl shadow-card ring-1 ring-navy-900/5">
+                <Photo
+                  src="/images/trucking.jpg"
+                  alt="Liberty & Liberty Logistics line-haul truck on the road"
+                  overlay="navy"
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                  className="aspect-[16/9] w-full"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-6">
+                  <p className="flex items-center gap-2 text-sm font-semibold text-white">
+                    <MapPin className="h-4 w-4 text-gold-300" aria-hidden="true" />
+                    Hubs in the USA &amp; Ghana — door-to-door, worldwide.
+                  </p>
+                </div>
+              </div>
+
               {/* Quick contact */}
               <div className="rounded-2xl border border-navy-100 bg-navy-50 p-7 shadow-card">
                 <h2 className="text-lg font-bold text-navy-900">
@@ -482,10 +514,10 @@ export default function ContactPage() {
                       </dt>
                       <dd>
                         <a
-                          href="mailto:hello@lcmlogistics.com"
+                          href="mailto:hello@libertylogistics.com"
                           className="text-sm font-semibold text-navy-900 hover:text-brand-700"
                         >
-                          hello@lcmlogistics.com
+                          hello@libertylogistics.com
                         </a>
                       </dd>
                     </div>

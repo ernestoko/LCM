@@ -1,20 +1,29 @@
 import type { Metadata } from "next";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
+import { ChatWidget } from "@/components/marketing/ChatWidget";
 
 export const metadata: Metadata = {
   title: {
-    default: "LCM Logistics — Global Logistics & International Shipping",
-    template: "%s · LCM Logistics",
+    default: "Liberty & Liberty Logistics — Global Logistics & International Shipping",
+    template: "%s · Liberty & Liberty Logistics",
   },
   description:
-    "LCM Logistics moves cargo to and from the USA, to and from Ghana, and across Africa and the world. Air freight, ocean freight, express parcel, door-to-door delivery, customs clearance, warehousing and e-commerce shipping — with real-time tracking.",
+    "Liberty & Liberty Logistics moves cargo to and from the USA, to and from Ghana, and across Africa and the world. Air freight, ocean freight, express parcel, door-to-door delivery, customs clearance, warehousing and e-commerce shipping — with real-time tracking.",
   openGraph: {
-    title: "LCM Logistics — Global Logistics & International Shipping",
+    title: "Liberty & Liberty Logistics — Global Logistics & International Shipping",
     description:
       "Air & ocean freight, express parcel, door-to-door, customs clearance and warehousing — shipping to and from the USA, Ghana, and worldwide.",
-    siteName: "LCM Logistics",
+    siteName: "Liberty & Liberty Logistics",
     type: "website",
+    images: ["/images/hero-port.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Liberty & Liberty Logistics — Global Logistics & International Shipping",
+    description:
+      "Air & ocean freight, express parcel, door-to-door, customs clearance and warehousing — to and from the USA, Ghana, and worldwide.",
+    images: ["/images/hero-port.jpg"],
   },
 };
 
@@ -28,6 +37,7 @@ export default function MarketingLayout({
       <MarketingNav />
       <main className="flex-1">{children}</main>
       <MarketingFooter />
+      <ChatWidget />
     </div>
   );
 }

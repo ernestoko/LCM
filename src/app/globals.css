@@ -33,17 +33,53 @@ body {
   background-color: #a9bedd;
 }
 
-/* Print styles for invoices & manifests */
+/* ---------------------------------------------------------------------------
+   Print / PDF — applies to invoices, waybills, manifests, statements, etc.
+   Goal: a clean, full-page document with no app chrome and brand colours
+   preserved (badges, accent stripes, tints).
+--------------------------------------------------------------------------- */
 @media print {
+  /* Preserve brand colours/backgrounds in the PDF (browsers strip them by default). */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page {
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    height: auto !important;
+    background: #ffffff !important;
+  }
+
+  /* Anything marked no-print (nav, buttons, action bars) is removed. */
   .no-print {
     display: none !important;
   }
-  body {
-    background: white;
-  }
+
+  /* The printable document fills the page edge-to-edge, no card chrome. */
   .print-container {
     box-shadow: none !important;
     border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Keep tables and cards from splitting awkwardly across pages. */
+  thead {
+    display: table-header-group;
+  }
+  tr,
+  .print-keep {
+    break-inside: avoid;
   }
 }
 

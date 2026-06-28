@@ -28,7 +28,7 @@ function textToHtml(text: string): string {
 
 export async function sendEmail(msg: EmailMessage): Promise<EmailResult> {
   const provider = process.env.EMAIL_PROVIDER ?? "console";
-  const from = process.env.EMAIL_FROM ?? "Liberty Cargo Movers <no-reply@example.com>";
+  const from = process.env.EMAIL_FROM ?? "Liberty & Liberty Logistics <no-reply@example.com>";
 
   if (provider === "resend") {
     const key = process.env.RESEND_API_KEY;

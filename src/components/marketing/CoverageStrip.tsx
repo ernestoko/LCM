@@ -1,6 +1,7 @@
 import { Globe2, Plane, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Container } from "./Container";
+import { Photo } from "./Photo";
 
 const DEFAULT_COUNTRIES = [
   "United States",
@@ -45,8 +46,8 @@ function WorldRoutes() {
     >
       <defs>
         <linearGradient id="coverage-arc" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#598bff" />
-          <stop offset="100%" stopColor="#d6a541" />
+          <stop offset="0%" stopColor="#e6c44d" />
+          <stop offset="100%" stopColor="#b8860b" />
         </linearGradient>
         <radialGradient id="coverage-hub" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#d6a541" />
@@ -103,19 +104,31 @@ function WorldRoutes() {
 
 export function CoverageStrip({
   countries = DEFAULT_COUNTRIES,
+  image = "/images/world-map.jpg",
   className,
 }: {
   countries?: string[];
+  image?: string;
   className?: string;
 }) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 via-navy-900 to-brand-900 px-6 py-12 shadow-card-hover sm:px-10 sm:py-16",
+        "relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 via-navy-900 to-brand-900 px-6 py-12 shadow-lift sm:px-10 sm:py-16",
         className,
       )}
     >
-      {/* Map sits behind, dimmed */}
+      {/* Faint real-world texture behind the brand trade-lane map */}
+      {image ? (
+        <Photo
+          src={image}
+          alt=""
+          overlay="none"
+          sizes="100vw"
+          className="absolute inset-0 opacity-[0.12] mix-blend-luminosity"
+        />
+      ) : null}
+      {/* Animated trade-lane map sits behind, dimmed */}
       <div className="pointer-events-none absolute inset-0 opacity-60" aria-hidden="true">
         <WorldRoutes />
       </div>

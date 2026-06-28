@@ -28,6 +28,7 @@ export const NAV_SECTIONS: NavSection[] = [
     heading: "Operations",
     items: [
       { label: "Customers", href: "/customers", icon: "Users", permission: "customers.view" },
+      { label: "Requests", href: "/requests", icon: "Inbox", permission: "requests.view" },
       { label: "Shipments", href: "/shipments", icon: "Package", permission: "shipments.view" },
       { label: "Package Intake", href: "/intake", icon: "ScanLine", permission: "intake.manage" },
       { label: "Manifests", href: "/manifests", icon: "ClipboardList", permission: "manifests.view" },
@@ -63,13 +64,25 @@ export const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-/** Customer portal has its own slim navigation. */
+/** Customer portal — action-first, deliberately simple. */
 export const CUSTOMER_NAV_SECTIONS: NavSection[] = [
   {
+    items: [{ label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" }],
+  },
+  {
+    heading: "Send a package",
     items: [
-      { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
+      { label: "Request a Pickup", href: "/request/pickup", icon: "Truck" },
+      { label: "Ship to Warehouse", href: "/request/warehouse", icon: "Warehouse" },
+    ],
+  },
+  {
+    heading: "My account",
+    items: [
+      { label: "My Requests", href: "/requests", icon: "ClipboardList" },
       { label: "My Shipments", href: "/shipments", icon: "Package" },
       { label: "My Invoices", href: "/invoices", icon: "FileText" },
+      { label: "Track a Shipment", href: "/track", icon: "Search" },
       { label: "Support", href: "/complaints", icon: "MessageSquareWarning" },
     ],
   },

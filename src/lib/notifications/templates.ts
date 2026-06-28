@@ -12,6 +12,8 @@ export interface TemplateContext {
   ticketNumber?: string;
   supportPhone?: string;
   supportEmail?: string;
+  trackUrl?: string;
+  senderName?: string;
   [key: string]: string | undefined;
 }
 
@@ -24,7 +26,7 @@ export interface RenderedTemplate {
   whatsapp: string;
 }
 
-const COMPANY = "Liberty Cargo Movers";
+const COMPANY = "Liberty & Liberty Logistics";
 
 /**
  * Notification copy for every lifecycle event. SMS bodies are intentionally
@@ -57,9 +59,15 @@ export const TEMPLATES: Record<NotificationEvent, (c: TemplateContext) => Render
   }),
   dispatched: (c) => ({
     subject: `Dispatched — ${c.trackingNumber}`,
-    sms: `${COMPANY}: Your package ${c.trackingNumber} has been dispatched${c.eta ? `. ETA: ${c.eta}` : ""}.`,
-    email: `Hi ${c.customerName ?? "there"},\n\nYour package ${c.trackingNumber} has been dispatched on route ${c.route ?? ""}.${c.eta ? `\nEstimated arrival: ${c.eta}.` : ""}\n\n— ${COMPANY}`,
-    whatsapp: `🚚 *${COMPANY}*\n*${c.trackingNumber}* dispatched${c.eta ? `\nETA: ${c.eta}` : ""}.`,
+    sms: `${COMPANY}: Your package ${c.trackingNumber} has been dispatched${c.eta ? `. ETA: ${c.eta}` : ""}.${c.trackUrl ? ` Track: ${c.trackUrl}` : ""}`,
+    email: `Hi ${c.customerName ?? "there"},\n\nYour package ${c.trackingNumber} has been dispatched on route ${c.route ?? ""}.${c.eta ? `\nEstimated arrival: ${c.eta}.` : ""}${c.trackUrl ? `\n\nTrack your package here: ${c.trackUrl}` : ""}\n\n— ${COMPANY}`,
+    whatsapp: `🚚 *${COMPANY}*\n*${c.trackingNumber}* dispatched${c.eta ? `\nETA: ${c.eta}` : ""}.${c.trackUrl ? `\nTrack: ${c.trackUrl}` : ""}`,
+  }),
+  recipient_incoming: (c) => ({
+    subject: `A package is on its way to you — ${c.trackingNumber}`,
+    sms: `${COMPANY}: Hi ${c.customerName ?? "there"}, a package from ${c.senderName ?? "a sender"} (${c.trackingNumber}) has shipped and is on its way to you. Please standby.${c.trackUrl ? ` Track: ${c.trackUrl}` : ""}`,
+    email: `Hi ${c.customerName ?? "there"},\n\nGood news — a package from ${c.senderName ?? "a sender"} has been shipped to you via ${COMPANY} (tracking ${c.trackingNumber}${c.route ? `, route ${c.route}` : ""}).\n\nPlease standby to receive it — we'll keep you posted as it moves.${c.trackUrl ? `\n\nTrack your package here: ${c.trackUrl}` : ""}\n\n— ${COMPANY}`,
+    whatsapp: `📦 *${COMPANY}*\nHi ${c.customerName ?? "there"}, a package from ${c.senderName ?? "a sender"} (*${c.trackingNumber}*) is on its way to you. Please standby.${c.trackUrl ? `\nTrack: ${c.trackUrl}` : ""}`,
   }),
   in_transit: (c) => ({
     subject: `In transit — ${c.trackingNumber}`,

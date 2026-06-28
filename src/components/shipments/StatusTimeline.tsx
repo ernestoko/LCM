@@ -2,7 +2,7 @@
 
 import { Check, Circle, MapPin } from "lucide-react";
 import type { Shipment, ShipmentStatusEvent } from "@/types";
-import { SHIPMENT_STATUS_META, SHIPMENT_STATUS_ORDER } from "@/constants/statuses";
+import { SHIPMENT_STATUS_META, shipmentStatusOrder } from "@/constants/statuses";
 import { fromNow } from "@/lib/utils/dates";
 import { cn } from "@/lib/utils/cn";
 
@@ -15,20 +15,23 @@ export function StatusTimeline({ shipment }: { shipment: Shipment }) {
     (a, b) => b.at.localeCompare(a.at),
   );
 
+  // Lifecycle for this shipment's mode of carriage (air or sea).
+  const order = shipmentStatusOrder(shipment.cargoType);
+
   // Position of the current status within the ordered lifecycle. Statuses that
   // are off the linear path (issue_reported / cancelled) clamp to 0.
-  const currentIndex = SHIPMENT_STATUS_ORDER.indexOf(shipment.status);
+  const currentIndex = order.indexOf(shipment.status);
 
   return (
     <div className="space-y-6">
       {/* Horizontal stepper over the canonical lifecycle */}
       <div className="overflow-x-auto pb-1">
         <ol className="flex min-w-max items-center gap-0">
-          {SHIPMENT_STATUS_ORDER.map((status, idx) => {
+          {order.map((status, idx) => {
             const meta = SHIPMENT_STATUS_META[status];
             const isDone = currentIndex >= 0 && idx < currentIndex;
             const isCurrent = idx === currentIndex;
-            const isLast = idx === SHIPMENT_STATUS_ORDER.length - 1;
+            const isLast = idx === order.length - 1;
             return (
               <li key={status} className="flex items-center">
                 <div className="flex flex-col items-center gap-1.5 px-1">

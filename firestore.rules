@@ -49,9 +49,21 @@ service cloud.firestore {
     match /customers/{id} {
       allow read: if isLiberty() || ownsCustomer(id);
       allow create: if isLibertyAdmin() || isSuperAdmin();
-      // Ownership can never be reassigned; record stays owned by Liberty.
-      allow update: if (isLibertyAdmin() || isSuperAdmin())
-                    && request.resource.data.ownedBy == 'liberty';
+      // Liberty admins manage the record (ownership stays Liberty). A customer
+      // may update only their OWN record's self-service fields (addresses,
+      // default contacts, contact details) — identity, ownership, the customer
+      // code and financial counters must stay unchanged.
+      allow update: if ((isLibertyAdmin() || isSuperAdmin())
+                        && request.resource.data.ownedBy == 'liberty')
+                    || (ownsCustomer(id)
+                        && request.resource.data.ownedBy == resource.data.ownedBy
+                        && request.resource.data.customerCode == resource.data.customerCode
+                        && request.resource.data.fullName == resource.data.fullName
+                        && request.resource.data.customerType == resource.data.customerType
+                        && request.resource.data.source == resource.data.source
+                        && request.resource.data.shipmentCount == resource.data.shipmentCount
+                        && request.resource.data.totalSpend == resource.data.totalSpend
+                        && request.resource.data.active == resource.data.active);
       allow delete: if isSuperAdmin();
     }
 
@@ -135,6 +147,22 @@ service cloud.firestore {
       allow read: if isStaff() || ownsCustomer(resource.data.customerId);
       allow create: if signedIn();
       allow update: if isStaff();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ---- requests (customer self-service: pickup / ship-to-warehouse) ------
+    // Customers create requests for their own customerId (always starting as
+    // 'submitted'); staff triage them. A customer may only update their own
+    // request to cancel it — staff own every other transition.
+    match /requests/{id} {
+      allow read: if isStaff() || ownsCustomer(resource.data.customerId);
+      allow create: if signedIn()
+                    && request.resource.data.customerId == request.auth.token.customerId
+                    && request.resource.data.status == 'submitted';
+      allow update: if isStaff()
+                    || (ownsCustomer(resource.data.customerId)
+                        && request.resource.data.status == 'cancelled'
+                        && unchanged('customerId') && unchanged('type'));
       allow delete: if isSuperAdmin();
     }
 

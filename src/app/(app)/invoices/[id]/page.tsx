@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Printer, CreditCard } from "lucide-react";
+import { ArrowLeft, Printer, CreditCard, CheckCircle2 } from "lucide-react";
+import { GATEWAY_METHODS } from "@/types";
 import type { Invoice, PaymentMethod } from "@/types";
 import { useAuth, useActor } from "@/lib/auth/AuthProvider";
 import { isLiberty, isFinance } from "@/lib/auth/permissions";
@@ -195,7 +196,22 @@ export default function InvoiceDetailPage() {
             </Select>
           </Field>
 
-          <Field label="Reference" hint="Transaction ID, cheque #, etc. (optional)">
+          {GATEWAY_METHODS.includes(method) && (
+            <p className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs text-emerald-700">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+              {PAYMENT_METHOD_LABELS[method]} confirms payment at the gateway, so this payment
+              reconciles automatically. Enter the gateway transaction reference below.
+            </p>
+          )}
+
+          <Field
+            label="Reference"
+            hint={
+              GATEWAY_METHODS.includes(method)
+                ? `${PAYMENT_METHOD_LABELS[method]} transaction reference`
+                : "Transaction ID, cheque #, etc. (optional)"
+            }
+          >
             <Input
               value={reference}
               onChange={(e) => setReference(e.target.value)}

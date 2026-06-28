@@ -2,24 +2,41 @@ import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Container } from "./Container";
 import { MButton } from "./MButton";
+import { Photo } from "./Photo";
 
 export function CTASection({
   title,
   subtitle,
   primary,
   secondary,
+  image,
+  imageAlt,
   className,
 }: {
   title: string;
   subtitle?: string;
   primary: { label: string; href: string };
   secondary?: { label: string; href: string };
+  /** Optional background photo (rendered under a heavy navy/brand wash). */
+  image?: string;
+  imageAlt?: string;
   className?: string;
 }) {
   return (
     <section className={cn("py-16 sm:py-20", className)}>
       <Container>
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-900 via-navy-900 to-brand-800 px-6 py-14 shadow-card-hover sm:px-12 sm:py-16 lg:px-16">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-900 via-navy-900 to-brand-800 px-6 py-14 shadow-lift sm:px-12 sm:py-16 lg:px-16">
+          {/* Optional photo background */}
+          {image ? (
+            <Photo
+              src={image}
+              alt={imageAlt ?? ""}
+              overlay="hero"
+              sizes="100vw"
+              className="absolute inset-0"
+            />
+          ) : null}
+
           {/* Decorative glow + gold accent line */}
           <div
             className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand-500/20 blur-3xl"
@@ -48,7 +65,12 @@ export function CTASection({
                 <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </MButton>
               {secondary ? (
-                <MButton href={secondary.href} variant="outline" size="lg" className="border-white/30 bg-white/5 text-white hover:border-white/60 hover:bg-white/10 hover:text-white">
+                <MButton
+                  href={secondary.href}
+                  variant="outline"
+                  size="lg"
+                  className="border-white/30 bg-white/5 text-white hover:border-white/60 hover:bg-white/10 hover:text-white"
+                >
                   {secondary.label}
                 </MButton>
               ) : null}

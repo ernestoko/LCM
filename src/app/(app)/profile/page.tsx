@@ -14,8 +14,11 @@ import { useAuth, useActor } from "@/lib/auth/AuthProvider";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { update } from "@/lib/db/firestore";
 import { COLLECTIONS } from "@/lib/db/collections";
+import { useDocument } from "@/lib/db/hooks";
+import { updateCustomer } from "@/lib/db/repositories/customers";
+import { AddressBook } from "@/components/customers/AddressBook";
 import { ROLE_LABELS } from "@/constants/roles";
-import type { AppUser, Organization } from "@/types";
+import type { AppUser, Organization, Customer } from "@/types";
 import {
   PageHeader,
   Card,
@@ -29,7 +32,7 @@ import {
 } from "@/components/ui";
 
 const ORG_LABELS: Record<Organization, string> = {
-  liberty: "Liberty Cargo Movers",
+  liberty: "Liberty & Liberty Logistics",
   seal: "Operations",
   customer: "Customer",
 };
@@ -274,6 +277,20 @@ function PasswordSection({ user }: { user: AppUser }) {
   );
 }
 
+function CustomerAddressesSection({ customerId }: { customerId: string }) {
+  const actor = useActor();
+  const { data: customer } = useDocument<Customer>(COLLECTIONS.customers, customerId);
+  if (!customer) return null;
+  return (
+    <AddressBook
+      title="My addresses"
+      subtitle="Saved delivery & pickup locations — used when you request a pickup."
+      addresses={customer.addresses ?? []}
+      onSave={(next) => updateCustomer(customerId, { addresses: next }, actor)}
+    />
+  );
+}
+
 function SessionSection() {
   const router = useRouter();
   const { signOut } = useAuth();
@@ -329,6 +346,7 @@ export default function ProfilePage() {
       ) : user ? (
         <>
           <ProfileSection user={user} />
+          {user.customerId && <CustomerAddressesSection customerId={user.customerId} />}
           <PasswordSection user={user} />
           <SessionSection />
         </>

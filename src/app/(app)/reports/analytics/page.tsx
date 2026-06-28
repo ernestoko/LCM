@@ -30,7 +30,7 @@ import { formatMoney, formatNumber } from "@/lib/utils/format";
 
 // Concrete hex colours so SVG fills never depend on Tailwind classes.
 const HEX = {
-  brand: "#3463ff", // brand-500
+  brand: "#b6881a", // brand-500 (gold)
   emerald: "#10b981",
   gold: "#c78d2c", // gold-500
   amber: "#f59e0b",

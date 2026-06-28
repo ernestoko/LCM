@@ -69,6 +69,17 @@ export const SEED_SERVICE_FEE = {
 };
 
 // ---------------------------------------------------------------------------
+// Sea-freight pricing — PLACEHOLDER rates. Sea cargo is billed by volume (CBM)
+// or by standard units (boxes/drums). Real rates change often and are edited on
+// the active sea rate card; these just seed a working starting point.
+// ---------------------------------------------------------------------------
+
+export const SEED_SEA_RATE = {
+  pricePerCbm: 220, // placeholder per-CBM rate (USD)
+  minimumCbm: 1, // bill at least 1 CBM
+};
+
+// ---------------------------------------------------------------------------
 // Initial country routes — multi-directional global lanes.
 //   • Outbound (USA → country) lanes (Ghana active at start; others draft).
 //   • Inbound (country → USA) lanes so packages can originate anywhere.

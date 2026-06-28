@@ -1,16 +1,7 @@
 import Link from "next/link";
-import {
-  Phone,
-  Mail,
-  MapPin,
-  Linkedin,
-  Facebook,
-  Instagram,
-  Twitter,
-  Youtube,
-} from "lucide-react";
+import { Phone, Mail, MapPin } from "lucide-react";
 import { Container } from "./Container";
-import { LcmWordmark } from "./Brand";
+import { LibertyWordmark } from "./Brand";
 import { TrackingBar } from "./TrackingBar";
 
 const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] = [
@@ -40,7 +31,7 @@ const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] =
     links: [
       { label: "Track a Shipment", href: "/track" },
       { label: "Sign in", href: "/login" },
-      { label: "Help & FAQ", href: "/contact" },
+      { label: "Help & FAQ", href: "/faq" },
       { label: "Customs Guidance", href: "/coverage#customs" },
     ],
   },
@@ -55,14 +46,6 @@ const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] =
   },
 ];
 
-const SOCIALS: { label: string; href: string; icon: typeof Linkedin }[] = [
-  { label: "LinkedIn", href: "#", icon: Linkedin },
-  { label: "Facebook", href: "#", icon: Facebook },
-  { label: "Instagram", href: "#", icon: Instagram },
-  { label: "X", href: "#", icon: Twitter },
-  { label: "YouTube", href: "#", icon: Youtube },
-];
-
 export function MarketingFooter() {
   const year = new Date().getFullYear();
 
@@ -72,12 +55,12 @@ export function MarketingFooter() {
       <Container className="border-b border-white/10 py-12">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center">
           <div className="max-w-md">
-            <LcmWordmark light />
+            <LibertyWordmark light />
             <p className="mt-4 text-sm leading-relaxed text-navy-300">
-              LCM Logistics is your trusted partner for global logistics and
-              international shipping — moving cargo to and from the USA, to and from
-              Ghana, and across Africa and the world with speed, care and full
-              visibility.
+              Liberty &amp; Liberty Logistics is your trusted partner for global
+              logistics and international shipping — moving cargo to and from the
+              USA, to and from Ghana, and across Africa and the world with speed,
+              care and full visibility.
             </p>
           </div>
           <div className="lg:justify-self-end lg:w-full lg:max-w-md">
@@ -127,10 +110,10 @@ export function MarketingFooter() {
               <li className="flex items-start gap-3">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-gold-400" aria-hidden="true" />
                 <a
-                  href="mailto:hello@lcmlogistics.com"
+                  href="mailto:hello@libertylogistics.com"
                   className="transition-colors hover:text-white"
                 >
-                  hello@lcmlogistics.com
+                  hello@libertylogistics.com
                 </a>
               </li>
               <li className="flex items-start gap-3">
@@ -150,21 +133,11 @@ export function MarketingFooter() {
       <div className="border-t border-white/10">
         <Container className="flex flex-col items-center justify-between gap-4 py-6 sm:flex-row">
           <p className="text-xs text-navy-400">
-            &copy; {year} LCM Logistics. All rights reserved.
+            &copy; {year} Liberty &amp; Liberty Logistics. All rights reserved.
           </p>
-          <ul className="flex items-center gap-2">
-            {SOCIALS.map(({ label, href, icon: Icon }) => (
-              <li key={label}>
-                <a
-                  href={href}
-                  aria-label={label}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-navy-300 transition-all hover:border-gold-400/50 hover:bg-white/5 hover:text-gold-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-950"
-                >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                </a>
-              </li>
-            ))}
-          </ul>
+          <p className="text-xs text-navy-400">
+            Air &amp; ocean freight · USA &harr; Ghana &amp; worldwide
+          </p>
         </Container>
       </div>
     </footer>

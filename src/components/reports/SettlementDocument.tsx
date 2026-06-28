@@ -66,8 +66,8 @@ export function SettlementDocument({
         <div>
           <div className="flex items-center gap-2 text-navy-900">
             <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
-              Liberty Cargo Movers <ArrowLeftRight className="inline h-5 w-5 text-navy-400" /> LCM
-              Logistics
+              Liberty &amp; Liberty Logistics{" "}
+              <ArrowLeftRight className="inline h-5 w-5 text-navy-400" /> Operations
             </h1>
           </div>
           <p className="mt-1 text-sm font-medium text-navy-600">Settlement Statement</p>

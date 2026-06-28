@@ -35,6 +35,8 @@ export const formatInvoiceNumber = (seq: number) => `LCM-INV-${pad(seq)}`;
 export const formatManifestNumber = (seq: number) => `LCM-MF-${pad(seq)}`;
 export const formatPaymentNumber = (seq: number) => `LCM-PAY-${pad(seq)}`;
 export const formatTicketNumber = (seq: number) => `LCM-TKT-${pad(seq)}`;
+export const formatRequestNumber = (seq: number) => `LCM-REQ-${pad(seq)}`;
+export const formatConsolidationNumber = (seq: number) => `LCM-CON-${pad(seq)}`;
 export const formatCustomerCode = (seq: number) => `LCM-C-${pad(seq, 5)}`;
 
 /** Stable route code from origin + destination, e.g. ("United States","Ghana") -> "USA-GHANA". */

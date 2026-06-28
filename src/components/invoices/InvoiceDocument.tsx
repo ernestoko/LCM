@@ -3,6 +3,8 @@
 import { Lock } from "lucide-react";
 import type { Invoice } from "@/types";
 import { StatusBadge } from "@/components/ui";
+import { Eagle } from "@/components/brand/Eagle";
+import { BUSINESS } from "@/constants/business";
 import { PAYMENT_STATUS_META } from "@/constants/statuses";
 import { formatMoney } from "@/lib/utils/format";
 import { formatDate } from "@/lib/utils/dates";
@@ -27,16 +29,36 @@ export function InvoiceDocument({
   return (
     <div className="space-y-6">
       <div className="print-container rounded-xl border border-navy-100 bg-white p-6 shadow-card sm:p-8">
-        {/* Header */}
-        <div className="flex flex-col gap-4 border-b border-navy-100 pb-6 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-navy-900">Liberty Cargo Movers</h1>
-            <p className="mt-1 text-sm text-navy-500">Logistics &amp; Freight Forwarding</p>
+        {/* Brand accent stripe */}
+        <div
+          className="-mx-6 -mt-6 mb-6 h-1.5 rounded-t-xl bg-gradient-to-r from-brand-600 via-brand-500 to-gold-400 sm:-mx-8 sm:-mt-8"
+          aria-hidden="true"
+        />
+
+        {/* Header — business identity + invoice meta */}
+        <div className="flex flex-col gap-5 border-b border-navy-100 pb-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            <Eagle className="h-12 w-12 shrink-0" fill="#b8860b" eyeFill="#ffffff" />
+            <div>
+              <h1 className="text-xl font-extrabold italic tracking-tight text-navy-900">
+                {BUSINESS.name}
+              </h1>
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-brand-600">
+                {BUSINESS.tagline}
+              </p>
+              <div className="mt-2 space-y-0.5 text-xs leading-relaxed text-navy-500">
+                <p>{BUSINESS.addresses.usa}</p>
+                <p>
+                  {BUSINESS.phone} · {BUSINESS.email}
+                </p>
+                <p>{BUSINESS.website}</p>
+              </div>
+            </div>
           </div>
-          <div className="sm:text-right">
-            <p className="text-xs font-medium uppercase tracking-wide text-navy-400">Invoice</p>
-            <p className="font-mono text-lg font-semibold text-navy-900">{invoice.invoiceNumber}</p>
-            <p className="mt-1 text-sm text-navy-500">{formatDate(invoice.createdAt)}</p>
+          <div className="shrink-0 sm:text-right">
+            <p className="text-2xl font-extrabold uppercase tracking-tight text-navy-900">Invoice</p>
+            <p className="font-mono text-base font-semibold text-brand-700">{invoice.invoiceNumber}</p>
+            <p className="mt-1 text-sm text-navy-500">Issued {formatDate(invoice.createdAt)}</p>
             <div className="mt-2 flex sm:justify-end">
               <StatusBadge
                 meta={PAYMENT_STATUS_META[invoice.paymentStatus]}
@@ -114,7 +136,7 @@ export function InvoiceDocument({
         <div className="mt-6 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
           Pricing is based on our approved rate card (
           <span className="font-medium">{invoice.rateCardName}</span>, effective{" "}
-          {formatDate(invoice.rateCardEffectiveDate)}) for the 6-month pilot period.
+          {formatDate(invoice.rateCardEffectiveDate)}).
         </div>
 
         {/* Payment instructions */}
@@ -133,7 +155,7 @@ export function InvoiceDocument({
         )}
 
         <div className="mt-6 border-t border-navy-100 pt-4 text-center text-xs text-navy-400">
-          Thank you for shipping with Liberty Cargo Movers.
+          Thank you for shipping with Liberty &amp; Liberty Logistics.
         </div>
       </div>
 

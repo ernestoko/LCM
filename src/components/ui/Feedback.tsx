@@ -48,9 +48,11 @@ export function ErrorState({ message }: { message?: string }) {
 export function InfoBanner({
   tone = "info",
   children,
+  className,
 }: {
   tone?: "info" | "warning" | "success";
   children: React.ReactNode;
+  className?: string;
 }) {
   const tones = {
     info: "border-sky-200 bg-sky-50 text-sky-800",
@@ -58,6 +60,8 @@ export function InfoBanner({
     success: "border-emerald-200 bg-emerald-50 text-emerald-800",
   };
   return (
-    <div className={cn("rounded-lg border px-4 py-3 text-sm", tones[tone])}>{children}</div>
+    <div className={cn("rounded-lg border px-4 py-3 text-sm", tones[tone], className)}>
+      {children}
+    </div>
   );
 }

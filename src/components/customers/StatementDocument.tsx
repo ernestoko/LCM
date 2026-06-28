@@ -89,7 +89,7 @@ export function StatementDocument({
       <div className="flex flex-col gap-4 border-b border-navy-100 pb-6 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-navy-900">
-            Liberty Cargo Movers
+            Liberty &amp; Liberty Logistics
           </h1>
           <p className="mt-1 text-sm font-medium text-navy-600">Account Statement</p>
           <p className="mt-0.5 text-xs text-navy-400">Logistics &amp; Freight Forwarding</p>
@@ -253,7 +253,7 @@ export function StatementDocument({
 
       <div className="mt-8 border-t border-navy-100 pt-4 text-center text-xs text-navy-400">
         This statement reflects all invoices and payments on record as of{" "}
-        {formatDate(statementDate)}. Thank you for shipping with Liberty Cargo Movers.
+        {formatDate(statementDate)}. Thank you for shipping with Liberty &amp; Liberty Logistics.
       </div>
     </div>
   );

@@ -40,7 +40,7 @@ async function requireStaff(req: Request): Promise<StaffCaller | null> {
 }
 
 const SEAL_RATE_NOTE =
-  "All charges on this invoice are calculated from our approved rate card in effect on the rate-card effective date shown above. Rates are fixed for the duration of the pilot program.";
+  "All charges on this invoice are calculated from our approved rate card in effect on the rate-card effective date shown above.";
 
 function escapeHtml(value: string): string {
   return value
@@ -145,7 +145,7 @@ function buildHtml(invoice: Invoice): string {
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0">
           <tr>
             <td style="background:#0f1b3d;padding:22px 24px">
-              <div style="font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:.01em">Liberty Cargo Movers</div>
+              <div style="font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:.01em">Liberty &amp; Liberty Logistics</div>
               <div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#aab4cf;margin-top:4px">Invoice ${escapeHtml(
                 invoice.invoiceNumber,
               )}</div>
@@ -207,7 +207,7 @@ function buildHtml(invoice: Invoice): string {
           <tr>
             <td style="padding:18px 24px 24px">
               <div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#94a3b8;line-height:1.6;text-align:center">
-                Thank you for shipping with Liberty Cargo Movers.<br />
+                Thank you for shipping with Liberty &amp; Liberty Logistics.<br />
                 This is an automated message regarding invoice ${escapeHtml(invoice.invoiceNumber)}.
               </div>
             </td>
@@ -223,7 +223,7 @@ function buildHtml(invoice: Invoice): string {
 function buildText(invoice: Invoice): string {
   const currency = invoice.currency;
   const lines = [
-    "Liberty Cargo Movers",
+    "Liberty & Liberty Logistics",
     `Invoice ${invoice.invoiceNumber}`,
     "",
     `Billed to: ${invoice.customerName}`,
@@ -268,7 +268,7 @@ function buildText(invoice: Invoice): string {
   lines.push(SEAL_RATE_NOTE);
   lines.push(`Rate card: ${invoice.rateCardName}`);
   lines.push("");
-  lines.push("Thank you for shipping with Liberty Cargo Movers.");
+  lines.push("Thank you for shipping with Liberty & Liberty Logistics.");
 
   return lines.join("\n");
 }
@@ -327,7 +327,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       );
     }
 
-    const subject = `Invoice ${invoice.invoiceNumber} — Liberty Cargo Movers`;
+    const subject = `Invoice ${invoice.invoiceNumber} — Liberty & Liberty Logistics`;
     const html = buildHtml(invoice);
     const text = buildText(invoice);
 
