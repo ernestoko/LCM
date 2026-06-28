@@ -107,7 +107,7 @@ function NewRateCard() {
         unitPrice: String(r.unitPrice),
       })),
     );
-    success("Loaded SEAL default item rates.");
+    success("Loaded default item rates.");
   }
 
   function buildItems(): RateItem[] {
@@ -287,7 +287,7 @@ function NewRateCard() {
               action={
                 pricingType === "item_based" ? (
                   <Button type="button" variant="outline" size="sm" onClick={loadSealDefaults}>
-                    <Download className="h-4 w-4" /> Load SEAL default items
+                    <Download className="h-4 w-4" /> Load default items
                   </Button>
                 ) : undefined
               }

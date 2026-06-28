@@ -31,7 +31,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Shipments", href: "/shipments", icon: "Package", permission: "shipments.view" },
       { label: "Package Intake", href: "/intake", icon: "ScanLine", permission: "intake.manage" },
       { label: "Manifests", href: "/manifests", icon: "ClipboardList", permission: "manifests.view" },
-      { label: "SEAL Operations", href: "/seal-operations", icon: "Warehouse", permission: "seal.operate" },
+      { label: "Operations", href: "/seal-operations", icon: "Warehouse", permission: "seal.operate" },
     ],
   },
   {

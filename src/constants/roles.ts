@@ -12,8 +12,8 @@ export const ROLES: Role[] = [
 export const ROLE_LABELS: Record<Role, string> = {
   liberty_super_admin: "Liberty Super Admin",
   liberty_admin: "Liberty Admin / Operations",
-  seal_admin: "SEAL Admin",
-  seal_staff: "SEAL Staff",
+  seal_admin: "Operations Manager",
+  seal_staff: "Warehouse Staff",
   finance_user: "Finance User",
   customer: "Customer",
 };
@@ -29,15 +29,15 @@ export const ROLE_ORG: Record<Role, Organization> = {
 
 export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   liberty_super_admin:
-    "Full control — users, SEAL access, rate & route approvals, all records, exports, commission settings.",
+    "Full control — users, operations access, rate & route approvals, all records, exports, commission settings.",
   liberty_admin:
     "Operations — register customers, create shipments, update status, invoices, documents, Ghana delivery prep.",
   seal_admin:
-    "SEAL operations lead — intake, photos, weights, manifests, delivery proof, operational updates.",
+    "Operations lead — intake, photos, weights, manifests, delivery proof, operational updates.",
   seal_staff:
-    "SEAL warehouse — receive packages, photos, weight & dimensions, intake status on assigned batches.",
+    "Warehouse — receive packages, photos, weight & dimensions, intake status on assigned batches.",
   finance_user:
-    "Finance — invoices, mark payments, record SEAL invoices & Liberty commission, reconciliation.",
+    "Finance — invoices, mark payments, record operations invoices & Liberty commission, reconciliation.",
   customer:
     "Customer portal — view shipment status, invoices, receipts and tracking updates.",
 };

@@ -83,7 +83,7 @@ const nowISO = () => new Date().toISOString();
 const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
 
 const ACTOR = { uid: "seed-demo", name: "Liberty Operations" };
-const SEAL_OFFICE = "SEAL Minnesota";
+const SEAL_OFFICE = "Minnesota Hub";
 const PHOTO_URL =
   "https://images.unsplash.com/photo-1605902711622-cfb43c4437b5?auto=format&fit=crop&w=640&q=60";
 
@@ -121,6 +121,8 @@ function initAdmin() {
 
 const GHANA = "Ghana";
 const NIGERIA = "Nigeria";
+const UNITED_KINGDOM = "United Kingdom";
+const USA = "United States";
 const ORIGIN = "United States";
 
 interface DemoCustomerDef {
@@ -162,7 +164,9 @@ interface DemoShipmentDef {
   pricingMode: "item_based" | "weight_based";
   weightLb?: number;
   items?: ShipmentItem[];
-  destination: string; // GHANA or NIGERIA
+  /** Origin country — defaults to the USA when omitted (outbound diaspora). */
+  origin?: string;
+  destination: string; // e.g. GHANA, NIGERIA, USA (for inbound lanes)
   description: string;
   ageDays: number; // how many days ago it was created
 }
@@ -217,6 +221,10 @@ const SHIPMENT_DEFS: DemoShipmentDef[] = [
   // --- issue_reported (2) ---
   { custIdx: 4, status: "issue_reported", pricingMode: "weight_based", weightLb: 20, destination: GHANA, description: "Business samples (damaged)", ageDays: 40 },
   { custIdx: 8, status: "issue_reported", pricingMode: "weight_based", weightLb: 35, destination: NIGERIA, description: "Fabric stock (delayed)", ageDays: 42 },
+  // --- inbound: packages ORIGINATING outside the USA, destined for the USA ---
+  { custIdx: 1, status: "received_by_seal", pricingMode: "weight_based", weightLb: 24, origin: GHANA, destination: USA, description: "Shea butter & crafts for US buyer", ageDays: 6 },
+  { custIdx: 8, status: "invoice_generated", pricingMode: "weight_based", weightLb: 31, origin: NIGERIA, destination: USA, description: "Ankara fabric order — US reseller", ageDays: 12 },
+  { custIdx: 5, status: "in_transit", pricingMode: "item_based", items: [item("phone_other_used", "Used Samsung S22", "phone", "used", 2)], origin: UNITED_KINGDOM, destination: USA, description: "Returned electronics from UK depot", ageDays: 14 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -289,7 +297,7 @@ function buildHistory(status: ShipmentStatus, createdISO: string, destination: s
   const hist: ShipmentStatusEvent[] = [ev("draft", step(0), "Shipment created", "Minneapolis, US")];
 
   if (atOrAfter(status, "received_by_seal") || status === "issue_reported") {
-    hist.push(ev("received_by_seal", step(2), "Package received at SEAL Minnesota", SEAL_OFFICE));
+    hist.push(ev("received_by_seal", step(2), "Package received at Minnesota Hub", SEAL_OFFICE));
   }
   if (atOrAfter(status, "invoice_generated") || status === "issue_reported") {
     hist.push(ev("invoice_generated", step(3), "Invoice generated", SEAL_OFFICE));
@@ -430,8 +438,8 @@ async function main() {
     const shipId = `demo-ship-${pad2(i + 1)}`;
     const createdISO = daysAgo(def.ageDays);
     const createdDate = new Date(createdISO);
-    const route = `USA-${def.destination.toUpperCase().replace(/[^A-Z]/g, "")}`;
-    const rcode = routeByCode.has(route) ? route : routeCode(ORIGIN, def.destination);
+    const origin = def.origin ?? ORIGIN;
+    const rcode = routeCode(origin, def.destination);
     const routeDoc = routeByCode.get(rcode) ?? null;
     const transitDays = routeDoc?.transitTimeDays ?? 21;
 
@@ -449,7 +457,7 @@ async function main() {
       customerName: cust.data.fullName,
       sender: cust.data.defaultSender!,
       receiver: cust.data.defaultReceiver!,
-      originCountry: ORIGIN,
+      originCountry: origin,
       destinationCountry: def.destination,
       routeCode: rcode,
       pricingMode: def.pricingMode,
@@ -651,7 +659,7 @@ async function main() {
     }
     if (opts.status === "dispatched") {
       manifest.sealConfirmedBy = ACTOR.uid;
-      manifest.sealConfirmedByName = "SEAL Admin (Minnesota)";
+      manifest.sealConfirmedByName = "Operations Manager (Minnesota)";
       manifest.sealConfirmedAt = new Date(new Date(createdISO).getTime() + 2 * 86_400_000).toISOString();
     }
     await db.collection("manifests").doc(opts.id).set(manifest, { merge: true });

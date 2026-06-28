@@ -2,10 +2,11 @@ import type {
   RateItem,
   CountryRoute,
   PricingType,
+  RouteDirection,
 } from "@/types";
 
 /**
- * SEAL's approved initial price list for the 6-month outsourcing pilot.
+ * LCM Operations' approved initial price list.
  * These values seed the first ACTIVE rate cards. All future changes flow
  * through the approval + audit workflow in the Rate Cards module.
  */
@@ -68,7 +69,13 @@ export const SEED_SERVICE_FEE = {
 };
 
 // ---------------------------------------------------------------------------
-// Initial country routes — only Ghana is approved/active at pilot start.
+// Initial country routes — multi-directional global lanes.
+//   • Outbound (USA → country) lanes (Ghana active at start; others draft).
+//   • Inbound (country → USA) lanes so packages can originate anywhere.
+//   • A `direction` and optional `origin`/`destination` describe each lane.
+//     The `direction` field is backward compatible: existing consumers that
+//     don't read it still work, and `countryName`/`countryCode` remain the
+//     "non-USA endpoint" of the lane.
 // ---------------------------------------------------------------------------
 
 export interface SeedRoute {
@@ -80,18 +87,48 @@ export interface SeedRoute {
   transitTimeDays: number;
   serviceFeeApplies: boolean;
   startActive: boolean;
+  /** Lane direction. Defaults to "usa_to_country" when omitted (back-compat). */
+  direction?: RouteDirection;
+  /** Optional explicit endpoints; default to USA ↔ countryName by direction. */
+  origin?: string;
+  destination?: string;
 }
 
 export const SEED_ROUTES: SeedRoute[] = [
-  { code: "USA-GHANA", countryName: "Ghana", countryCode: "GH", pricingType: "weight_based", pricePerLb: 11.57, transitTimeDays: 21, serviceFeeApplies: true, startActive: true },
-  { code: "USA-LIBERIA", countryName: "Liberia", countryCode: "LR", pricingType: "weight_based", pricePerLb: 11.57, transitTimeDays: 28, serviceFeeApplies: true, startActive: false },
-  { code: "USA-NIGERIA", countryName: "Nigeria", countryCode: "NG", pricingType: "weight_based", pricePerLb: 6.5, transitTimeDays: 28, serviceFeeApplies: false, startActive: false },
-  { code: "USA-CAMEROON", countryName: "Cameroon", countryCode: "CM", pricingType: "weight_based", pricePerLb: 15, transitTimeDays: 30, serviceFeeApplies: true, startActive: false },
-  { code: "USA-KENYA", countryName: "Kenya", countryCode: "KE", pricingType: "weight_based", pricePerLb: 15, transitTimeDays: 30, serviceFeeApplies: true, startActive: false },
-  { code: "USA-SOUTHAFRICA", countryName: "South Africa", countryCode: "ZA", pricingType: "weight_based", pricePerLb: 15, transitTimeDays: 32, serviceFeeApplies: true, startActive: false },
+  // --- Outbound: USA → country ------------------------------------------------
+  { code: "USA-GHANA", countryName: "Ghana", countryCode: "GH", pricingType: "weight_based", pricePerLb: 11.57, transitTimeDays: 21, serviceFeeApplies: true, startActive: true, direction: "usa_to_country", origin: "United States", destination: "Ghana" },
+  { code: "USA-LIBERIA", countryName: "Liberia", countryCode: "LR", pricingType: "weight_based", pricePerLb: 11.57, transitTimeDays: 28, serviceFeeApplies: true, startActive: false, direction: "usa_to_country", origin: "United States", destination: "Liberia" },
+  { code: "USA-NIGERIA", countryName: "Nigeria", countryCode: "NG", pricingType: "weight_based", pricePerLb: 6.5, transitTimeDays: 28, serviceFeeApplies: false, startActive: false, direction: "usa_to_country", origin: "United States", destination: "Nigeria" },
+  { code: "USA-CAMEROON", countryName: "Cameroon", countryCode: "CM", pricingType: "weight_based", pricePerLb: 15, transitTimeDays: 30, serviceFeeApplies: true, startActive: false, direction: "usa_to_country", origin: "United States", destination: "Cameroon" },
+  { code: "USA-KENYA", countryName: "Kenya", countryCode: "KE", pricingType: "weight_based", pricePerLb: 15, transitTimeDays: 30, serviceFeeApplies: true, startActive: false, direction: "usa_to_country", origin: "United States", destination: "Kenya" },
+  { code: "USA-SOUTHAFRICA", countryName: "South Africa", countryCode: "ZA", pricingType: "weight_based", pricePerLb: 15, transitTimeDays: 32, serviceFeeApplies: true, startActive: false, direction: "usa_to_country", origin: "United States", destination: "South Africa" },
+  { code: "USA-UNITEDKINGDOM", countryName: "United Kingdom", countryCode: "GB", pricingType: "weight_based", pricePerLb: 9.5, transitTimeDays: 10, serviceFeeApplies: true, startActive: false, direction: "usa_to_country", origin: "United States", destination: "United Kingdom" },
+  { code: "USA-CANADA", countryName: "Canada", countryCode: "CA", pricingType: "weight_based", pricePerLb: 7.25, transitTimeDays: 7, serviceFeeApplies: true, startActive: false, direction: "usa_to_country", origin: "United States", destination: "Canada" },
+  // --- Inbound: country → USA -------------------------------------------------
+  { code: "GHANA-USA", countryName: "Ghana", countryCode: "GH", pricingType: "weight_based", pricePerLb: 12.5, transitTimeDays: 18, serviceFeeApplies: true, startActive: true, direction: "country_to_usa", origin: "Ghana", destination: "United States" },
+  { code: "NIGERIA-USA", countryName: "Nigeria", countryCode: "NG", pricingType: "weight_based", pricePerLb: 8.0, transitTimeDays: 20, serviceFeeApplies: false, startActive: false, direction: "country_to_usa", origin: "Nigeria", destination: "United States" },
+  { code: "UNITEDKINGDOM-USA", countryName: "United Kingdom", countryCode: "GB", pricingType: "weight_based", pricePerLb: 9.75, transitTimeDays: 9, serviceFeeApplies: true, startActive: false, direction: "country_to_usa", origin: "United Kingdom", destination: "United States" },
 ];
 
-/** Countries selectable in forms during the pilot. */
+/** Countries the platform serves both ways (origin AND destination). */
+export const SUPPORTED_COUNTRIES = [
+  "United States",
+  "Ghana",
+  "Liberia",
+  "Nigeria",
+  "Cameroon",
+  "Kenya",
+  "South Africa",
+  "United Kingdom",
+  "Canada",
+  "China",
+  "United Arab Emirates",
+  "Germany",
+  "Togo",
+  "Côte d'Ivoire",
+];
+
+/** Countries selectable in forms during the pilot (kept for back-compat). */
 export const PILOT_COUNTRIES = [
   "Ghana",
   "Liberia",
@@ -102,4 +139,5 @@ export const PILOT_COUNTRIES = [
   "United States",
 ];
 
-export const ORIGIN_COUNTRIES = ["United States"];
+/** Shipments can originate anywhere the platform serves. */
+export const ORIGIN_COUNTRIES = SUPPORTED_COUNTRIES;

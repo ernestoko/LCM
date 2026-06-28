@@ -72,13 +72,13 @@ export default function LoginPage() {
             Transparent, accountable cargo logistics — USA to Ghana and beyond.
           </h1>
           <p className="mt-4 max-w-md text-navy-200">
-            Liberty Cargo Movers owns the platform and customer records. SEAL Logistics manages
-            pricing and cargo operations during the 6-month pilot — all under controlled access.
+            Liberty Cargo Movers connects you to a global logistics network — moving cargo reliably
+            from the USA to Ghana and beyond, all under controlled access.
           </p>
           <div className="mt-8 space-y-3 text-sm">
-            <Feature icon={<ShieldCheck className="h-5 w-5 text-gold-300" />} text="Role-based access — Liberty, SEAL, Finance & Customers" />
+            <Feature icon={<ShieldCheck className="h-5 w-5 text-gold-300" />} text="Role-based access — Operations, Finance & Customers" />
             <Feature icon={<Truck className="h-5 w-5 text-gold-300" />} text="Track packages from intake to delivery" />
-            <Feature icon={<Globe2 className="h-5 w-5 text-gold-300" />} text="SEAL-approved rate cards & gradual country onboarding" />
+            <Feature icon={<Globe2 className="h-5 w-5 text-gold-300" />} text="Approved rate cards & gradual country onboarding" />
           </div>
         </div>
         <p className="text-xs text-navy-300">© {new Date().getFullYear()} Liberty Cargo Movers. All rights reserved.</p>

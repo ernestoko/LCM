@@ -66,7 +66,7 @@ export function SettlementDocument({
         <div>
           <div className="flex items-center gap-2 text-navy-900">
             <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
-              Liberty Cargo Movers <ArrowLeftRight className="inline h-5 w-5 text-navy-400" /> SEAL
+              Liberty Cargo Movers <ArrowLeftRight className="inline h-5 w-5 text-navy-400" /> LCM
               Logistics
             </h1>
           </div>
@@ -95,7 +95,7 @@ export function SettlementDocument({
               <th className="px-3 py-2.5 font-medium">Invoice #</th>
               <th className="px-3 py-2.5 font-medium">Tracking</th>
               <th className="px-3 py-2.5 font-medium">Customer</th>
-              <th className="px-3 py-2.5 text-right font-medium">SEAL Charge</th>
+              <th className="px-3 py-2.5 text-right font-medium">Operational Charge</th>
               <th className="px-3 py-2.5 text-right font-medium">Service Fee</th>
               <th className="px-3 py-2.5 text-right font-medium">Liberty Commission</th>
               <th className="px-3 py-2.5 text-right font-medium">Platform Fee</th>
@@ -163,9 +163,9 @@ export function SettlementDocument({
       {/* Settlement summary panel */}
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <SummaryStat
-          label="SEAL operational charges"
+          label="Operational charges"
           value={money(totals.sealCharge)}
-          hint="Owed by Liberty to SEAL"
+          hint="Owed by Liberty to Operations"
         />
         <SummaryStat label="Service fees" value={money(totals.serviceFee)} />
         <SummaryStat
@@ -183,17 +183,17 @@ export function SettlementDocument({
         <SummaryStat
           label="Net position"
           value={money(netPosition)}
-          hint="Collected − SEAL charges"
+          hint="Collected − Operational charges"
           tone={netPosition >= 0 ? "emerald" : "red"}
           emphasize
         />
       </div>
 
       <div className="mt-8 rounded-lg border border-violet-200 bg-violet-50/50 px-4 py-3 text-xs text-violet-700">
-        This settlement reconciles Liberty&rsquo;s remittance to SEAL Logistics (operational charges)
+        This settlement reconciles Liberty&rsquo;s remittance for operational charges
         against Liberty&rsquo;s earnings (commission and platform fee) for the stated period of the
-        6-month outsourcing pilot. Figures are sourced from each invoice&rsquo;s commission
-        breakdown. Not visible to customers or SEAL.
+        6-month pilot. Figures are sourced from each invoice&rsquo;s commission
+        breakdown. Not visible to customers.
       </div>
     </div>
   );

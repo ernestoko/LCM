@@ -458,7 +458,7 @@ export default function ShipmentDetailPage() {
               <KeyValue label="Payment">
                 <StatusBadge meta={PAYMENT_STATUS_META[shipment.paymentStatus]} />
               </KeyValue>
-              <KeyValue label="SEAL office">{shipment.assignedSealOffice}</KeyValue>
+              <KeyValue label="Operations hub">{shipment.assignedSealOffice}</KeyValue>
               <KeyValue label="Expected delivery">{formatDate(shipment.expectedDeliveryDate)}</KeyValue>
               <KeyValue label="Actual delivery">{formatDate(shipment.actualDeliveryDate)}</KeyValue>
             </CardBody>

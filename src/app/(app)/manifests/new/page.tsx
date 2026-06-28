@@ -73,7 +73,7 @@ function NewManifest() {
   const activeRoutes = useMemo(() => routes.filter((r) => r.status === "active"), [routes]);
 
   const [routeId, setRouteId] = useState("");
-  const [sealOffice, setSealOffice] = useState("SEAL Minnesota");
+  const [sealOffice, setSealOffice] = useState("Operations Minnesota");
   const [dispatchDate, setDispatchDate] = useState("");
   const [expectedArrivalDate, setExpectedArrivalDate] = useState("");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -171,7 +171,7 @@ function NewManifest() {
       </Link>
       <PageHeader
         title="New Manifest"
-        description="Group payment-confirmed packages onto a route for dispatch. Requires Liberty approval and SEAL confirmation before it can move."
+        description="Group payment-confirmed packages onto a route for dispatch. Requires Liberty approval and Operations confirmation before it can move."
       />
 
       <div className="space-y-6">
@@ -206,11 +206,11 @@ function NewManifest() {
               </Field>
             )}
 
-            <Field label="SEAL office">
+            <Field label="Operations hub">
               <Input
                 value={sealOffice}
                 onChange={(e) => setSealOffice(e.target.value)}
-                placeholder="SEAL Minnesota"
+                placeholder="Operations Minnesota"
               />
             </Field>
             <div />

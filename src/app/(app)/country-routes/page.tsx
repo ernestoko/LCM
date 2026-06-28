@@ -104,7 +104,7 @@ function CountryRoutes() {
       />
 
       <InfoBanner tone="info">
-        New country routes start as <strong>DRAFT</strong>. SEAL confirms operational readiness,
+        New country routes start as <strong>DRAFT</strong>. Operations confirms operational readiness,
         then Liberty approves to activate the route for live shipments.
       </InfoBanner>
 
@@ -139,7 +139,7 @@ function CountryRoutes() {
                   withBusy(
                     route.id,
                     () => sealConfirmRoute(route.id, actor),
-                    `${route.countryName} confirmed by SEAL.`,
+                    `${route.countryName} confirmed by Operations.`,
                   )
                 }
                 onLibertyApprove={() =>
@@ -227,11 +227,11 @@ function RouteCard({
         <div className="flex flex-wrap gap-2">
           {route.sealConfirmed ? (
             <Badge tone="success">
-              <CheckCircle2 className="h-3.5 w-3.5" /> SEAL confirmed
+              <CheckCircle2 className="h-3.5 w-3.5" /> Operations confirmed
             </Badge>
           ) : (
             <Badge tone="warning">
-              <AlertTriangle className="h-3.5 w-3.5" /> SEAL pending
+              <AlertTriangle className="h-3.5 w-3.5" /> Operations pending
             </Badge>
           )}
           {route.libertyApproved ? (
@@ -248,7 +248,7 @@ function RouteCard({
         <div className="flex flex-wrap gap-2 border-t border-navy-100 pt-3">
           {isSealUser && !route.sealConfirmed && (
             <Button size="sm" variant="gold" onClick={onSealConfirm} loading={busy} disabled={busy}>
-              <ShieldCheck className="h-4 w-4" /> SEAL Confirm
+              <ShieldCheck className="h-4 w-4" /> Operations Confirm
             </Button>
           )}
           {canApprove && !route.libertyApproved && (

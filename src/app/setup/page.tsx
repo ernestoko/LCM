@@ -20,7 +20,7 @@ export default function SetupPage() {
     {
       icon: Database,
       title: "3 · Deploy rules & seed data",
-      body: "Run `firebase deploy --only firestore:rules,storage:rules` then `npm run seed` to create the Super Admin, SEAL rate cards and the Ghana route.",
+      body: "Run `firebase deploy --only firestore:rules,storage:rules` then `npm run seed` to create the Super Admin, operations rate cards and the Ghana route.",
     },
     {
       icon: Rocket,

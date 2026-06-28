@@ -149,7 +149,7 @@ function AnalyticsDashboard() {
     () => [
       { label: "Revenue", value: finance.totalCollected, color: HEX.emerald },
       { label: "Liberty", value: liberty.libertyEarnings, color: HEX.gold },
-      { label: "SEAL", value: liberty.sealCharges, color: HEX.navy },
+      { label: "Operations", value: liberty.sealCharges, color: HEX.navy },
     ],
     [finance.totalCollected, liberty.libertyEarnings, liberty.sealCharges],
   );
@@ -269,14 +269,14 @@ function AnalyticsDashboard() {
       {/* Revenue vs earnings vs SEAL charges */}
       <Card>
         <CardHeader
-          title="Revenue vs Liberty Earnings vs SEAL Charges"
-          subtitle="Collected revenue against Liberty's commission and SEAL's payable."
+          title="Revenue vs Liberty Earnings vs Operational Charges"
+          subtitle="Collected revenue against Liberty's commission and Operations payable."
         />
         <CardBody>
           <div className="h-72 w-full">
             <BarChart
               data={financeBars}
-              title="Comparison of collected revenue, Liberty earnings and SEAL charges"
+              title="Comparison of collected revenue, Liberty earnings and operational charges"
               formatValue={moneyCompact}
               emptyLabel={
                 hasFinance ? "No data to display" : "No financial activity yet"

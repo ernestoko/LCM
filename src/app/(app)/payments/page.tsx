@@ -224,7 +224,7 @@ function PaymentsWorkspace() {
     <div className="space-y-6">
       <PageHeader
         title="Payments &amp; Reconciliation"
-        description="Record customer payments and reconcile against SEAL settlements."
+        description="Record customer payments and reconcile against Operations settlements."
         actions={
           can("payments.record") ? (
             <Button onClick={openPayModal} disabled={outstanding.length === 0}>
@@ -255,7 +255,7 @@ function PaymentsWorkspace() {
           tone="red"
         />
         <StatCard
-          label="SEAL payable"
+          label="Operations payable"
           value={formatMoney(metrics.sealPayable, currency)}
           icon="Truck"
           tone="violet"
@@ -286,7 +286,7 @@ function PaymentsWorkspace() {
           <KeyValue label="Customer payments">
             {formatMoney(report.totalCustomerPayments, currency)}
           </KeyValue>
-          <KeyValue label="SEAL charges">
+          <KeyValue label="Operational charges">
             {formatMoney(report.totalSealCharges, currency)}
           </KeyValue>
           <KeyValue label="Liberty commission">

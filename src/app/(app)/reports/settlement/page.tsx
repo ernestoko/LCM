@@ -115,8 +115,8 @@ function SettlementReport() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="SEAL Settlement Report"
-        description="Reconcile what Liberty owes SEAL against what Liberty earns for a chosen period."
+        title="Operations Settlement Report"
+        description="Reconcile what Liberty owes Operations against what Liberty earns for a chosen period."
         actions={
           <Link href="/reports">
             <Button variant="ghost" size="sm">

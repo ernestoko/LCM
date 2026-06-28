@@ -33,14 +33,14 @@ const COMPANY = "Liberty Cargo Movers";
 export const TEMPLATES: Record<NotificationEvent, (c: TemplateContext) => RenderedTemplate> = {
   package_received: (c) => ({
     subject: `Package received — ${c.trackingNumber}`,
-    sms: `${COMPANY}: Hi ${c.customerName ?? "there"}, your package ${c.trackingNumber} has been received by SEAL. We'll keep you updated.`,
-    email: `Hi ${c.customerName ?? "there"},\n\nGood news — your package (${c.trackingNumber}) has been received at our SEAL intake point and is being processed.\n\nWe'll notify you at each step.\n\n— ${COMPANY}`,
-    whatsapp: `📦 *${COMPANY}*\nHi ${c.customerName ?? "there"}, your package *${c.trackingNumber}* has been received by SEAL and is being processed.`,
+    sms: `${COMPANY}: Hi ${c.customerName ?? "there"}, your package ${c.trackingNumber} has been received by Operations. We'll keep you updated.`,
+    email: `Hi ${c.customerName ?? "there"},\n\nGood news — your package (${c.trackingNumber}) has been received at our intake point and is being processed.\n\nWe'll notify you at each step.\n\n— ${COMPANY}`,
+    whatsapp: `📦 *${COMPANY}*\nHi ${c.customerName ?? "there"}, your package *${c.trackingNumber}* has been received by Operations and is being processed.`,
   }),
   invoice_generated: (c) => ({
     subject: `Invoice ${c.invoiceNumber} — ${c.amount}`,
     sms: `${COMPANY}: Invoice ${c.invoiceNumber} for ${c.trackingNumber} is ready. Amount: ${c.amount}. Pay using your tracking number as reference.`,
-    email: `Hi ${c.customerName ?? "there"},\n\nYour invoice ${c.invoiceNumber} for shipment ${c.trackingNumber} is ready.\n\nTotal due: ${c.amount}\nPrices are based on SEAL's approved rate card for the outsourcing period.\n\nPlease use your tracking number as the payment reference.\n\n— ${COMPANY}`,
+    email: `Hi ${c.customerName ?? "there"},\n\nYour invoice ${c.invoiceNumber} for shipment ${c.trackingNumber} is ready.\n\nTotal due: ${c.amount}\nPrices are based on our approved rate card for the period.\n\nPlease use your tracking number as the payment reference.\n\n— ${COMPANY}`,
     whatsapp: `🧾 *${COMPANY}*\nInvoice *${c.invoiceNumber}* is ready.\nShipment: ${c.trackingNumber}\nAmount due: *${c.amount}*\nUse your tracking number as the payment reference.`,
   }),
   payment_confirmed: (c) => ({

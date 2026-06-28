@@ -66,7 +66,7 @@ export function Waybill({ shipment }: WaybillProps) {
               color: "#475569",
             }}
           >
-            SEAL Logistics — Pilot
+            LCM Logistics — Pilot
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
@@ -138,7 +138,7 @@ export function Waybill({ shipment }: WaybillProps) {
         <Metric label="Weight" value={formatWeight(shipment.weightLb)} />
         <Metric label="Declared value" value={formatMoney(shipment.declaredValue ?? 0)} />
         <Metric label="Created" value={formatDate(shipment.createdAt)} />
-        <Metric label="SEAL office" value={shipment.assignedSealOffice || "Unassigned"} />
+        <Metric label="Operations hub" value={shipment.assignedSealOffice || "Unassigned"} />
       </div>
 
       {/* Package description */}

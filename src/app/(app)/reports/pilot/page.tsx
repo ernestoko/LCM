@@ -156,7 +156,7 @@ function PilotTrackerView() {
     <div className="space-y-6">
       <PageHeader
         title="6-Month Outsourcing Tracker"
-        description="Live pilot performance and the SEAL partnership recommendation."
+        description="Live pilot performance and the operations partnership recommendation."
         actions={
           <Link href="/reports">
             <Button variant="ghost" size="sm">

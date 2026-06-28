@@ -96,9 +96,9 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 
         <div className="border-t border-navy-100 p-3">
           <div className="rounded-lg bg-gradient-to-br from-navy-900 to-brand-800 p-3 text-white">
-            <p className="text-xs font-semibold">6-Month SEAL Pilot</p>
+            <p className="text-xs font-semibold">6-Month Pilot</p>
             <p className="mt-0.5 text-[11px] text-navy-200">
-              SEAL Logistics manages pricing & cargo ops. Liberty owns the platform & records.
+              Global logistics network for pricing & cargo ops. Liberty owns the platform & records.
             </p>
           </div>
         </div>

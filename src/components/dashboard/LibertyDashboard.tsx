@@ -42,7 +42,7 @@ export function LibertyDashboard() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Revenue Collected" value={formatMoney(m.revenue)} icon="Wallet" tone="emerald" />
         <StatCard label="Liberty Earnings" value={formatMoney(m.libertyEarnings)} icon="TrendingUp" tone="gold" hint="Commission + platform fees" />
-        <StatCard label="SEAL Op. Charges" value={formatMoney(m.sealCharges)} icon="Building2" tone="violet" />
+        <StatCard label="Operational charges" value={formatMoney(m.sealCharges)} icon="Building2" tone="violet" />
         <StatCard label="Pending Payments" value={formatMoney(m.pendingPaymentAmount)} icon="CircleAlert" tone="red" hint={`${m.pendingPayments} invoices`} />
       </div>
 

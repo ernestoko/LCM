@@ -21,7 +21,7 @@ export function FinanceDashboard() {
         <StatCard label="Total Invoiced" value={formatMoney(m.totalInvoiced)} icon="FileText" tone="brand" href="/invoices" />
         <StatCard label="Collected" value={formatMoney(m.totalCollected)} icon="Wallet" tone="emerald" href="/payments" />
         <StatCard label="Outstanding" value={formatMoney(m.outstanding)} icon="CircleAlert" tone="red" />
-        <StatCard label="SEAL Payable" value={formatMoney(m.sealPayable)} icon="Building2" tone="violet" />
+        <StatCard label="Operations Payable" value={formatMoney(m.sealPayable)} icon="Building2" tone="violet" />
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

@@ -123,7 +123,7 @@ function RateCards() {
     <div>
       <PageHeader
         title="Rate Cards"
-        description="SEAL-controlled pricing for the six-month pilot. Every change is approved and logged."
+        description="Controlled pricing for the six-month pilot. Every change is approved and logged."
         actions={
           canCreate ? (
             <Link href="/rate-cards/new">
@@ -136,7 +136,7 @@ function RateCards() {
       />
 
       <InfoBanner tone="info">
-        <strong>SEAL sets pricing during the pilot.</strong> New rate cards start as a{" "}
+        <strong>Operations sets pricing during the pilot.</strong> New rate cards start as a{" "}
         <strong>DRAFT</strong>, are submitted for approval, and only a Liberty Super Admin can
         approve them to become <strong>ACTIVE</strong>. Active rate cards are immutable and every
         change is recorded in the card&apos;s change history.

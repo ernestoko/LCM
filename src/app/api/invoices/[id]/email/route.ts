@@ -40,7 +40,7 @@ async function requireStaff(req: Request): Promise<StaffCaller | null> {
 }
 
 const SEAL_RATE_NOTE =
-  "All charges on this invoice are calculated from the SEAL-approved rate card in effect on the rate-card effective date shown above. Rates are fixed for the duration of the pilot program.";
+  "All charges on this invoice are calculated from our approved rate card in effect on the rate-card effective date shown above. Rates are fixed for the duration of the pilot program.";
 
 function escapeHtml(value: string): string {
   return value

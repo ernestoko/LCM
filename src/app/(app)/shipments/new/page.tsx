@@ -39,7 +39,7 @@ export default function NewShipmentPage() {
         </Link>
         <PageHeader
           title="New Shipment"
-          description="Register a package and preview its price before it reaches SEAL intake."
+          description="Register a package and preview its price before it reaches operations intake."
         />
         <ShipmentForm onSubmit={handleSubmit} submitting={submitting} />
       </div>

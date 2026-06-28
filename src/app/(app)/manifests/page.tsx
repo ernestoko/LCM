@@ -79,7 +79,7 @@ function ManifestsList() {
     <div>
       <PageHeader
         title="Manifests"
-        description="A package only moves once it's on an approved, SEAL-confirmed manifest."
+        description="A package only moves once it's on an approved, operations-confirmed manifest."
         actions={
           can("manifests.create") ? (
             <Link href="/manifests/new">

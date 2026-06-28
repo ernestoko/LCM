@@ -54,7 +54,7 @@ export const SHIPMENT_STATUS_ORDER: ShipmentStatus[] = [
 export const SHIPMENT_STATUS_META: Record<ShipmentStatus, StatusMeta> = {
   draft: { label: "Draft", tone: "neutral" },
   awaiting_package: { label: "Awaiting Package", tone: "warning" },
-  received_by_seal: { label: "Received by SEAL", tone: "info" },
+  received_by_seal: { label: "Received by Operations", tone: "info" },
   inspected: { label: "Inspected", tone: "info" },
   invoice_generated: { label: "Invoice Generated", tone: "purple" },
   payment_pending: { label: "Payment Pending", tone: "warning" },
@@ -97,7 +97,7 @@ export const MANIFEST_STATUS_META: Record<ManifestStatus, StatusMeta> = {
   draft: { label: "Draft", tone: "neutral" },
   pending_liberty_approval: { label: "Pending Liberty Approval", tone: "warning" },
   approved: { label: "Liberty Approved", tone: "info" },
-  confirmed_by_seal: { label: "Confirmed by SEAL", tone: "purple" },
+  confirmed_by_seal: { label: "Confirmed by Operations", tone: "purple" },
   dispatched: { label: "Dispatched", tone: "info" },
   arrived: { label: "Arrived", tone: "success" },
   closed: { label: "Closed", tone: "neutral" },
@@ -140,7 +140,7 @@ export const CUSTOMER_TYPE_LABELS: Record<CustomerType, string> = {
 
 export const CUSTOMER_SOURCE_LABELS: Record<CustomerSource, string> = {
   liberty: "Liberty",
-  seal: "SEAL",
+  seal: "Partner",
   referral: "Referral",
   walk_in: "Walk-in",
   online: "Online",

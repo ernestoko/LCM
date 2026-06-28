@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     template: "%s · Liberty Cargo Movers",
   },
   description:
-    "Liberty Cargo Movers logistics platform — customer onboarding, SEAL-managed rate cards, shipment tracking, manifests, invoicing and reporting for the USA → Ghana cargo pilot.",
+    "Liberty Cargo Movers logistics platform — customer onboarding, managed rate cards, shipment tracking, manifests, invoicing and reporting for the USA → Ghana cargo pilot.",
   manifest: "/manifest.webmanifest",
   applicationName: "Liberty Cargo Movers",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Liberty Cargo" },

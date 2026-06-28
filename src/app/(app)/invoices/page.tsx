@@ -83,7 +83,7 @@ export default function InvoicesPage() {
         description={
           isCustomer(role)
             ? "Your invoices and balances."
-            : "Invoices generated from SEAL's approved rate card."
+            : "Invoices generated from our approved rate card."
         }
       />
 

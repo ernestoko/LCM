@@ -301,7 +301,7 @@ function UsersManager() {
           </Field>
 
           {isSealRole && (
-            <Field label="SEAL Office" htmlFor="nu-seal-office" hint="Office this user is attached to.">
+            <Field label="Operations hub" htmlFor="nu-seal-office" hint="Hub this user is attached to.">
               <Input
                 id="nu-seal-office"
                 value={form.sealOffice}

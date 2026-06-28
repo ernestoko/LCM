@@ -5,8 +5,8 @@
  *   • A Liberty Super Admin account (+ custom claims)
  *   • Optional demo staff & a demo customer
  *   • Platform settings + commission rules + service-fee config
- *   • SEAL's approved rate cards (item-based + per-route weight + service fee)
- *   • Country routes (Ghana active; others draft awaiting Liberty approval)
+ *   • LCM Operations' approved rate cards (item-based + per-route weight + service fee)
+ *   • Country routes (multi-directional: USA↔country lanes; Ghana active, others draft)
  *   • The 6-month pilot tracker
  *
  * Run:  npm run seed
@@ -141,8 +141,8 @@ async function main() {
   if (process.env.SEED_DEMO === "true") {
     await ensureUser({ email: "ops@libertycargomovers.com", password: adminPassword, displayName: "Liberty Operations", role: "liberty_admin", org: "liberty" });
     await ensureUser({ email: "finance@libertycargomovers.com", password: adminPassword, displayName: "Finance User", role: "finance_user", org: "liberty" });
-    await ensureUser({ email: "seal@seallogistics.com", password: adminPassword, displayName: "SEAL Admin (Minnesota)", role: "seal_admin", org: "seal" });
-    await ensureUser({ email: "warehouse@seallogistics.com", password: adminPassword, displayName: "SEAL Staff", role: "seal_staff", org: "seal" });
+    await ensureUser({ email: "seal@seallogistics.com", password: adminPassword, displayName: "Operations Manager", role: "seal_admin", org: "seal" });
+    await ensureUser({ email: "warehouse@seallogistics.com", password: adminPassword, displayName: "Warehouse Staff", role: "seal_staff", org: "seal" });
   }
 
   // 2. Platform settings -----------------------------------------------------
@@ -213,20 +213,21 @@ async function main() {
   // 4. Country routes --------------------------------------------------------
   console.log("🌍 Country routes");
   for (const r of SEED_ROUTES) {
+    const direction = r.direction ?? "usa_to_country";
     await db.collection("countryRoutes").doc(r.code).set(
       {
         id: r.code,
         code: r.code,
         countryName: r.countryName,
         countryCode: r.countryCode,
-        direction: "usa_to_country",
+        direction,
         pricingType: r.pricingType,
         defaultRate: r.pricePerLb ?? null,
         currency: "USD",
         transitTimeDays: r.transitTimeDays,
         prohibitedItems: ["Cash", "Weapons", "Hazardous materials", "Perishables"],
         requiredDocuments: ["Valid ID", "Invoice / receipt for high-value items"],
-        customsProcess: "Standard SEAL customs clearing on arrival in Ghana hub.",
+        customsProcess: "Standard customs clearing at our Ghana hub on arrival.",
         deliveryCoverage: r.countryName,
         sealConfirmed: r.startActive,
         libertyApproved: r.startActive,
@@ -239,18 +240,18 @@ async function main() {
       },
       { merge: true },
     );
-    console.log(`   • ${r.countryName} (${r.code}) — ${r.startActive ? "ACTIVE" : "draft"}`);
+    console.log(`   • ${r.countryName} (${r.code}, ${direction}) — ${r.startActive ? "ACTIVE" : "draft"}`);
   }
 
   // 5. Rate cards ------------------------------------------------------------
-  console.log("🏷️  Rate cards (SEAL approved)");
+  console.log("🏷️  Rate cards (approved)");
   const baseCard = {
     currency: "USD",
     effectiveDate: nowISO(),
     status: "active",
     version: 1,
     uploadedBy: actor.uid,
-    uploadedByName: "SEAL Logistics",
+    uploadedByName: "LCM Operations",
     approvedBy: actor.uid,
     approvedByName: actor.name,
     approvalDate: nowISO(),
@@ -263,7 +264,7 @@ async function main() {
   await db.collection("rateCards").doc("seed-item-based").set(
     {
       id: "seed-item-based",
-      name: "SEAL Item-Based Pricing (Pilot)",
+      name: "Standard Item-Based Pricing",
       pricingType: "item_based",
       items: SEED_ITEM_RATES,
       ...baseCard,
@@ -275,27 +276,34 @@ async function main() {
   // Weight-based card per active/draft route
   for (const r of SEED_ROUTES) {
     if (r.pricingType !== "weight_based") continue;
+    const direction = r.direction ?? "usa_to_country";
+    // The card's `country` must equal the shipment's destinationCountry so the
+    // pricing engine's country filter matches for BOTH directions. The per-lb
+    // label uses the non-USA endpoint for readability; pricePerLb is the rate
+    // the engine ultimately falls back to.
+    const cardCountry =
+      r.destination ?? (direction === "country_to_usa" ? "United States" : r.countryName);
     await db.collection("rateCards").doc(`seed-weight-${r.code}`).set(
       {
         id: `seed-weight-${r.code}`,
-        name: `SEAL Weight Pricing — ${r.countryName}`,
+        name: `Weight Pricing — ${r.countryName} (${direction})`,
         pricingType: "weight_based",
         route: r.code,
-        country: r.countryName,
+        country: cardCountry,
         pricePerLb: r.pricePerLb,
-        items: [{ key: r.countryCode, label: r.countryName, condition: "any", unitPrice: r.pricePerLb ?? 0, perUnit: "lb" }],
+        items: [{ key: r.countryCode, label: cardCountry, condition: "any", unitPrice: r.pricePerLb ?? 0, perUnit: "lb" }],
         ...baseCard,
       },
       { merge: true },
     );
-    console.log(`   • Weight card — ${r.countryName} @ $${r.pricePerLb}/lb`);
+    console.log(`   • Weight card — ${r.countryName} (${direction}) @ $${r.pricePerLb}/lb`);
   }
 
   // Service-fee card
   await db.collection("rateCards").doc("seed-service-fee").set(
     {
       id: "seed-service-fee",
-      name: "SEAL Service Fee (Pilot)",
+      name: "Service Fee",
       pricingType: "service_fee",
       items: [],
       serviceFee: {
@@ -324,8 +332,8 @@ async function main() {
     console.log("  Demo staff (same password):");
     console.log("    ops@libertycargomovers.com (Liberty Admin)");
     console.log("    finance@libertycargomovers.com (Finance)");
-    console.log("    seal@seallogistics.com (SEAL Admin)");
-    console.log("    warehouse@seallogistics.com (SEAL Staff)");
+    console.log("    seal@seallogistics.com (Operations Manager)");
+    console.log("    warehouse@seallogistics.com (Warehouse Staff)");
     console.log("────────────────────────────────────────────");
   }
   console.log("  ⚠️  Change these passwords after first login.\n");

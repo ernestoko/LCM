@@ -110,7 +110,7 @@ function IntakePageInner() {
     <div>
       <PageHeader
         title="Package Intake"
-        description="Receive, photograph, weigh and inspect packages arriving at SEAL."
+        description="Receive, photograph, weigh and inspect packages arriving at Operations."
       />
 
       <div className="mb-5 grid gap-4 sm:grid-cols-3">
@@ -158,7 +158,7 @@ function IntakePageInner() {
           description={
             search
               ? "No queued packages match your search."
-              : "New packages will appear here as they arrive at SEAL."
+              : "New packages will appear here as they arrive at Operations."
           }
         />
       ) : (

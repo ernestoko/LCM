@@ -237,7 +237,7 @@ function ReportsHub() {
               tone="gold"
             />
             <StatCard
-              label="SEAL Charges"
+              label="Operational Charges"
               value={formatMoney(liberty.sealCharges, currency)}
               icon="Truck"
               tone="navy"
@@ -334,7 +334,7 @@ function ReportsHub() {
       <Card>
         <CardHeader
           title="Commission Report"
-          subtitle="Per-invoice SEAL charge, Liberty commission and platform fee."
+          subtitle="Per-invoice operational charge, Liberty commission and platform fee."
           action={exportBtn(exportCommission)}
         />
         <CardBody className="p-0">
@@ -353,7 +353,7 @@ function ReportsHub() {
                   <TH>Invoice</TH>
                   <TH>Customer</TH>
                   <TH>Route</TH>
-                  <TH className="text-right">SEAL Charge</TH>
+                  <TH className="text-right">Operational Charge</TH>
                   <TH className="text-right">Liberty Commission</TH>
                   <TH className="text-right">Platform Fee</TH>
                   <TH className="text-right">Liberty Earnings</TH>
@@ -408,7 +408,7 @@ function ReportsHub() {
       <Card>
         <CardHeader
           title="Weekly Reconciliation"
-          subtitle="Snapshot for the Liberty ↔ SEAL settlement."
+          subtitle="Snapshot for the Operations Settlement."
           action={exportBtn(exportReconciliation)}
         />
         <CardBody>
@@ -419,7 +419,7 @@ function ReportsHub() {
               value={formatMoney(reconciliation.customerPayments, currency)}
             />
             <ReconStat
-              label="SEAL Charges"
+              label="Operational Charges"
               value={formatMoney(reconciliation.sealCharges, currency)}
             />
             <ReconStat

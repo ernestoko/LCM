@@ -134,7 +134,7 @@ export function IntakeForm({
         "received_by_seal",
         actor,
         settings,
-        { note: "Package received & inspected at SEAL" },
+        { note: "Package received & inspected at Operations" },
       );
 
       if (!result.ok) {

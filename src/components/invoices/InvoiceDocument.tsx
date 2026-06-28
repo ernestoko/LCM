@@ -112,9 +112,9 @@ export function InvoiceDocument({
 
         {/* Rate-card note */}
         <div className="mt-6 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
-          Pricing is based on SEAL Logistics&rsquo; approved rate card (
+          Pricing is based on our approved rate card (
           <span className="font-medium">{invoice.rateCardName}</span>, effective{" "}
-          {formatDate(invoice.rateCardEffectiveDate)}) for the 6-month outsourcing period.
+          {formatDate(invoice.rateCardEffectiveDate)}) for the 6-month pilot period.
         </div>
 
         {/* Payment instructions */}
@@ -142,10 +142,10 @@ export function InvoiceDocument({
         <div className="no-print rounded-xl border border-violet-200 bg-violet-50/50 p-6 shadow-card">
           <div className="mb-4 flex items-center gap-2">
             <Lock className="h-4 w-4 text-violet-600" />
-            <h2 className="text-sm font-semibold text-violet-900">Internal — Liberty/SEAL settlement</h2>
+            <h2 className="text-sm font-semibold text-violet-900">Internal — Operations Settlement</h2>
           </div>
           <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Metric label="SEAL charge" value={money(invoice.commission.sealCharge)} />
+            <Metric label="Operational charge" value={money(invoice.commission.sealCharge)} />
             <Metric label="Service fee" value={money(invoice.commission.serviceFee)} />
             <Metric label="Liberty commission" value={money(invoice.commission.libertyCommission)} />
             <Metric label="Platform fee" value={money(invoice.commission.platformFee)} />
@@ -161,7 +161,7 @@ export function InvoiceDocument({
             </p>
           )}
           <p className="mt-3 text-xs font-medium text-violet-500">
-            Not visible to customers or SEAL.
+            Not visible to customers.
           </p>
         </div>
       )}

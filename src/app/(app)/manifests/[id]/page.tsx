@@ -95,7 +95,7 @@ function ManifestDetail() {
     setBusy("confirm");
     try {
       await sealConfirmManifest(id, actor);
-      success("Manifest confirmed by SEAL.");
+      success("Manifest confirmed by Operations.");
     } catch (err) {
       toastError(err instanceof Error ? err.message : "Failed to confirm manifest.");
     } finally {
@@ -167,7 +167,7 @@ function ManifestDetail() {
                 loading={busy === "confirm"}
                 disabled={busy !== null}
               >
-                <ShieldCheck className="h-4 w-4" /> SEAL Confirm
+                <ShieldCheck className="h-4 w-4" /> Operations Confirm
               </Button>
             )}
             {canDispatchNow && (
@@ -201,7 +201,7 @@ function ManifestDetail() {
               label="Origin → Destination"
               value={`${manifest.origin} → ${manifest.destination}`}
             />
-            <DocField label="SEAL office" value={manifest.sealOffice ?? "—"} />
+            <DocField label="Operations hub" value={manifest.sealOffice ?? "—"} />
             <DocField label="Dispatch date" value={formatDate(manifest.dispatchDate)} />
             <DocField label="Expected arrival" value={formatDate(manifest.expectedArrivalDate)} />
             <DocField label="Status" value={MANIFEST_STATUS_META[manifest.status].label} />
@@ -219,7 +219,7 @@ function ManifestDetail() {
               }
             />
             <DocField
-              label="SEAL confirmed by"
+              label="Operations confirmed by"
               value={
                 manifest.sealConfirmedByName
                   ? `${manifest.sealConfirmedByName}${

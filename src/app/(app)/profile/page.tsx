@@ -30,7 +30,7 @@ import {
 
 const ORG_LABELS: Record<Organization, string> = {
   liberty: "Liberty Cargo Movers",
-  seal: "SEAL",
+  seal: "Operations",
   customer: "Customer",
 };
 
@@ -114,7 +114,7 @@ function ProfileSection({ user }: { user: AppUser }) {
             <Input id="profile-org" value={ORG_LABELS[user.organization]} readOnly disabled />
           </Field>
           {user.sealOffice && (
-            <Field label="SEAL Office" htmlFor="profile-office">
+            <Field label="Operations hub" htmlFor="profile-office">
               <Input id="profile-office" value={user.sealOffice} readOnly disabled />
             </Field>
           )}

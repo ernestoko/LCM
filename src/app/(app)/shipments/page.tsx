@@ -94,7 +94,7 @@ export default function ShipmentsPage() {
     <div>
       <PageHeader
         title="Shipments"
-        description="Track every package across the SEAL outsourcing pipeline."
+        description="Track every package across the operations pipeline."
         actions={
           can("shipments.create") ? (
             <Link href="/shipments/new">

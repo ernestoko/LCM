@@ -81,7 +81,7 @@ function ShipmentTable({ rows }: { rows: Shipment[] }) {
     return (
       <EmptyState
         title="Nothing here yet"
-        description="Shipments will appear in this view as they move through the SEAL pipeline."
+        description="Shipments will appear in this view as they move through the operations pipeline."
       />
     );
   }
@@ -93,7 +93,7 @@ function ShipmentTable({ rows }: { rows: Shipment[] }) {
             <TH>Tracking</TH>
             <TH>Customer</TH>
             <TH>Route</TH>
-            <TH>SEAL handling</TH>
+            <TH>Operations handling</TH>
             <TH>Status</TH>
             <TH>Weight</TH>
             <TH>Updated</TH>
@@ -179,7 +179,7 @@ function SealOperationsInner() {
   return (
     <div>
       <PageHeader
-        title="SEAL Operations"
+        title="Operations"
         description="Warehouse workspace for intake, manifesting and dispatch across the pilot."
       />
 
@@ -187,7 +187,7 @@ function SealOperationsInner() {
         <span className="inline-flex items-center gap-2 font-medium">
           <Lock className="h-4 w-4" /> Controlled access
         </span>{" "}
-        SEAL operates within scoped permissions — you can receive, manifest and
+        Operations works within scoped permissions — you can receive, manifest and
         update shipments, but cannot delete records, change record ownership, or
         export customer data. These actions are reserved for Liberty.
       </InfoBanner>
@@ -246,7 +246,7 @@ function SealOperationsInner() {
 
         <div className="mt-4">
           {loading ? (
-            <LoadingState label="Loading SEAL operations…" />
+            <LoadingState label="Loading operations…" />
           ) : error ? (
             <ErrorState message={error.message} />
           ) : tab === "manifests" ? (

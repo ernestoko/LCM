@@ -19,7 +19,7 @@ import {
   ITEM_CATEGORIES,
   SEED_ITEM_RATES,
   ORIGIN_COUNTRIES,
-  PILOT_COUNTRIES,
+  SUPPORTED_COUNTRIES,
 } from "@/constants/seed-data";
 import { PRICING_TYPE_LABELS } from "@/constants/statuses";
 import {
@@ -81,9 +81,14 @@ export function ShipmentForm({
   const [receiver, setReceiver] = useState<ContactParty>(emptyContact());
 
   // --- Route ----------------------------------------------------------------
-  const [originCountry, setOriginCountry] = useState(ORIGIN_COUNTRIES[0] ?? "United States");
+  // Origin can now be ANY supported country (default USA); destination is any
+  // supported country other than the origin. routeCode recomputes when either
+  // endpoint changes (see the memo below).
+  const [originCountry, setOriginCountry] = useState(
+    ORIGIN_COUNTRIES.find((c) => c === "United States") ?? ORIGIN_COUNTRIES[0] ?? "United States",
+  );
   const [destinationCountry, setDestinationCountry] = useState(
-    PILOT_COUNTRIES.find((c) => c === "Ghana") ?? PILOT_COUNTRIES[0],
+    SUPPORTED_COUNTRIES.find((c) => c === "Ghana") ?? SUPPORTED_COUNTRIES[0],
   );
 
   // --- Pricing --------------------------------------------------------------
@@ -95,7 +100,7 @@ export function ShipmentForm({
   const [declaredValue, setDeclaredValue] = useState("");
   const [packageDescription, setPackageDescription] = useState("");
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("");
-  const [assignedSealOffice, setAssignedSealOffice] = useState("SEAL Minnesota");
+  const [assignedSealOffice, setAssignedSealOffice] = useState("Minnesota Hub");
 
   const [error, setError] = useState<string | null>(null);
 
@@ -298,7 +303,19 @@ export function ShipmentForm({
           <CardHeader title="Route" subtitle={`Route code: ${routeCode}`} />
           <CardBody className="grid gap-4 sm:grid-cols-2">
             <Field label="Origin" required htmlFor="origin">
-              <Select id="origin" value={originCountry} onChange={(e) => setOriginCountry(e.target.value)}>
+              <Select
+                id="origin"
+                value={originCountry}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setOriginCountry(next);
+                  // Keep destination valid (can't ship a country to itself).
+                  if (next === destinationCountry) {
+                    const fallback = SUPPORTED_COUNTRIES.find((c) => c !== next);
+                    if (fallback) setDestinationCountry(fallback);
+                  }
+                }}
+              >
                 {ORIGIN_COUNTRIES.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -312,7 +329,7 @@ export function ShipmentForm({
                 value={destinationCountry}
                 onChange={(e) => setDestinationCountry(e.target.value)}
               >
-                {PILOT_COUNTRIES.filter((c) => c !== "United States").map((c) => (
+                {SUPPORTED_COUNTRIES.filter((c) => c !== originCountry).map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>
@@ -462,12 +479,12 @@ export function ShipmentForm({
                 onChange={(e) => setExpectedDeliveryDate(e.target.value)}
               />
             </Field>
-            <Field label="Assigned SEAL office" htmlFor="sealOffice">
+            <Field label="Assigned operations hub" htmlFor="sealOffice">
               <Input
                 id="sealOffice"
                 value={assignedSealOffice}
                 onChange={(e) => setAssignedSealOffice(e.target.value)}
-                placeholder="SEAL Minnesota"
+                placeholder="Minnesota Hub"
               />
             </Field>
             <Field label="Package description" htmlFor="packageDescription" className="sm:col-span-2">
@@ -529,7 +546,7 @@ export function ShipmentForm({
               )}
 
               <p className="text-xs text-navy-400">
-                Indicative only — the binding invoice is generated from SEAL&apos;s active rate card.
+                Indicative only — the binding invoice is generated from the active rate card.
               </p>
             </CardBody>
           </Card>
