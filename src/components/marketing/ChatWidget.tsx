@@ -52,16 +52,19 @@ interface ChatMessage {
   chips?: string[];
 }
 
+/** The assistant's name — shown in the header and used when she introduces herself. */
+const ASSISTANT_NAME = "Jesselyn";
+
 const GREETING_CHIPS = [
   "Track a package",
   "Shipping rates",
+  "Air or sea?",
   "Where are you located?",
-  "Ship to your warehouse",
   "Talk to a human",
 ];
 
 const GREETING: BotReply = {
-  text: "Hi! 👋 I'm the Liberty assistant. I can help you track a shipment, understand pricing for air or sea, find our locations, or connect you with a person. What do you need?",
+  text: "Hi, I'm Jesselyn 👋 — your Liberty & Liberty Logistics assistant. I can track a shipment, explain air & sea pricing, set up a pickup or warehouse forwarding, answer customs questions, or connect you with a person. How can I help?",
   chips: GREETING_CHIPS,
 };
 
@@ -92,107 +95,227 @@ function searchFaq(norm: string): { q: string; a: string } | null {
   return bestScore >= 2 ? best : null;
 }
 
+/**
+ * Jesselyn's "brain": a prioritised intent router covering the whole shipping
+ * journey. The most specific intents are checked first; anything unmatched falls
+ * through to a search of the FAQ knowledge base, then to a friendly catch-all.
+ */
 function getReply(input: string): BotReply {
   const norm = input.toLowerCase().trim();
 
-  // 1. A tracking number was pasted → take them straight to the tracker.
+  // A tracking number was pasted → take them straight to the tracker.
   const tn = input.match(TRACK_RE)?.[0];
   if (tn) {
     return {
-      text: `Let's track ${tn}. Tap below to see its live status and timeline.`,
+      text: `Let's track ${tn}. Tap below for its live status and full timeline.`,
       actions: [{ label: `Track ${tn}`, href: `/track/${tn}`, icon: "track" }],
+      chips: ["Talk to a human"],
     };
   }
 
-  // 2. Human handoff
-  if (
-    has(norm, "human", "agent", "representative", "real person", "talk to", "speak", "someone") ||
-    has(norm, "whatsapp", "call you", "phone number", "contact")
-  ) {
+  // Identity — who is Jesselyn?
+  if (has(norm, "who are you", "your name", "what are you", "are you a bot", "are you human", "are you real", "who is this", "introduce yourself", "what's your name", "whats your name")) {
     return {
-      text: "Of course — here's how to reach our team directly. We're happy to help.",
+      text: "I'm Jesselyn, your virtual assistant at Liberty & Liberty Logistics 🦅. I help with tracking, air & sea pricing, pickups, warehouse forwarding, customs and anything about shipping between the USA, Ghana and beyond. Ask me anything — or I'll connect you with a teammate.",
+      chips: ["What can you do?", "Track a package", "Talk to a human"],
+    };
+  }
+
+  // Capabilities
+  if (has(norm, "what can you do", "what do you do", "how can you help", "what can you help", "menu", "options", "capabilities")) {
+    return {
+      text:
+        "Plenty! Here's where I can help:\n• 📦 Track a shipment\n• 💵 Quote air (per lb) & sea (per CBM, drums/boxes) pricing\n• 🚚 Book a pickup or set up warehouse forwarding\n• 🛃 Customs, duties, prohibited items & delivery times\n• 👤 Open a customer account\n• 📞 Hand you to a human anytime\nWhat would you like to do?",
+      chips: GREETING_CHIPS,
+    };
+  }
+
+  // Thanks / sign-off
+  if (has(norm, "thank", "thanks", "thx", "appreciate", "cheers", "great help")) {
+    return {
+      text: "You're very welcome! 🙌 I'm always here if you need anything else. — Jesselyn",
+      chips: ["Track a package", "Shipping rates", "Talk to a human"],
+    };
+  }
+
+  // Human handoff
+  if (has(norm, "human", "agent", "representative", "real person", "talk to", "speak", "someone", "whatsapp", "call you", "phone number", "contact you", "customer service", "support team")) {
+    return {
+      text: "Of course — here's how to reach a real teammate. They're happy to help, and I'll be right here when you're back. 😊",
       actions: [...HANDOFF, { label: "Contact page", href: "/contact", icon: "external" }],
     };
   }
 
-  // 3. Tracking (no number yet)
-  if (has(norm, "track", "where is my", "status of my", "trace", "find my package")) {
+  // Tracking (no number yet)
+  if (has(norm, "track", "where is my", "status of my", "trace", "find my package", "my shipment", "my parcel", "my order")) {
     return {
-      text: "Sure! Enter your tracking number here and I'll pull it up, or open the full tracker. No login needed.",
+      text: "Sure! Pop your tracking number in here and I'll pull it up, or open the full tracker — no login needed. It works in any case (upper or lower).",
       actions: [{ label: "Open tracker", href: "/track", icon: "track" }],
-      chips: ["My shipment updates", "Talk to a human"],
+      chips: ["Talk to a human"],
     };
   }
 
-  // 4. Locations
-  if (has(norm, "where are you", "located", "location", "your address", "office", "hub") &&
-      !has(norm, "ship", "send", "forward")) {
+  // Locations
+  if (
+    has(norm, "where are you", "located", "location", "your address", "office", "hub", "drop off", "drop-off", "branch") &&
+    !has(norm, "ship to", "send to", "forward", "my address", "recipient")
+  ) {
     const cities = WAREHOUSES.map((w) => `${w.flag} ${w.city}`).join(" · ");
     return {
-      text: `We operate hubs in: ${cities}. When you open an account you get a personal suite at our warehouses so you can ship to us directly.`,
+      text: `We run fulfilment hubs in: ${cities}. Open an account and you get a personal suite at our warehouses so you can shop and ship to us directly.`,
       actions: [{ label: "See coverage", href: "/coverage", icon: "external" }],
       chips: ["Ship to your warehouse", "Shipping rates"],
     };
   }
 
-  // 5. Ship-to-warehouse / forwarding
-  if (has(norm, "ship to your", "send to your", "forward", "pre-alert", "prealert", "suite", "warehouse address", "package forwarding")) {
+  // Ship-to-warehouse / forwarding
+  if (has(norm, "ship to your", "send to your", "forward", "pre-alert", "prealert", "suite", "warehouse address", "package forwarding", "shop and ship", "us address", "uk address")) {
     return {
-      text: "Great — to ship to us, sign in and choose “Ship to warehouse”. You'll get a hub address with your personal suite number; address your package to it and pre-alert us with the carrier and tracking number so we match it instantly.",
+      text: "Great choice! Sign in and pick “Ship to warehouse”. You'll get a hub address with your personal suite number — address your online orders to it and pre-alert me with the carrier + tracking number so we match your parcel the moment it lands.",
       actions: [{ label: "Ship to warehouse", href: "/login", icon: "external" }],
       chips: ["Request a pickup", "Shipping rates"],
     };
   }
 
-  // 6. Pickup
-  if (has(norm, "pickup", "pick up", "collect from", "schedule a collection")) {
+  // Pickup
+  if (has(norm, "pickup", "pick up", "collect from", "collection", "come get", "from my house", "from my home")) {
     return {
-      text: "We can collect from your door. Sign in and choose “Request pickup”, give us the address plus a preferred date and time window, and we'll confirm the slot.",
+      text: "We can collect from your door. Sign in, choose “Request pickup”, share the address and a preferred date/time window, and we'll confirm the slot.",
       actions: [{ label: "Request a pickup", href: "/login", icon: "external" }],
       chips: ["Ship to your warehouse", "Talk to a human"],
     };
   }
 
-  // 7. Pricing / quotes
-  if (has(norm, "price", "cost", "rate", "how much", "quote", "charge", "cbm", "per pound", "per lb", "expensive")) {
+  // Sea units — CBM, drums, boxes
+  if (has(norm, "cbm", "cubic", "drum", "barrel", "by the box", "per box", "volume")) {
     return {
-      text: "Air Cargo is charged by weight (per pound); Sea Cargo is charged by volume (per CBM) or by standard units like boxes and drums. You always get an itemised invoice before anything ships. For a tailored quote, tell us your route, weight or dimensions, and contents.",
+      text: "For sea cargo we charge by volume (CBM = length × width × height in metres) or by standard units: 200L drum, 100L half-drum/barrel, and small/medium/large boxes. Send loose cargo and we'll measure the CBM for you — and you can mix CBM cargo and units on one invoice.",
+      actions: [{ label: "Sea cargo units", href: "/services", icon: "external" }],
+      chips: ["Shipping rates", "Air or sea?", "Get a quote"],
+    };
+  }
+
+  // Pricing / quotes
+  if (has(norm, "price", "cost", "rate", "how much", "quote", "charge", "per pound", "per lb", "per kilo", "expensive", "cheap", "fee")) {
+    return {
+      text: "Air Cargo is priced by weight (per lb); Sea Cargo by volume (per CBM) or by standard drums/boxes. You always get an itemised invoice before anything ships. For a tailored quote, tell me your route, the weight or dimensions, and what's inside.",
       actions: [{ label: "Get a quote", href: "/contact", icon: "external" }],
       chips: ["Air or sea?", "Payment methods", "Talk to a human"],
     };
   }
 
-  // 8. Payment
-  if (has(norm, "pay", "paystack", "paypal", "payment", "card", "mobile money")) {
+  // Payment
+  if (has(norm, "pay", "paystack", "paypal", "card", "mobile money", "momo", "invoice", "bank transfer")) {
     return {
-      text: "You can pay your invoice securely online with Paystack or PayPal. Payments reconcile automatically and your shipment moves forward as soon as payment is confirmed.",
-      chips: ["Shipping rates", "When do I pay?"],
+      text: "You can pay your invoice securely online with Paystack or PayPal. Payments reconcile automatically and your shipment moves forward the moment payment is confirmed — just use your tracking number as the reference.",
+      chips: ["Shipping rates", "When do I pay?", "Talk to a human"],
     };
   }
 
-  // 9. Air vs sea
-  if (has(norm, "air", "sea", "ocean", "vessel", "flight")) {
+  // Air vs sea
+  if (has(norm, "air or sea", "air vs", "vs sea", "by air", "by sea", "ocean", "vessel", "flight", "air freight", "sea freight", "fastest", "which is faster")) {
     return {
-      text: "We ship both ways. ✈️ Air Cargo is fastest and priced by weight — best for urgent or lighter goods. 🚢 Sea Cargo is the economical choice for bulky/heavy cargo and is priced by volume (CBM) or by boxes and drums. Tell us what you're sending and we'll recommend the best fit.",
-      chips: ["Shipping rates", "Get a quote", "Talk to a human"],
+      text: "We ship both ways:\n✈️ Air — fastest, priced by weight, best for urgent or lighter goods.\n🚢 Sea — most economical for bulky/heavy cargo, priced by CBM or by drums/boxes.\nTell me what you're sending and I'll recommend the best fit.",
+      chips: ["Shipping rates", "Get a quote", "Delivery time"],
     };
   }
 
-  // 10. Greeting / smalltalk
-  if (norm.length <= 12 && has(norm, "hi", "hey", "hello", "yo", "good morning", "good afternoon", "good evening", "start")) {
+  // Delivery / transit time
+  if (has(norm, "how long", "delivery time", "transit", "how many days", "when will it arrive", "eta", "arrive", "how soon")) {
+    return {
+      text: "Air Cargo usually clears in a matter of days; Sea Cargo is more economical but takes several weeks (door-to-port). Each route shows its estimated transit time, and your tracking timeline updates at every milestone.",
+      actions: [{ label: "Track a shipment", href: "/track", icon: "track" }],
+      chips: ["Air or sea?", "Shipping rates"],
+    };
+  }
+
+  // Customs / duties
+  if (has(norm, "customs", "duty", "duties", "clearance", "clearing", "import tax", "import")) {
+    return {
+      text: "We handle customs clearing at destination on supported routes. Some goods need extra documents — each route lists what's required, and I'll flag anything needed from you to clear quickly. Duties/taxes depend on the destination and the goods.",
+      chips: ["Prohibited items", "Delivery time", "Talk to a human"],
+    };
+  }
+
+  // Prohibited / can I ship
+  if (has(norm, "prohibit", "restricted", "banned", "can i ship", "can i send", "allowed", "illegal", "not allowed", "forbidden", "hazard")) {
+    return {
+      text: "Most everyday goods are fine. Prohibited items vary by route — typically hazardous materials, flammables, weapons, illegal goods and certain restricted foods/chemicals. Tell me the specific item and I'll guide you.",
+      chips: ["Customs & duties", "Talk to a human"],
+    };
+  }
+
+  // Consolidation
+  if (has(norm, "consolidat", "combine", "multiple package", "merge", "group", "several parcels", "one shipment")) {
+    return {
+      text: "Yes! It's called consolidation — we hold your incoming packages and combine them into a single shipment with one consolidated invoice. For sea and bulky cargo especially, consolidating lowers your overall cost.",
+      chips: ["Ship to your warehouse", "Shipping rates"],
+    };
+  }
+
+  // Account / register
+  if (has(norm, "account", "register", "sign up", "signup", "create account", "onboard", "open an account", "new customer", "join")) {
+    return {
+      text: "Opening an account takes a minute and gives you a personal warehouse suite plus one place for all your shipments, invoices and tracking. Every shipment needs an account first.",
+      actions: [{ label: "Create an account", href: "/register", icon: "external" }],
+      chips: ["How it works", "Ship to your warehouse"],
+    };
+  }
+
+  // How it works
+  if (has(norm, "how it works", "how does it work", "process", "get started", "first time", "new here", "the steps")) {
+    return {
+      text: "Four simple steps:\n1️⃣ Send your package to our warehouse or book a pickup.\n2️⃣ We receive, weigh/measure, photograph and inspect it.\n3️⃣ We invoice you — pay online.\n4️⃣ We ship it, and you and your recipient both get tracking to the door.",
+      actions: [{ label: "Get started", href: "/register", icon: "external" }],
+      chips: ["Shipping rates", "Air or sea?"],
+    };
+  }
+
+  // Coverage / countries
+  if (has(norm, "countries", "coverage", "where do you ship", "do you ship to", "destination", "ghana", "nigeria", "africa", "which country")) {
+    return {
+      text: "We move cargo to and from the USA and Ghana, with growing lanes across Africa, the UK and beyond. Tell me your origin and destination and I'll confirm the route and how it's priced.",
+      actions: [{ label: "View coverage", href: "/coverage", icon: "external" }],
+      chips: ["Shipping rates", "Get a quote"],
+    };
+  }
+
+  // Insurance / lost / damaged
+  if (has(norm, "insur", "lost", "damage", "broken", "protect", "missing", "claim")) {
+    return {
+      text: "We handle every shipment with care and photograph packages at intake. If something's wrong, open a support ticket from your dashboard with your tracking number and our team will investigate and make it right. For cover on high-value items, ask us before you ship.",
+      actions: [...HANDOFF],
+      chips: ["Track a package", "Talk to a human"],
+    };
+  }
+
+  // Notifications / updates
+  if (has(norm, "notif", "updates", "sms", "email alert", "alert", "recipient", "standby", "keep me posted")) {
+    return {
+      text: "You'll be notified at every milestone — received, invoiced, paid, dispatched, in transit, arrived, ready and delivered — by email and SMS (and WhatsApp where enabled). When a shipment ships, your recipient also gets a standby alert and their own tracking link.",
+      chips: ["Track a package", "How it works"],
+    };
+  }
+
+  // Greeting / smalltalk
+  if (norm.length <= 16 && has(norm, "hi", "hey", "hello", "yo", "good morning", "good afternoon", "good evening", "start", "hiya", "howdy")) {
     return GREETING;
   }
 
-  // 11. Fall back to the FAQ knowledge base
+  // Fall back to the FAQ knowledge base.
   const faq = searchFaq(norm);
   if (faq) {
-    return { text: faq.a, actions: [{ label: "Browse all FAQs", href: "/faq", icon: "external" }], chips: ["Talk to a human"] };
+    return {
+      text: faq.a,
+      actions: [{ label: "Browse all FAQs", href: "/faq", icon: "external" }],
+      chips: ["Talk to a human"],
+    };
   }
 
-  // 12. Nothing matched
+  // Friendly catch-all — stay helpful and on-brand.
   return {
-    text: "I'm not totally sure on that one — but I can help with tracking, pricing, locations, or get you to a human. You can also browse our full FAQ.",
-    actions: [...HANDOFF, { label: "Browse FAQ", href: "/faq", icon: "external" }],
+    text: "I want to get this right — I'm Jesselyn, and I can help with tracking, pricing, pickups, warehouse forwarding, customs, delivery times, or getting you to a human. Could you rephrase, or pick one below?",
+    actions: [{ label: "Browse FAQ", href: "/faq", icon: "external" }, ...HANDOFF],
     chips: GREETING_CHIPS,
   };
 }
@@ -247,7 +370,7 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Close chat" : "Chat with us"}
+        aria-label={open ? "Close chat" : `Chat with ${ASSISTANT_NAME}`}
         aria-expanded={open}
         className={cn(
           "fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lift transition-all hover:-translate-y-0.5 hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 sm:bottom-6 sm:right-6",
@@ -267,7 +390,7 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
       {open && (
         <div
           role="dialog"
-          aria-label="Liberty assistant chat"
+          aria-label={`Chat with ${ASSISTANT_NAME}`}
           className="fixed bottom-24 right-4 z-[60] flex h-[min(70vh,560px)] w-[calc(100vw-2rem)] animate-fade-up flex-col overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-lift sm:right-6 sm:w-[384px]"
         >
           {/* Header */}
@@ -276,9 +399,9 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
               <Eagle className="h-6 w-6" fill="#e6c44d" eyeFill="#0a1230" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold leading-tight">Liberty Assistant</p>
+              <p className="text-sm font-semibold leading-tight">{ASSISTANT_NAME}</p>
               <p className="flex items-center gap-1.5 text-xs text-navy-200">
-                <span className="h-1.5 w-1.5 rounded-full bg-green-400" /> Online · replies instantly
+                <span className="h-1.5 w-1.5 rounded-full bg-green-400" /> Liberty &amp; Liberty assistant · online
               </p>
             </div>
             <button
@@ -298,7 +421,7 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
                 <div className={cn("max-w-[85%] space-y-2")}>
                   <div
                     className={cn(
-                      "rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-card",
+                      "whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-card",
                       m.from === "user"
                         ? "rounded-br-md bg-brand-600 text-white"
                         : "rounded-bl-md bg-white text-navy-700",
