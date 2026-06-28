@@ -68,6 +68,21 @@ const GREETING: BotReply = {
   chips: GREETING_CHIPS,
 };
 
+/**
+ * Proactive outreach: a few seconds after a visitor lands, Jesselyn pops a warm
+ * teaser bubble above the launcher (with a brief "typing" beat for a human feel),
+ * once per browser session. One opener is picked at random for variety.
+ */
+const PROACTIVE_OPENERS = [
+  "Hi there! 👋 I'm Jesselyn. Shipping to Ghana — or anywhere — today? I can grab you a quick quote or track a package.",
+  "Hey! 😊 Jesselyn here. Need a hand sending a package or getting a rate? I'm right here whenever you're ready.",
+  "Welcome! 👋 I'm Jesselyn, your shipping assistant. Want me to track a parcel, compare air vs sea, or set up a pickup?",
+];
+const NUDGE_CHIPS = ["Get a quote", "Track a package", "Air or sea?"];
+const NUDGE_DELAY_MS = 3500; // wait after landing before reaching out
+const NUDGE_TYPING_MS = 1400; // show "typing…" for this long, then the message
+const NUDGE_SEEN_KEY = "jesselyn-greeted"; // once per session
+
 /* ------------------------------------------------------------------ */
 /* Intent router                                                       */
 /* ------------------------------------------------------------------ */
@@ -334,6 +349,10 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  // Proactive outreach teaser shown above the launcher.
+  const [nudge, setNudge] = useState<"hidden" | "typing" | "shown">("hidden");
+  const [opener, setOpener] = useState("");
+
   // Auto-scroll to the newest message.
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -344,6 +363,34 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
     const t = timers.current;
     return () => t.forEach(clearTimeout);
   }, []);
+
+  // Jesselyn reaches out shortly after the visitor lands — once per session.
+  useEffect(() => {
+    if (open || defaultOpen) return;
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem(NUDGE_SEEN_KEY) === "1";
+    } catch {
+      // sessionStorage may be unavailable (private mode) — just greet anyway.
+    }
+    if (seen) return;
+    setOpener(PROACTIVE_OPENERS[Math.floor(Math.random() * PROACTIVE_OPENERS.length)]);
+    const t1 = setTimeout(() => setNudge("typing"), NUDGE_DELAY_MS);
+    const t2 = setTimeout(() => setNudge("shown"), NUDGE_DELAY_MS + NUDGE_TYPING_MS);
+    timers.current.push(t1, t2);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [open, defaultOpen]);
+
+  function markGreeted() {
+    try {
+      sessionStorage.setItem(NUDGE_SEEN_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+  }
 
   function send(raw: string) {
     const text = raw.trim();
@@ -364,12 +411,92 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
     timers.current.push(t);
   }
 
+  /** Toggle the panel (from the launcher) and dismiss any proactive teaser. */
+  function toggleOpen() {
+    setNudge("hidden");
+    markGreeted();
+    setOpen((v) => !v);
+  }
+
+  /** Open the chat from the teaser bubble. */
+  function openFromNudge() {
+    setNudge("hidden");
+    markGreeted();
+    setOpen(true);
+  }
+
+  /** Dismiss the teaser without opening the chat. */
+  function dismissNudge() {
+    setNudge("hidden");
+    markGreeted();
+  }
+
+  /** Open the chat from a teaser quick-reply and ask that question. */
+  function nudgeSend(q: string) {
+    setNudge("hidden");
+    markGreeted();
+    setOpen(true);
+    send(q);
+  }
+
   return (
     <>
+      {/* Proactive outreach teaser — Jesselyn reaches out first */}
+      {!open && nudge !== "hidden" && (
+        <div className="fixed bottom-24 right-4 z-[60] w-[min(20rem,calc(100vw-2rem))] animate-fade-up sm:right-6">
+          <div className="overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-lift">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-navy-900 to-brand-900 px-3 py-2 text-white">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10">
+                <Eagle className="h-4 w-4" fill="#e6c44d" eyeFill="#0a1230" />
+              </span>
+              <span className="flex-1 text-xs font-semibold">{ASSISTANT_NAME}</span>
+              <span className="flex items-center gap-1 text-[10px] text-navy-200">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-400" /> online
+              </span>
+              <button
+                type="button"
+                onClick={dismissNudge}
+                aria-label="Dismiss"
+                className="ml-1 rounded p-0.5 text-navy-200 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={openFromNudge}
+              className="block w-full px-3.5 py-3 text-left"
+            >
+              {nudge === "typing" ? (
+                <span className="inline-flex items-center gap-1 py-1">
+                  <Dot /> <Dot delay="0.15s" /> <Dot delay="0.3s" />
+                </span>
+              ) : (
+                <span className="text-sm leading-relaxed text-navy-700">{opener}</span>
+              )}
+            </button>
+            {nudge === "shown" && (
+              <div className="flex flex-wrap gap-1.5 px-3.5 pb-3">
+                {NUDGE_CHIPS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => nudgeSend(c)}
+                    className="rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-medium text-brand-700 transition-colors hover:border-brand-400 hover:bg-brand-50"
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Launcher */}
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggleOpen}
         aria-label={open ? "Close chat" : `Chat with ${ASSISTANT_NAME}`}
         aria-expanded={open}
         className={cn(
