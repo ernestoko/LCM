@@ -69,7 +69,7 @@ function UsersManager() {
   const [submitting, setSubmitting] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const isSealRole = form.role === "seal_admin" || form.role === "seal_staff";
+  const isSealRole = form.role.startsWith("seal_");
   const isCustomerRole = form.role === "customer";
 
   function set<K extends keyof NewUserForm>(key: K, value: NewUserForm[K]) {

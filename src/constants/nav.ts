@@ -59,6 +59,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Settings", href: "/settings", icon: "Settings", permission: "settings.manage" },
       { label: "Users", href: "/settings/users", icon: "ShieldCheck", permission: "users.manage" },
+      { label: "Roles & Access", href: "/settings/roles", icon: "KeyRound", permission: "users.manage" },
       { label: "Audit Logs", href: "/audit-logs", icon: "ScrollText", permission: "audit.view" },
     ],
   },

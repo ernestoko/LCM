@@ -19,7 +19,9 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getFirebaseAuth, getDb, isFirebaseConfigured } from "@/lib/firebase/client";
 import { COLLECTIONS } from "@/lib/db/collections";
 import type { AppUser, Role } from "@/types";
-import { can, canAny, type Permission } from "./permissions";
+import type { Permission } from "./permissions";
+import { effectivePermissions } from "@/constants/modules";
+import { getRoleModules, type RoleModules } from "@/lib/db/repositories/roleConfig";
 
 interface AuthContextValue {
   firebaseUser: FirebaseUser | null;
@@ -40,6 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  // Super-admin-managed role -> module grants; empty means "use static defaults".
+  const [roleModules, setRoleModules] = useState<RoleModules>({});
   const configured = isFirebaseConfigured;
 
   useEffect(() => {
@@ -64,6 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(profile);
           // Best-effort last-login stamp.
           void setDoc(ref, { lastLoginAt: new Date().toISOString() }, { merge: true });
+          // Load the Super-Admin-managed role -> module config (safe: {} on failure).
+          void getRoleModules().then(setRoleModules);
         } else {
           // Auth user with no profile doc yet — treat as unprovisioned.
           setUser(null);
@@ -81,14 +87,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextValue>(() => {
     const role = user?.role ?? null;
+    // Effective permissions: custom module grants if the Super Admin has set
+    // them for this role, otherwise the role's static defaults.
+    const perms = effectivePermissions(role, roleModules);
     return {
       firebaseUser,
       user,
       role,
       loading,
       configured,
-      can: (p: Permission) => can(role, p),
-      canAny: (ps: Permission[]) => canAny(role, ps),
+      can: (p: Permission) => perms.includes(p),
+      canAny: (ps: Permission[]) => ps.some((p) => perms.includes(p)),
       signIn: async (email, password) => {
         await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
       },
@@ -99,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await sendPasswordResetEmail(getFirebaseAuth(), email);
       },
     };
-  }, [firebaseUser, user, loading, configured]);
+  }, [firebaseUser, user, loading, configured, roleModules]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

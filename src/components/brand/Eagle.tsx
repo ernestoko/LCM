@@ -14,15 +14,18 @@ export function Eagle({
   className,
   fill = "currentColor",
   eyeFill = "#ffffff",
+  style,
 }: {
   className?: string;
   fill?: string;
   eyeFill?: string;
+  style?: React.CSSProperties;
 }) {
   return (
     <svg
       viewBox="0 0 300 250"
       className={cn("h-9 w-9", className)}
+      style={style}
       role="img"
       aria-label="Liberty & Liberty Logistics"
       fill="none"

@@ -83,22 +83,11 @@ const config: Config = {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-8px)" },
         },
-        // Branded loader: sweeping progress bar + pulsing ring behind the eagle.
-        "loader-sweep": {
-          "0%": { transform: "translateX(-110%)" },
-          "100%": { transform: "translateX(320%)" },
-        },
-        "pulse-ring": {
-          "0%": { transform: "scale(0.85)", opacity: "0.55" },
-          "70%, 100%": { transform: "scale(1.6)", opacity: "0" },
-        },
       },
       animation: {
         "fade-up": "fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both",
         "fade-in": "fade-in 0.8s ease-out both",
         float: "float 6s ease-in-out infinite",
-        "loader-sweep": "loader-sweep 1.4s ease-in-out infinite",
-        "pulse-ring": "pulse-ring 2.1s cubic-bezier(0.16, 1, 0.3, 1) infinite",
       },
     },
   },

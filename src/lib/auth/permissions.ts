@@ -116,6 +116,22 @@ const SEAL_ADMIN: Permission[] = [
   "requests.view", "requests.manage",
 ];
 
+const SEAL_SUPERVISOR: Permission[] = [
+  "shipments.view.assigned", "shipments.status.update",
+  "intake.manage", "seal.operate",
+  "manifests.view", "manifests.create", "manifests.confirm",
+  "invoices.view",
+  "complaints.view", "complaints.create",
+  "requests.view", "requests.manage",
+];
+
+const SEAL_INTAKE: Permission[] = [
+  "shipments.view.assigned", "shipments.status.update",
+  "intake.manage", "seal.operate",
+  "manifests.view",
+  "requests.view",
+];
+
 const SEAL_STAFF: Permission[] = [
   "shipments.view.assigned", "shipments.status.update",
   "intake.manage", "seal.operate",
@@ -145,6 +161,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   liberty_super_admin: LIBERTY_SUPER_ADMIN,
   liberty_admin: LIBERTY_ADMIN,
   seal_admin: SEAL_ADMIN,
+  seal_supervisor: SEAL_SUPERVISOR,
+  seal_intake: SEAL_INTAKE,
   seal_staff: SEAL_STAFF,
   finance_user: FINANCE_USER,
   customer: CUSTOMER,
@@ -167,7 +185,10 @@ export function canAll(role: Role | undefined | null, permissions: Permission[])
 export const isLiberty = (role?: Role | null) =>
   role === "liberty_super_admin" || role === "liberty_admin";
 export const isSeal = (role?: Role | null) =>
-  role === "seal_admin" || role === "seal_staff";
+  role === "seal_admin" ||
+  role === "seal_supervisor" ||
+  role === "seal_intake" ||
+  role === "seal_staff";
 export const isSuperAdmin = (role?: Role | null) => role === "liberty_super_admin";
 export const isFinance = (role?: Role | null) => role === "finance_user";
 export const isCustomer = (role?: Role | null) => role === "customer";

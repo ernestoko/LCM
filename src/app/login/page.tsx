@@ -6,7 +6,6 @@ import { FirebaseError } from "firebase/app";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { Button, Field, Input, InfoBanner } from "@/components/ui";
 import { Logo, LogoWordmark } from "@/components/brand/Logo";
-import { BrandLoader } from "@/components/brand/BrandLoader";
 import { ShieldCheck, Truck, Globe2, FlaskConical, ArrowRight } from "lucide-react";
 
 const AUTH_ERRORS: Record<string, string> = {
@@ -49,22 +48,13 @@ export default function LoginPage() {
     if (!loading && firebaseUser && user) router.replace("/dashboard");
   }, [loading, firebaseUser, user, router]);
 
-  /** Shared sign-in flow used by the form and the demo shortcuts. */
+  /** Shared sign-in flow used by the form and the demo shortcuts — fast, no splash. */
   const runSignIn = async (emailArg: string, passwordArg: string) => {
     setBusy(true);
     setError(null);
-    const startedAt = Date.now();
     try {
       await signIn(emailArg.trim(), passwordArg);
-      // Hold the branded splash for a beat so it reads as a splash, not a flash.
-      const MIN_SPLASH_MS = 2000;
-      const elapsed = Date.now() - startedAt;
-      if (elapsed < MIN_SPLASH_MS) {
-        await new Promise((r) => setTimeout(r, MIN_SPLASH_MS - elapsed));
-      }
       router.replace("/dashboard");
-      // Keep `busy` true through navigation so the splash stays until the
-      // dashboard mounts (no flash back to the form).
     } catch (err) {
       const code = err instanceof FirebaseError ? err.code : "";
       setError(AUTH_ERRORS[code] ?? "Unable to sign in. Please try again.");
@@ -98,10 +88,6 @@ export default function LoginPage() {
     }
   };
 
-  // Branded full-screen loader while the sign-in request is in flight and we
-  // hand off to the dashboard — the eagle fills to depict loading progress.
-  if (busy) return <BrandLoader label="Signing you in…" />;
-
   return (
     <div className="flex min-h-screen">
       {/* Brand panel */}
@@ -134,7 +120,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* Big Liberty logo */}
           <div className="mb-6 flex flex-col items-center text-center">
-            <Logo size={176} className="drop-shadow-[0_6px_20px_rgba(184,134,11,0.25)]" />
+            <Logo size={224} className="drop-shadow-[0_8px_26px_rgba(184,134,11,0.28)]" />
             <p className="mt-3 text-xl font-bold tracking-tight text-navy-900">
               Liberty <span className="text-brand-600">&amp;</span> Liberty Logistics
             </p>

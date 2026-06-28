@@ -185,6 +185,12 @@ service cloud.firestore {
     }
 
     // ---- settings / commission / pilot (Liberty control plane) ------------
+    // Role -> module grants are read by every staff member (to resolve their
+    // effective permissions) but only the Super Admin may change them.
+    match /settings/roleModules {
+      allow read: if isStaff();
+      allow write: if isSuperAdmin();
+    }
     match /settings/{id} {
       allow read: if isLiberty();
       allow write: if isSuperAdmin();

@@ -35,6 +35,8 @@ export type Role =
   | "liberty_super_admin"
   | "liberty_admin"
   | "seal_admin"
+  | "seal_supervisor"
+  | "seal_intake"
   | "seal_staff"
   | "finance_user"
   | "customer";

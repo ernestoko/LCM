@@ -1,4 +1,5 @@
 import { CheckCircle2, Truck } from "lucide-react";
+import { Eagle } from "@/components/brand/Eagle";
 import { Container } from "./Container";
 import { MButton } from "./MButton";
 
@@ -21,13 +22,26 @@ export function DeliveryBand() {
           <div className="order-last lg:order-first">
             <div className="relative mx-auto max-w-md overflow-hidden rounded-3xl bg-white shadow-lift">
               <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-brand-100/60 blur-2xl" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/delivery-courier.jpg"
-                alt="Liberty courier in a black uniform smiling and handing over a cardboard parcel"
-                className="relative mx-auto w-full max-w-sm"
-                loading="lazy"
-              />
+              <div className="relative mx-auto w-full max-w-sm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/delivery-courier.jpg"
+                  alt="Liberty courier in a branded black uniform smiling and handing over a cardboard parcel"
+                  className="w-full"
+                  loading="lazy"
+                />
+                {/* Branded uniform mark on the courier's chest */}
+                <Eagle
+                  className="pointer-events-none absolute left-1/2 top-[38%] h-5 w-9 -translate-x-1/2 opacity-95"
+                  fill="#e6c44d"
+                  eyeFill="#0a1230"
+                />
+                {/* Liberty brand badge */}
+                <div className="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-navy-900/90 px-3 py-1.5 text-white shadow-lg backdrop-blur">
+                  <Eagle className="h-4 w-7" fill="#e6c44d" eyeFill="#0a1230" />
+                  <span className="text-xs font-semibold">Liberty &amp; Liberty</span>
+                </div>
+              </div>
             </div>
           </div>
 

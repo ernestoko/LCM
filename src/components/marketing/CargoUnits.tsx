@@ -1,4 +1,5 @@
 import { SEA_UNIT_DEFS } from "@/constants/seaUnits";
+import { Eagle } from "@/components/brand/Eagle";
 import { Container } from "./Container";
 
 const NAVY = "#0a1230";
@@ -82,8 +83,14 @@ export function CargoUnits() {
               key={u.key}
               className="flex flex-col items-center rounded-2xl border border-navy-100 bg-navy-50/40 p-5 text-center shadow-card transition-shadow hover:shadow-card-hover"
             >
-              <div className="flex h-24 w-24 items-center justify-center rounded-xl bg-white">
+              <div className="relative flex h-24 w-24 items-center justify-center rounded-xl bg-white">
                 {u.key.startsWith("drum") ? <DrumArt /> : <BoxArt />}
+                {/* Liberty brand mark stamped on the unit */}
+                <Eagle
+                  className="pointer-events-none absolute left-1/2 top-[56%] h-4 w-7 -translate-x-1/2 -translate-y-1/2 opacity-90"
+                  fill="#0a1230"
+                  eyeFill="#f6edc7"
+                />
               </div>
               <p className="mt-3 text-sm font-semibold leading-tight text-navy-900">{u.label}</p>
               <span className="mt-2 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700">

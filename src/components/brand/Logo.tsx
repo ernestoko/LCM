@@ -5,11 +5,12 @@ const GOLD = "#b8860b";
 const GOLD_BRIGHT = "#e6c44d";
 const NAVY = "#0a1230";
 
-/** App eagle mark — the Liberty & Liberty Logistics falcon (gold). */
+/** App eagle mark — the Liberty & Liberty Logistics falcon (gold). `size` in px. */
 export function Logo({ className, size = 36 }: { className?: string; size?: number }) {
   return (
     <Eagle
       className={cn(className)}
+      style={{ width: size, height: size }}
       fill={GOLD}
       eyeFill="#ffffff"
     />
