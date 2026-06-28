@@ -1,0 +1,178 @@
+rules_version = '2';
+
+// ============================================================================
+// Liberty Cargo Movers — Firestore Security Rules
+// ----------------------------------------------------------------------------
+// Roles are carried as Firebase Auth custom claims set by the admin SDK at
+// user creation: token.role, token.org ("liberty"|"seal"|"customer"),
+// token.customerId, token.sealOffice.
+//
+// Principles:
+//  - Liberty owns the customer database & business intelligence. SEAL has NO
+//    read access to the `customers` collection or platform settings.
+//  - SEAL can perform operational tasks (intake, manifests) but cannot delete
+//    shipments, change ownership, or activate rates without Liberty approval.
+//  - Customers see only their own shipments & invoices.
+//  - Rate activation, route approval, locking and exports are Super-Admin gated.
+//  - Audit logs are append-only and never editable.
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- helpers ----------------------------------------------------------
+    function signedIn() { return request.auth != null; }
+    function role() { return request.auth.token.role; }
+    function org() { return request.auth.token.org; }
+    function isSuperAdmin() { return signedIn() && role() == 'liberty_super_admin'; }
+    function isLibertyAdmin() { return signedIn() && role() == 'liberty_admin'; }
+    function isLiberty() { return signedIn() && org() == 'liberty'; } // includes finance
+    function isFinance() { return signedIn() && role() == 'finance_user'; }
+    function isSeal() { return signedIn() && org() == 'seal'; }
+    function isSealAdmin() { return signedIn() && role() == 'seal_admin'; }
+    function isCustomer() { return signedIn() && role() == 'customer'; }
+    function isStaff() { return signedIn() && org() != 'customer'; }
+    function ownsCustomer(cid) { return isCustomer() && request.auth.token.customerId == cid; }
+    function unchanged(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    // ---- users ------------------------------------------------------------
+    // Users read their own profile; Super Admin manages everyone. Writes to
+    // roles happen via the Admin SDK (server), which bypasses these rules.
+    match /users/{uid} {
+      allow read: if isSuperAdmin() || (signedIn() && request.auth.uid == uid);
+      allow write: if isSuperAdmin();
+    }
+
+    // ---- customers (Liberty-owned, SEAL has NO access) --------------------
+    match /customers/{id} {
+      allow read: if isLiberty() || ownsCustomer(id);
+      allow create: if isLibertyAdmin() || isSuperAdmin();
+      // Ownership can never be reassigned; record stays owned by Liberty.
+      allow update: if (isLibertyAdmin() || isSuperAdmin())
+                    && request.resource.data.ownedBy == 'liberty';
+      allow delete: if isSuperAdmin();
+    }
+
+    // ---- shipments --------------------------------------------------------
+    match /shipments/{id} {
+      allow read: if isStaff() || ownsCustomer(resource.data.customerId);
+      allow create: if isLiberty();
+      // SEAL may update operational fields but cannot lock, change ownership,
+      // or edit a locked record. Liberty admins manage everything (unless locked).
+      allow update: if (
+                      (isLiberty() && (resource.data.locked == false || isSuperAdmin()))
+                      || (isSeal() && resource.data.locked == false
+                          && unchanged('customerId') && unchanged('locked'))
+                    );
+      allow delete: if isSuperAdmin();
+    }
+
+    // ---- packages (operational sub-records) -------------------------------
+    match /packages/{id} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ---- rate cards (SEAL proposes, only Super Admin activates) -----------
+    match /rateCards/{id} {
+      allow read: if isStaff();
+      // New cards must start as draft or pending_approval (never active).
+      allow create: if (isLiberty() || isSealAdmin())
+                    && request.resource.data.status in ['draft', 'pending_approval'];
+      // Activating, expiring or approving a card is Super-Admin only.
+      allow update: if isSuperAdmin()
+                    || ((isLiberty() || isSealAdmin())
+                        && request.resource.data.status in ['draft', 'pending_approval', 'rejected']
+                        && resource.data.status in ['draft', 'pending_approval', 'rejected']);
+      allow delete: if isSuperAdmin();
+    }
+
+    // ---- invoices ---------------------------------------------------------
+    match /invoices/{id} {
+      allow read: if isStaff() || ownsCustomer(resource.data.customerId);
+      allow create: if isLiberty();
+      allow update: if isLiberty();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ---- payments ---------------------------------------------------------
+    match /payments/{id} {
+      allow read: if isLiberty() || ownsCustomer(resource.data.customerId);
+      allow create, update: if isFinance() || isLibertyAdmin() || isSuperAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ---- manifests --------------------------------------------------------
+    match /manifests/{id} {
+      allow read: if isStaff();
+      allow create: if isSeal() || isLiberty();
+      // Liberty approval & SEAL confirmation both permitted; status flow
+      // validated in the app layer.
+      allow update: if isSeal() || isLiberty();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ---- country routes (Liberty approves activation) ---------------------
+    match /countryRoutes/{id} {
+      allow read: if isStaff();
+      allow create: if isLiberty() || isSealAdmin();
+      // Only Liberty admin / Super Admin may approve or set a route active.
+      allow update: if isSuperAdmin() || isLibertyAdmin()
+                    || (isSeal() && request.resource.data.status == resource.data.status
+                        && unchanged('libertyApproved'));
+      allow delete: if isSuperAdmin();
+    }
+
+    // ---- complaints -------------------------------------------------------
+    match /complaints/{id} {
+      allow read: if isStaff() || ownsCustomer(resource.data.customerId);
+      allow create: if signedIn();
+      allow update: if isStaff();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ---- notifications ----------------------------------------------------
+    match /notifications/{id} {
+      allow read: if isStaff() || (signedIn() && resource.data.recipientUserId == request.auth.uid);
+      allow create: if isStaff();
+      // Recipients may mark their own notification read.
+      allow update: if isStaff() || (signedIn() && resource.data.recipientUserId == request.auth.uid);
+      allow delete: if isSuperAdmin();
+    }
+
+    // ---- audit logs (append-only) -----------------------------------------
+    match /auditLogs/{id} {
+      allow read: if isSuperAdmin() || isLibertyAdmin();
+      allow create: if signedIn();
+      allow update, delete: if false; // immutable
+    }
+
+    // ---- settings / commission / pilot (Liberty control plane) ------------
+    match /settings/{id} {
+      allow read: if isLiberty();
+      allow write: if isSuperAdmin();
+    }
+    match /commissions/{id} {
+      allow read: if isLiberty();
+      allow write: if isSuperAdmin();
+    }
+    match /pilotTracker/{id} {
+      allow read: if isStaff();
+      allow write: if isLibertyAdmin() || isSuperAdmin();
+    }
+
+    // ---- counters (gap-free sequence numbers) -----------------------------
+    match /counters/{id} {
+      allow read: if isStaff();
+      allow write: if isStaff(); // transactional increments only
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

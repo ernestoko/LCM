@@ -1,0 +1,49 @@
+rules_version = '2';
+
+// ============================================================================
+// Liberty Cargo Movers — Firebase Storage Security Rules
+// ----------------------------------------------------------------------------
+// Package photos, delivery proof, ID documents and invoices live here.
+// Reads require authentication (no public access to customer data / docs).
+// Writes are limited to staff and capped at 15MB image/PDF uploads.
+// ============================================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
+    function isStaff() { return signedIn() && request.auth.token.org != 'customer'; }
+    function validUpload() {
+      return request.resource.size < 15 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType == 'application/pdf');
+    }
+
+    // Shipment & package photos, delivery proof.
+    match /shipments/{shipmentId}/{allPaths=**} {
+      allow read: if signedIn();
+      allow write: if isStaff() && validUpload();
+    }
+
+    // Customer ID verification documents — Liberty only.
+    match /customers/{customerId}/{allPaths=**} {
+      allow read: if signedIn() && request.auth.token.org == 'liberty';
+      allow write: if signedIn() && request.auth.token.org == 'liberty' && validUpload();
+    }
+
+    // Complaint attachments.
+    match /complaints/{ticketId}/{allPaths=**} {
+      allow read: if signedIn();
+      allow write: if signedIn() && validUpload();
+    }
+
+    // Generated invoice / manifest PDFs.
+    match /documents/{allPaths=**} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

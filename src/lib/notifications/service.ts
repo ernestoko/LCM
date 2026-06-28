@@ -1,0 +1,70 @@
+"use client";
+
+import type { NotificationEvent, NotificationChannel } from "@/types";
+import { renderTemplate, type TemplateContext } from "./templates";
+import { logNotification } from "@/lib/db/repositories/notifications";
+
+export interface NotifyTarget {
+  userId?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface NotifyOptions {
+  channels?: NotificationChannel[]; // default: ["in_app", "email", "sms"]
+  shipmentId?: string;
+}
+
+/**
+ * Send a lifecycle notification across the configured channels.
+ *  - in_app: written directly to Firestore (visible in the bell).
+ *  - email/sms: dispatched via /api/notifications/send (server-side providers).
+ *
+ * Failures are swallowed so notifications never block the primary action.
+ */
+export async function notify(
+  event: NotificationEvent,
+  target: NotifyTarget,
+  ctx: TemplateContext,
+  opts: NotifyOptions = {},
+): Promise<void> {
+  const channels = opts.channels ?? ["in_app", "email", "sms"];
+  const rendered = renderTemplate(event, { customerName: target.name, ...ctx });
+
+  // 1. In-app record (also the audit trail of what was sent).
+  if (channels.includes("in_app") && target.userId) {
+    await logNotification({
+      event,
+      channel: "in_app",
+      recipientUserId: target.userId,
+      recipientName: target.name,
+      recipientAddress: target.email ?? target.phone ?? "",
+      subject: rendered.subject,
+      body: rendered.sms,
+      shipmentId: opts.shipmentId,
+      status: "sent",
+      sentAt: new Date().toISOString(),
+    }).catch(() => {});
+  }
+
+  // 2. Email + SMS via the API.
+  const wantEmail = channels.includes("email") && target.email;
+  const wantSms = channels.includes("sms") && target.phone;
+  if (wantEmail || wantSms) {
+    try {
+      await fetch("/api/notifications/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event,
+          context: { customerName: target.name, ...ctx },
+          email: wantEmail ? target.email : undefined,
+          phone: wantSms ? target.phone : undefined,
+        }),
+      });
+    } catch {
+      // Non-blocking.
+    }
+  }
+}

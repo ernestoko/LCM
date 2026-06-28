@@ -1,0 +1,48 @@
+{
+  "name": "lcm-logistics-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Liberty Cargo Movers Logistics Platform — manages the 6-month outsourced cargo arrangement with SEAL Logistics.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "seed": "tsx scripts/seed.ts",
+    "seed:demo": "tsx scripts/seed-demo.ts",
+    "firebase:rules": "firebase deploy --only firestore:rules,storage:rules",
+    "firebase:deploy": "next build && firebase deploy"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "firebase": "^10.13.2",
+    "firebase-admin": "^12.5.0",
+    "lucide-react": "^0.445.0",
+    "next": "14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.0",
+    "tailwind-merge": "^2.5.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.5",
+    "@types/react": "^18.3.8",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "14.2.35",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "Liberty Cargo Movers — Logistics Platform",
+  "short_name": "Liberty Cargo",
+  "description": "Cargo logistics management for Liberty Cargo Movers and the SEAL Logistics pilot.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0f1b3d",
+  "theme_color": "#0f1b3d",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

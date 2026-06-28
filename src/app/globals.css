@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-inter: "Inter", system-ui, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-navy-50 text-navy-900 antialiased;
+  font-feature-settings: "cv11", "ss01";
+}
+
+/* Thin, branded scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cdd9ec transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: #cdd9ec;
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #a9bedd;
+}
+
+/* Print styles for invoices & manifests */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+  .print-container {
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

@@ -1,0 +1,343 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, AlertTriangle, Boxes } from "lucide-react";
+import { RequirePermission } from "@/components/auth/Guard";
+import { useActor } from "@/lib/auth/AuthProvider";
+import { useRoutes } from "@/lib/db/repositories/routes";
+import { useShipments } from "@/lib/db/repositories/shipments";
+import {
+  createManifest,
+  shipmentToManifestPackage,
+} from "@/lib/db/repositories/manifests";
+import {
+  PageHeader,
+  Button,
+  Card,
+  CardHeader,
+  CardBody,
+  Field,
+  Input,
+  Select,
+  Checkbox,
+  StatusBadge,
+  Badge,
+  Table,
+  THead,
+  TH,
+  TBody,
+  TR,
+  TD,
+  InfoBanner,
+  LoadingState,
+  EmptyState,
+  useToast,
+} from "@/components/ui";
+import { PAYMENT_STATUS_META } from "@/constants/statuses";
+import { formatMoney, formatWeight, round2 } from "@/lib/utils/format";
+import type { CountryRoute, Shipment } from "@/types";
+
+export default function NewManifestPage() {
+  return (
+    <RequirePermission permission="manifests.create">
+      <NewManifest />
+    </RequirePermission>
+  );
+}
+
+function originDestination(route: CountryRoute): { origin: string; destination: string } {
+  switch (route.direction) {
+    case "usa_to_country":
+      return { origin: "United States", destination: route.countryName };
+    case "country_to_usa":
+      return { origin: route.countryName, destination: "United States" };
+    case "ghana_to_country":
+      return { origin: "Ghana", destination: route.countryName };
+    case "country_to_ghana":
+      return { origin: route.countryName, destination: "Ghana" };
+    default:
+      return { origin: "United States", destination: route.countryName };
+  }
+}
+
+function NewManifest() {
+  const router = useRouter();
+  const actor = useActor();
+  const { success, error: toastError } = useToast();
+
+  const { data: routes, loading: routesLoading } = useRoutes();
+  const { data: shipments, loading: shipmentsLoading } = useShipments();
+
+  const activeRoutes = useMemo(() => routes.filter((r) => r.status === "active"), [routes]);
+
+  const [routeId, setRouteId] = useState("");
+  const [sealOffice, setSealOffice] = useState("SEAL Minnesota");
+  const [dispatchDate, setDispatchDate] = useState("");
+  const [expectedArrivalDate, setExpectedArrivalDate] = useState("");
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [submitting, setSubmitting] = useState(false);
+
+  const route = useMemo(
+    () => activeRoutes.find((r) => r.id === routeId),
+    [activeRoutes, routeId],
+  );
+
+  // Shipments eligible for this route's manifest: matching route, not yet manifested.
+  const eligible = useMemo(() => {
+    if (!route) return [];
+    return shipments.filter(
+      (s) =>
+        s.routeCode === route.code &&
+        !s.manifestId &&
+        s.status !== "cancelled" &&
+        s.status !== "delivered",
+    );
+  }, [shipments, route]);
+
+  const chosen = useMemo(
+    () => eligible.filter((s) => selected[s.id]),
+    [eligible, selected],
+  );
+
+  const totals = useMemo(
+    () => ({
+      count: chosen.length,
+      weight: round2(chosen.reduce((sum, s) => sum + (s.weightLb || 0), 0)),
+      declaredValue: round2(chosen.reduce((sum, s) => sum + (s.declaredValue || 0), 0)),
+    }),
+    [chosen],
+  );
+
+  function toggle(id: string) {
+    setSelected((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function selectRoute(id: string) {
+    setRouteId(id);
+    setSelected({});
+  }
+
+  function paymentConfirmed(s: Shipment): boolean {
+    return s.paymentStatus === "confirmed" || s.paymentStatus === "paid";
+  }
+
+  const unconfirmedSelected = chosen.some((s) => !paymentConfirmed(s));
+
+  async function handleSubmit() {
+    if (!route) {
+      toastError("Select an active route first.");
+      return;
+    }
+    if (chosen.length === 0) {
+      toastError("Select at least one shipment to add to the manifest.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { origin, destination } = originDestination(route);
+      const packages = chosen.map((s) => shipmentToManifestPackage(s));
+      const id = await createManifest(
+        {
+          routeCode: route.code,
+          origin,
+          destination,
+          sealOffice: sealOffice.trim() || undefined,
+          dispatchDate: dispatchDate ? new Date(dispatchDate).toISOString() : undefined,
+          expectedArrivalDate: expectedArrivalDate
+            ? new Date(expectedArrivalDate).toISOString()
+            : undefined,
+          packages,
+          status: "draft",
+        },
+        actor,
+      );
+      success(`Manifest created with ${packages.length} package${packages.length === 1 ? "" : "s"}.`);
+      router.push(`/manifests/${id}`);
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : "Failed to create manifest.");
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div>
+      <Link
+        href="/manifests"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm text-navy-500 hover:text-navy-800"
+      >
+        <ArrowLeft className="h-4 w-4" /> Back to manifests
+      </Link>
+      <PageHeader
+        title="New Manifest"
+        description="Group payment-confirmed packages onto a route for dispatch. Requires Liberty approval and SEAL confirmation before it can move."
+      />
+
+      <div className="space-y-6">
+        <Card>
+          <CardHeader title="Manifest details" subtitle="Choose an approved, active route." />
+          <CardBody className="grid gap-5 sm:grid-cols-2">
+            <Field label="Route" required className="sm:col-span-2">
+              {routesLoading ? (
+                <LoadingState label="Loading routes…" />
+              ) : activeRoutes.length === 0 ? (
+                <InfoBanner tone="warning">
+                  No active routes yet. A country must be onboarded and Liberty-approved before it
+                  can carry a manifest.
+                </InfoBanner>
+              ) : (
+                <Select value={routeId} onChange={(e) => selectRoute(e.target.value)}>
+                  <option value="">Select a route…</option>
+                  {activeRoutes.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.countryName} · {r.code}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+
+            {route && (
+              <Field label="Origin → Destination" className="sm:col-span-2">
+                <p className="text-sm font-medium text-navy-800">
+                  {originDestination(route).origin} → {originDestination(route).destination}
+                </p>
+              </Field>
+            )}
+
+            <Field label="SEAL office">
+              <Input
+                value={sealOffice}
+                onChange={(e) => setSealOffice(e.target.value)}
+                placeholder="SEAL Minnesota"
+              />
+            </Field>
+            <div />
+            <Field label="Dispatch date">
+              <Input
+                type="date"
+                value={dispatchDate}
+                onChange={(e) => setDispatchDate(e.target.value)}
+              />
+            </Field>
+            <Field label="Expected arrival date">
+              <Input
+                type="date"
+                value={expectedArrivalDate}
+                onChange={(e) => setExpectedArrivalDate(e.target.value)}
+              />
+            </Field>
+          </CardBody>
+        </Card>
+
+        {route && (
+          <Card>
+            <CardHeader
+              title="Eligible shipments"
+              subtitle={`Packages on ${route.code} not yet on a manifest.`}
+            />
+            {shipmentsLoading ? (
+              <LoadingState label="Loading shipments…" />
+            ) : eligible.length === 0 ? (
+              <div className="p-5">
+                <EmptyState
+                  icon={Boxes}
+                  title="No eligible shipments"
+                  description="There are no un-manifested packages for this route right now."
+                />
+              </div>
+            ) : (
+              <Table>
+                <THead>
+                  <TR>
+                    <TH />
+                    <TH>Tracking</TH>
+                    <TH>Customer</TH>
+                    <TH>Description</TH>
+                    <TH>Weight</TH>
+                    <TH>Declared value</TH>
+                    <TH>Payment</TH>
+                  </TR>
+                </THead>
+                <TBody>
+                  {eligible.map((s) => {
+                    const confirmed = paymentConfirmed(s);
+                    return (
+                      <TR key={s.id} onClick={() => toggle(s.id)}>
+                        <TD>
+                          <Checkbox
+                            checked={Boolean(selected[s.id])}
+                            onChange={() => toggle(s.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </TD>
+                        <TD className="font-mono text-xs font-medium text-brand-600">
+                          {s.trackingNumber}
+                        </TD>
+                        <TD className="font-medium text-navy-800">{s.customerName}</TD>
+                        <TD className="text-xs text-navy-600">
+                          {s.packageDescription ||
+                            s.items.map((i) => i.itemType).join(", ") ||
+                            "—"}
+                        </TD>
+                        <TD className="text-navy-700">{formatWeight(s.weightLb)}</TD>
+                        <TD className="text-navy-700">{formatMoney(s.declaredValue ?? 0)}</TD>
+                        <TD>
+                          <span className="inline-flex items-center gap-1.5">
+                            <StatusBadge meta={PAYMENT_STATUS_META[s.paymentStatus]} />
+                            {!confirmed && (
+                              <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                            )}
+                          </span>
+                        </TD>
+                      </TR>
+                    );
+                  })}
+                </TBody>
+              </Table>
+            )}
+          </Card>
+        )}
+
+        {route && (
+          <Card>
+            <CardBody className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-6">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-navy-400">Packages</p>
+                  <p className="text-lg font-semibold text-navy-900">{totals.count}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-navy-400">Total weight</p>
+                  <p className="text-lg font-semibold text-navy-900">
+                    {formatWeight(totals.weight)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-navy-400">Declared value</p>
+                  <p className="text-lg font-semibold text-navy-900">
+                    {formatMoney(totals.declaredValue)}
+                  </p>
+                </div>
+                {unconfirmedSelected && (
+                  <Badge tone="warning">
+                    <AlertTriangle className="h-3.5 w-3.5" /> Some selected packages are not payment
+                    confirmed
+                  </Badge>
+                )}
+              </div>
+              <Button
+                onClick={handleSubmit}
+                loading={submitting}
+                disabled={submitting || totals.count === 0}
+              >
+                Create manifest
+              </Button>
+            </CardBody>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
