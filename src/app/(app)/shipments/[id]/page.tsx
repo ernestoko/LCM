@@ -27,6 +27,7 @@ import {
   changeShipmentStatus,
   lockShipment,
   overrideDispatch,
+  updateShipment,
 } from "@/lib/db/repositories/shipments";
 import { getCustomer } from "@/lib/db/repositories/customers";
 import { generateInvoice } from "@/lib/db/repositories/invoices";
@@ -66,6 +67,10 @@ import {
   useToast,
 } from "@/components/ui";
 import { StatusTimeline } from "@/components/shipments/StatusTimeline";
+import { DeliveryProofModal } from "@/components/shipments/DeliveryProofModal";
+import { DeliveryProofCard } from "@/components/shipments/DeliveryProofCard";
+import { DocumentManager } from "@/components/shipments/DocumentManager";
+import { channelsForCustomer } from "@/lib/notifications/channels";
 import { formatMoney, formatWeight } from "@/lib/utils/format";
 import { formatDate } from "@/lib/utils/dates";
 
@@ -104,6 +109,7 @@ export default function ShipmentDetailPage() {
   const [note, setNote] = useState("");
   const [location, setLocation] = useState("");
   const [overrideReason, setOverrideReason] = useState("");
+  const [deliveryOpen, setDeliveryOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const isStaff = !isCustomer(role);
@@ -149,12 +155,18 @@ export default function ShipmentDetailPage() {
         route: shipment.routeCode,
         status: SHIPMENT_STATUS_META[target].label,
       },
-      { shipmentId: shipment.id },
+      { shipmentId: shipment.id, channels: channelsForCustomer(customer) },
     );
   }
 
   async function handleStatusUpdate() {
     if (!shipment) return;
+    // Delivery requires proof of delivery — capture it first.
+    if (nextStatus === "delivered") {
+      setStatusOpen(false);
+      setDeliveryOpen(true);
+      return;
+    }
     setBusy(true);
     try {
       const result = await changeShipmentStatus(shipment.id, nextStatus, actor, settings, {
@@ -172,6 +184,44 @@ export default function ShipmentDetailPage() {
       setLocation("");
     } catch (err) {
       error(err instanceof Error ? err.message : "Failed to update status.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleDeliver(proof: {
+    recipientName: string;
+    photoUrls: string[];
+    signatureDataUrl?: string;
+    note?: string;
+  }) {
+    if (!shipment) return;
+    setBusy(true);
+    try {
+      await updateShipment(
+        shipment.id,
+        {
+          deliveryProof: {
+            ...proof,
+            by: actor.uid,
+            byName: actor.name,
+            at: new Date().toISOString(),
+          },
+        },
+        actor,
+      );
+      const result = await changeShipmentStatus(shipment.id, "delivered", actor, settings, {
+        note: proof.note || `Delivered to ${proof.recipientName}`,
+      });
+      if (!result.ok) {
+        error(result.reason ?? "Could not mark as delivered.");
+        return;
+      }
+      await maybeNotifyForStatus("delivered");
+      success("Delivery recorded with proof.");
+      setDeliveryOpen(false);
+    } catch (err) {
+      error(err instanceof Error ? err.message : "Failed to record delivery.");
     } finally {
       setBusy(false);
     }
@@ -227,7 +277,7 @@ export default function ShipmentDetailPage() {
           phone: customer?.phone,
         },
         { trackingNumber: shipment.trackingNumber },
-        { shipmentId: shipment.id },
+        { shipmentId: shipment.id, channels: channelsForCustomer(customer) },
       );
       success("Invoice generated.");
       // The shipment subscription will reflect the new invoiceId live.
@@ -387,6 +437,16 @@ export default function ShipmentDetailPage() {
               )}
             </CardBody>
           </Card>
+
+          {/* Proof of delivery */}
+          {shipment.deliveryProof && <DeliveryProofCard proof={shipment.deliveryProof} />}
+
+          {/* Documents */}
+          <DocumentManager
+            shipmentId={shipment.id}
+            documentUrls={shipment.documentUrls ?? []}
+            canManage={isStaff && !shipment.locked}
+          />
         </div>
 
         {/* Sidebar */}
@@ -577,6 +637,15 @@ export default function ShipmentDetailPage() {
           />
         </Field>
       </Modal>
+
+      {/* Proof-of-delivery capture (shown when marking delivered) */}
+      <DeliveryProofModal
+        shipmentId={shipment.id}
+        open={deliveryOpen}
+        onClose={() => setDeliveryOpen(false)}
+        onCaptured={handleDeliver}
+        submitting={busy}
+      />
     </div>
   );
 }

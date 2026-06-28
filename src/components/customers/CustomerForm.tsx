@@ -3,6 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Loader2, Upload, FileCheck2 } from "lucide-react";
 import { Button, Field, Input, Select, Textarea, useToast } from "@/components/ui";
+import { NotificationPreferencesField } from "@/components/customers/NotificationPreferencesField";
 import { uploadFile } from "@/lib/firebase/storage";
 import { PILOT_COUNTRIES } from "@/constants/seed-data";
 import { CUSTOMER_TYPE_LABELS, CUSTOMER_SOURCE_LABELS } from "@/constants/statuses";
@@ -41,6 +42,7 @@ interface FormState {
   sender: ContactParty;
   receiver: ContactParty;
   active: boolean;
+  notifications: { email: boolean; sms: boolean; whatsapp: boolean };
 }
 
 function emptyParty(): ContactParty {
@@ -66,6 +68,7 @@ function stateFromInitial(initial?: Partial<Customer>): FormState {
     sender: { ...emptyParty(), ...(initial?.defaultSender ?? {}) },
     receiver: { ...emptyParty(), ...(initial?.defaultReceiver ?? {}) },
     active: initial?.active ?? true,
+    notifications: initial?.notificationPreferences ?? { email: true, sms: true, whatsapp: false },
   };
 }
 
@@ -154,6 +157,7 @@ export function CustomerForm({
             verified: form.idVerified,
           }
         : undefined,
+      notificationPreferences: form.notifications,
       active: form.active,
     };
 
@@ -269,6 +273,12 @@ export function CustomerForm({
             value={form.notes}
             onChange={(e) => set("notes", e.target.value)}
             placeholder="Internal notes about this customer…"
+          />
+        </Field>
+        <Field label="Notification channels" hint="Which channels this customer receives updates on.">
+          <NotificationPreferencesField
+            value={form.notifications}
+            onChange={(v) => set("notifications", v)}
           />
         </Field>
       </section>

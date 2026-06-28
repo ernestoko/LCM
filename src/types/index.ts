@@ -110,6 +110,12 @@ export interface Customer extends AuditStamp {
   source: CustomerSource;
   referredBy?: string;
   notes?: string;
+  /** Per-channel notification opt-in. Undefined = email + sms + in-app. */
+  notificationPreferences?: {
+    email: boolean;
+    sms: boolean;
+    whatsapp: boolean;
+  };
   /** Denormalised counters kept in sync by the shipment repository. */
   shipmentCount: number;
   totalSpend: number;
@@ -326,6 +332,16 @@ export interface Shipment extends AuditStamp {
   locked: boolean;
   /** Records an admin override of a dispatch guard, with reason. */
   dispatchOverride?: { by: string; byName?: string; at: ISODate; reason: string };
+  /** Proof of delivery captured at the final delivered step. */
+  deliveryProof?: {
+    recipientName: string;
+    photoUrls: string[];
+    signatureDataUrl?: string;
+    note?: string;
+    by: string;
+    byName?: string;
+    at: ISODate;
+  };
 }
 
 // ---------------------------------------------------------------------------

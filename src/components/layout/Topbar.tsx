@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, Bell, LogOut, ChevronDown } from "lucide-react";
+import { Menu, LogOut, ChevronDown, UserCog } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { ROLE_LABELS } from "@/constants/roles";
 import { Avatar } from "@/components/ui";
@@ -49,12 +50,19 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
                 <p className="text-sm font-medium text-navy-900">{user?.displayName}</p>
                 <p className="truncate text-xs text-navy-400">{user?.email}</p>
               </div>
+              <Link
+                href="/profile"
+                onClick={() => setMenuOpen(false)}
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-navy-700 hover:bg-navy-50"
+              >
+                <UserCog className="h-4 w-4" /> Profile & security
+              </Link>
               <button
                 onClick={async () => {
                   await signOut();
                   router.push("/login");
                 }}
-                className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
+                className="flex w-full items-center gap-2 border-t border-navy-100 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
               >
                 <LogOut className="h-4 w-4" /> Sign out
               </button>
