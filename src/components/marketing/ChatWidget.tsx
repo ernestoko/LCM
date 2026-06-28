@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageCircle,
   X,
@@ -339,6 +341,7 @@ function getReply(input: string): BotReply {
 /* Widget                                                              */
 /* ------------------------------------------------------------------ */
 export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
+  const router = useRouter();
   const [open, setOpen] = useState(defaultOpen);
   const [typing, setTyping] = useState(false);
   const [input, setInput] = useState("");
@@ -395,10 +398,27 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
   function send(raw: string) {
     const text = raw.trim();
     if (!text) return;
-    const userMsg: ChatMessage = { id: idRef.current++, from: "user", text };
-    setMessages((m) => [...m, userMsg]);
+    setMessages((m) => [...m, { id: idRef.current++, from: "user", text }]);
     setInput("");
     setTyping(true);
+
+    // If the message contains a tracking number, confirm briefly and take the
+    // customer straight to its tracking page — no extra click needed.
+    const tn = text.match(TRACK_RE)?.[0];
+    if (tn) {
+      const num = tn.toUpperCase();
+      const t = setTimeout(() => {
+        setTyping(false);
+        setMessages((m) => [
+          ...m,
+          { id: idRef.current++, from: "bot", text: `Got it — opening live tracking for ${num} now… 📦` },
+        ]);
+        const t2 = setTimeout(() => router.push(`/track/${encodeURIComponent(num)}`), 650);
+        timers.current.push(t2);
+      }, 380);
+      timers.current.push(t);
+      return;
+    }
 
     const reply = getReply(text);
     const t = setTimeout(() => {
@@ -442,9 +462,17 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
   return (
     <>
       {/* Proactive outreach teaser — Jesselyn reaches out first */}
-      {!open && nudge !== "hidden" && (
-        <div className="fixed bottom-24 right-4 z-[60] w-[min(20rem,calc(100vw-2rem))] animate-fade-up sm:right-6">
-          <div className="overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-lift">
+      <AnimatePresence>
+        {!open && nudge !== "hidden" && (
+          <motion.div
+            key="nudge"
+            initial={{ opacity: 0, y: 16, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 420, damping: 32 }}
+            className="fixed bottom-24 right-4 z-[60] w-[min(20rem,calc(100vw-2rem))] sm:right-6"
+          >
+            <div className="overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-lift">
             <div className="flex items-center gap-2 bg-gradient-to-r from-navy-900 to-brand-900 px-3 py-2 text-white">
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10">
                 <Eagle className="h-4 w-4" fill="#e6c44d" eyeFill="#0a1230" />
@@ -490,8 +518,9 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
               </div>
             )}
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Launcher */}
       <button
@@ -514,12 +543,19 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
       </button>
 
       {/* Panel */}
-      {open && (
-        <div
-          role="dialog"
-          aria-label={`Chat with ${ASSISTANT_NAME}`}
-          className="fixed bottom-24 right-4 z-[60] flex h-[min(70vh,560px)] w-[calc(100vw-2rem)] animate-fade-up flex-col overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-lift sm:right-6 sm:w-[384px]"
-        >
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="panel"
+            role="dialog"
+            aria-label={`Chat with ${ASSISTANT_NAME}`}
+            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+            style={{ transformOrigin: "bottom right" }}
+            className="fixed bottom-24 right-4 z-[60] flex h-[min(70vh,560px)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-lift sm:right-6 sm:w-[384px]"
+          >
           {/* Header */}
           <div className="flex items-center gap-3 bg-gradient-to-r from-navy-900 to-brand-900 px-4 py-3.5 text-white">
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
@@ -544,7 +580,13 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto bg-navy-50/40 px-4 py-4">
             {messages.map((m) => (
-              <div key={m.id} className={cn("flex", m.from === "user" ? "justify-end" : "justify-start")}>
+              <motion.div
+                key={m.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className={cn("flex", m.from === "user" ? "justify-end" : "justify-start")}
+              >
                 <div className={cn("max-w-[85%] space-y-2")}>
                   <div
                     className={cn(
@@ -582,16 +624,16 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             ))}
 
             {/* Typing indicator */}
             {typing && (
-              <div className="flex justify-start">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
                 <div className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-white px-4 py-3 shadow-card">
                   <Dot /> <Dot delay="0.15s" /> <Dot delay="0.3s" />
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
 
@@ -619,8 +661,9 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
               <Send className="h-4 w-4" />
             </button>
           </form>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

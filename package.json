@@ -21,6 +21,7 @@
     "date-fns": "^3.6.0",
     "firebase": "^10.13.2",
     "firebase-admin": "^12.5.0",
+    "framer-motion": "^12.42.0",
     "lucide-react": "^0.445.0",
     "next": "14.2.35",
     "qrcode.react": "^4.2.0",
