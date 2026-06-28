@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { FirebaseError } from "firebase/app";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { Button, Field, Input, InfoBanner } from "@/components/ui";
-import { LogoWordmark } from "@/components/brand/Logo";
+import { Logo, LogoWordmark } from "@/components/brand/Logo";
 import { BrandLoader } from "@/components/brand/BrandLoader";
-import { ShieldCheck, Truck, Globe2 } from "lucide-react";
+import { ShieldCheck, Truck, Globe2, FlaskConical, ArrowRight } from "lucide-react";
 
 const AUTH_ERRORS: Record<string, string> = {
   "auth/invalid-credential": "Incorrect email or password.",
@@ -16,6 +16,21 @@ const AUTH_ERRORS: Record<string, string> = {
   "auth/too-many-requests": "Too many attempts. Please try again later.",
   "auth/invalid-email": "Enter a valid email address.",
 };
+
+/**
+ * Demo sign-in shortcuts — shown ONLY when running against the Firebase emulator
+ * (NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true), so real credentials are never exposed
+ * in production. These are the accounts created by `SEED_DEMO=true npm run seed`.
+ */
+const DEMO_MODE = process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true";
+const DEMO_PASSWORD = "Liberty@2026!";
+const DEMO_ACCOUNTS: { label: string; email: string }[] = [
+  { label: "Super Admin", email: "admin@libertycargomovers.com" },
+  { label: "Liberty Admin", email: "ops@libertycargomovers.com" },
+  { label: "Finance", email: "finance@libertycargomovers.com" },
+  { label: "Operations", email: "operations@libertylogistics.com" },
+  { label: "Warehouse", email: "warehouse@libertylogistics.com" },
+];
 
 export default function LoginPage() {
   const { signIn, resetPassword, firebaseUser, user, loading, configured } = useAuth();
@@ -34,13 +49,13 @@ export default function LoginPage() {
     if (!loading && firebaseUser && user) router.replace("/dashboard");
   }, [loading, firebaseUser, user, router]);
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  /** Shared sign-in flow used by the form and the demo shortcuts. */
+  const runSignIn = async (emailArg: string, passwordArg: string) => {
     setBusy(true);
     setError(null);
     const startedAt = Date.now();
     try {
-      await signIn(email.trim(), password);
+      await signIn(emailArg.trim(), passwordArg);
       // Hold the branded splash for a beat so it reads as a splash, not a flash.
       const MIN_SPLASH_MS = 2000;
       const elapsed = Date.now() - startedAt;
@@ -55,6 +70,18 @@ export default function LoginPage() {
       setError(AUTH_ERRORS[code] ?? "Unable to sign in. Please try again.");
       setBusy(false);
     }
+  };
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    runSignIn(email, password);
+  };
+
+  /** One-click demo sign-in: fill the fields (for visibility) then authenticate. */
+  const loginAs = (acc: { email: string }) => {
+    setEmail(acc.email);
+    setPassword(DEMO_PASSWORD);
+    runSignIn(acc.email, DEMO_PASSWORD);
   };
 
   const onReset = async () => {
@@ -105,11 +132,15 @@ export default function LoginPage() {
       {/* Form panel */}
       <div className="flex w-full items-center justify-center px-6 lg:w-1/2">
         <div className="w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
-            <LogoWordmark />
+          {/* Big Liberty logo */}
+          <div className="mb-6 flex flex-col items-center text-center">
+            <Logo size={176} className="drop-shadow-[0_6px_20px_rgba(184,134,11,0.25)]" />
+            <p className="mt-3 text-xl font-bold tracking-tight text-navy-900">
+              Liberty <span className="text-brand-600">&amp;</span> Liberty Logistics
+            </p>
           </div>
-          <h2 className="text-2xl font-bold text-navy-900">Welcome back</h2>
-          <p className="mt-1 text-sm text-navy-500">Sign in to the Liberty &amp; Liberty Logistics platform.</p>
+          <h2 className="text-center text-2xl font-bold text-navy-900">Welcome back</h2>
+          <p className="mt-1 text-center text-sm text-navy-500">Sign in to your account.</p>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             {error && <InfoBanner tone="warning">{error}</InfoBanner>}
@@ -158,9 +189,37 @@ export default function LoginPage() {
               Create a customer account
             </a>
           </div>
-          <p className="mt-3 text-center text-xs text-navy-400">
-            Staff accounts are provisioned by a Liberty Super Admin.
-          </p>
+          {DEMO_MODE ? (
+            <div className="mt-6 rounded-xl border border-dashed border-brand-300 bg-brand-50/50 p-4">
+              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-brand-700">
+                <FlaskConical className="h-3.5 w-3.5" /> Demo accounts
+              </p>
+              <p className="mt-1 text-xs text-navy-500">Click a role to sign in instantly.</p>
+              <div className="mt-3 space-y-1.5">
+                {DEMO_ACCOUNTS.map((acc) => (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    onClick={() => loginAs(acc)}
+                    className="flex w-full items-center justify-between rounded-lg border border-navy-100 bg-white px-3 py-2 text-left transition-colors hover:border-brand-300 hover:bg-brand-50"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-navy-800">{acc.label}</span>
+                      <span className="block truncate text-xs text-navy-400">{acc.email}</span>
+                    </span>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-brand-500" />
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-[11px] text-navy-400">
+                Shared password: <code className="font-mono text-navy-500">{DEMO_PASSWORD}</code>
+              </p>
+            </div>
+          ) : (
+            <p className="mt-3 text-center text-xs text-navy-400">
+              Staff accounts are provisioned by a Liberty Super Admin.
+            </p>
+          )}
         </div>
       </div>
     </div>
