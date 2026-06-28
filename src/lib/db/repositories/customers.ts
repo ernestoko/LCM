@@ -75,6 +75,6 @@ export function useCustomer(id: string | null | undefined) {
   return useCollection<Customer>(
     COLLECTIONS.customers,
     id ? [where("__name__", "==", id)] : [],
-    { enabled: Boolean(id) },
+    { enabled: Boolean(id), deps: [id] },
   );
 }

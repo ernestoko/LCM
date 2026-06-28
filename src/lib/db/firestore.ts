@@ -18,6 +18,7 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase/client";
+import { cleanForWrite } from "@/lib/utils/clean";
 import { COLLECTIONS, type CollectionName } from "./collections";
 
 /**
@@ -39,15 +40,8 @@ function withId<T extends DocumentData>(snap: { id: string; data: () => T | unde
   return { id: snap.id, ...(snap.data() as T) };
 }
 
-/** Strip undefined values (Firestore rejects them) and the id field. */
-function clean(data: object): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
-    if (k === "id" || v === undefined) continue;
-    out[k] = v;
-  }
-  return out;
-}
+/** Strip undefined values (Firestore rejects them, even nested) and the id field. */
+const clean = cleanForWrite;
 
 export async function getOne<T extends DocumentData>(
   name: CollectionName,

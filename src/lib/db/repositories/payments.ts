@@ -68,6 +68,6 @@ export function useCustomerPayments(customerId: string | null | undefined) {
   return useCollection<Payment>(
     COLLECTIONS.payments,
     customerId ? [where("customerId", "==", customerId), orderBy("paymentDate", "desc")] : [],
-    { enabled: Boolean(customerId) },
+    { enabled: Boolean(customerId), deps: ["customer-payments", customerId] },
   );
 }

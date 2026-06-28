@@ -7,8 +7,9 @@
  * Conventions:
  *  - `id` is the Firestore document id (never stored in the doc body).
  *  - Money is stored as a plain number in the document's stated `currency`.
- *  - Timestamps are stored as Firestore `Timestamp`; the app converts to ISO
- *    strings at the repository boundary so UI code only ever sees strings.
+ *  - Timestamps are stored as ISO 8601 strings (the `ISODate` type), which sort
+ *    chronologically and avoid Date/Timestamp conversion bugs across the
+ *    client/server boundary.
  */
 
 // ---------------------------------------------------------------------------

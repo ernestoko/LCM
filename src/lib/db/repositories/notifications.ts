@@ -28,7 +28,7 @@ export function useUserNotifications(userId: string | null | undefined) {
   return useCollection<NotificationRecord>(
     COLLECTIONS.notifications,
     userId ? [where("recipientUserId", "==", userId), orderBy("createdAt", "desc")] : [],
-    { enabled: Boolean(userId) },
+    { enabled: Boolean(userId), deps: ["user-notifications", userId] },
   );
 }
 

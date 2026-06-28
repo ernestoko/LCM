@@ -102,10 +102,10 @@ export async function generateInvoice(
 
   const id = await create<Partial<Invoice>>(COLLECTIONS.invoices, invoice, actor);
 
-  // Link back to the shipment and advance its lifecycle.
+  // Link back to the shipment and advance its lifecycle. Do NOT reset
+  // paymentStatus — regenerating an invoice must never wipe a recorded payment.
   await update<Shipment>(COLLECTIONS.shipments, shipment.id, {
     invoiceId: id,
-    paymentStatus: "unpaid",
     libertyHandlingStatus: "invoiced",
     status: shipment.status === "inspected" || shipment.status === "received_by_seal" ? "invoice_generated" : shipment.status,
   });
@@ -148,6 +148,6 @@ export function useCustomerInvoices(customerId: string | null | undefined) {
   return useCollection<Invoice>(
     COLLECTIONS.invoices,
     customerId ? [where("customerId", "==", customerId), orderBy("createdAt", "desc")] : [],
-    { enabled: Boolean(customerId) },
+    { enabled: Boolean(customerId), deps: ["customer-invoices", customerId] },
   );
 }

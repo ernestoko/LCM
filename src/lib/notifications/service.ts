@@ -3,6 +3,17 @@
 import type { NotificationEvent, NotificationChannel } from "@/types";
 import { renderTemplate, type TemplateContext } from "./templates";
 import { logNotification } from "@/lib/db/repositories/notifications";
+import { getFirebaseAuth } from "@/lib/firebase/client";
+
+/** Build an Authorization header from the current user's ID token, if signed in. */
+async function authHeaders(): Promise<Record<string, string>> {
+  try {
+    const token = await getFirebaseAuth().currentUser?.getIdToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
+  }
+}
 
 export interface NotifyTarget {
   userId?: string;
@@ -53,33 +64,39 @@ export async function notify(
   // 2. Email + SMS via the API.
   const wantEmail = channels.includes("email") && target.email;
   const wantSms = channels.includes("sms") && target.phone;
-  if (wantEmail || wantSms) {
-    try {
-      await fetch("/api/notifications/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event,
-          context,
-          email: wantEmail ? target.email : undefined,
-          phone: wantSms ? target.phone : undefined,
-        }),
-      });
-    } catch {
-      // Non-blocking.
-    }
-  }
+  const wantWhatsApp = channels.includes("whatsapp") && target.phone;
 
-  // 3. WhatsApp via the Cloud API (opt-in channel).
-  if (channels.includes("whatsapp") && target.phone) {
-    try {
-      await fetch("/api/notifications/whatsapp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to: target.phone, event, context }),
-      });
-    } catch {
-      // Non-blocking.
+  if (wantEmail || wantSms || wantWhatsApp) {
+    const headers = { "Content-Type": "application/json", ...(await authHeaders()) };
+
+    if (wantEmail || wantSms) {
+      try {
+        await fetch("/api/notifications/send", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            event,
+            context,
+            email: wantEmail ? target.email : undefined,
+            phone: wantSms ? target.phone : undefined,
+          }),
+        });
+      } catch {
+        // Non-blocking.
+      }
+    }
+
+    // WhatsApp via the Cloud API (opt-in channel).
+    if (wantWhatsApp) {
+      try {
+        await fetch("/api/notifications/whatsapp", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ to: target.phone, event, context }),
+        });
+      } catch {
+        // Non-blocking.
+      }
     }
   }
 }

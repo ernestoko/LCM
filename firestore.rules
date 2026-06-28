@@ -60,9 +60,11 @@ service cloud.firestore {
       allow read: if isStaff() || ownsCustomer(resource.data.customerId);
       allow create: if isLiberty();
       // SEAL may update operational fields but cannot lock, change ownership,
-      // or edit a locked record. Liberty admins manage everything (unless locked).
+      // or edit a locked record. Liberty admins manage everything (unless
+      // locked) but only a Super Admin may toggle the `locked` flag.
       allow update: if (
-                      (isLiberty() && (resource.data.locked == false || isSuperAdmin()))
+                      (isLiberty() && (resource.data.locked == false || isSuperAdmin())
+                        && (unchanged('locked') || isSuperAdmin()))
                       || (isSeal() && resource.data.locked == false
                           && unchanged('customerId') && unchanged('locked'))
                     );
@@ -119,10 +121,12 @@ service cloud.firestore {
     match /countryRoutes/{id} {
       allow read: if isStaff();
       allow create: if isLiberty() || isSealAdmin();
-      // Only Liberty admin / Super Admin may approve or set a route active.
-      allow update: if isSuperAdmin() || isLibertyAdmin()
-                    || (isSeal() && request.resource.data.status == resource.data.status
-                        && unchanged('libertyApproved'));
+      // Route APPROVAL (flipping libertyApproved) is Super-Admin only; Liberty
+      // admins may edit descriptive fields and suspend/reactivate; SEAL may only
+      // confirm without touching status or approval.
+      allow update: if isSuperAdmin()
+                    || (isLibertyAdmin() && unchanged('libertyApproved'))
+                    || (isSeal() && unchanged('status') && unchanged('libertyApproved'));
       allow delete: if isSuperAdmin();
     }
 
@@ -136,10 +140,12 @@ service cloud.firestore {
 
     // ---- notifications ----------------------------------------------------
     match /notifications/{id} {
-      allow read: if isStaff() || (signedIn() && resource.data.recipientUserId == request.auth.uid);
+      // Liberty may read all; everyone else only their own (protects customer
+      // contact details carried on notification records from SEAL harvesting).
+      allow read: if isLiberty() || (signedIn() && resource.data.recipientUserId == request.auth.uid);
       allow create: if isStaff();
       // Recipients may mark their own notification read.
-      allow update: if isStaff() || (signedIn() && resource.data.recipientUserId == request.auth.uid);
+      allow update: if isLiberty() || (signedIn() && resource.data.recipientUserId == request.auth.uid);
       allow delete: if isSuperAdmin();
     }
 

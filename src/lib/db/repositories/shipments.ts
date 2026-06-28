@@ -184,7 +184,7 @@ export function useCustomerShipments(customerId: string | null | undefined) {
   return useCollection<Shipment>(
     COLLECTIONS.shipments,
     customerId ? [where("customerId", "==", customerId), orderBy("createdAt", "desc")] : [],
-    { enabled: Boolean(customerId) },
+    { enabled: Boolean(customerId), deps: ["customer-shipments", customerId] },
   );
 }
 
@@ -195,5 +195,6 @@ export function useSealShipments(office?: string) {
     office
       ? [where("assignedSealOffice", "==", office), orderBy("sealHandlingStatus")]
       : [orderBy("createdAt", "desc")],
+    { deps: ["seal-shipments", office ?? "all"] },
   );
 }

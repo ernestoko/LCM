@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { renderTemplate, type TemplateContext } from "@/lib/notifications/templates";
 import { sendWhatsApp } from "@/lib/notifications/whatsapp";
+import { verifyCaller, isStaffCaller } from "@/lib/auth/apiAuth";
 import type { NotificationEvent } from "@/types";
 
 interface WhatsAppBody {
@@ -17,6 +18,12 @@ interface WhatsAppBody {
  * gracefully when unconfigured.
  */
 export async function POST(req: Request) {
+  // Only authenticated staff may send WhatsApp — never an open relay.
+  const caller = await verifyCaller(req);
+  if (!isStaffCaller(caller)) {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   let body: WhatsAppBody;
   try {
     body = (await req.json()) as WhatsAppBody;

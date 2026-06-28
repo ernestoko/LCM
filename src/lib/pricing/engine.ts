@@ -113,9 +113,12 @@ export function calculatePricing(
   const warnings: string[] = [];
   const lines: InvoiceLine[] = [];
   const route = ctx.route ?? null;
+  // Currency comes from the card actually used for THIS shipment's pricing mode,
+  // not whichever card happens to be non-null.
+  const pricingCard =
+    shipment.pricingMode === "item_based" ? ctx.itemRateCard : ctx.weightRateCard;
   const currency: CurrencyCode =
-    (ctx.itemRateCard?.currency ?? ctx.weightRateCard?.currency ?? ctx.settings.defaultCurrency) ||
-    "USD";
+    (pricingCard?.currency ?? ctx.settings.defaultCurrency) || "USD";
 
   let usedCard: RateCard | null = null;
 

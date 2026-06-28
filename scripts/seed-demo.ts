@@ -96,6 +96,11 @@ function initAdmin() {
     process.exit(1);
   }
   if (!getApps().length) initializeApp({ credential: cert({ projectId, clientEmail, privateKey }) });
+  try {
+    getFirestore().settings({ ignoreUndefinedProperties: true });
+  } catch {
+    // settings() can only be called once.
+  }
 }
 
 // ---------------------------------------------------------------------------

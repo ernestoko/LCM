@@ -8,7 +8,6 @@ import type {
 } from "@/types";
 import { ACTIVE_SHIPMENT_STATUSES } from "@/constants/statuses";
 import { round2 } from "@/lib/utils/format";
-import { daysBetween } from "@/lib/utils/dates";
 
 export interface LibertyMetrics {
   totalShipments: number;
@@ -53,10 +52,12 @@ export function computeLibertyMetrics(
   );
   const pendingPaymentAmount = round2(pendingInvoices.reduce((s, i) => s + (i.balanceDue || 0), 0));
 
+  const nowMs = Date.now();
   const delayed = active.filter((s) => {
     if (!s.expectedDeliveryDate) return false;
-    const d = daysBetween(s.expectedDeliveryDate, new Date().toISOString());
-    return d != null && d > 0; // expected date is in the past, still active
+    const expected = new Date(s.expectedDeliveryDate).getTime();
+    // Past the expected delivery date but still in the pipeline.
+    return Number.isFinite(expected) && expected < nowMs;
   }).length;
 
   return {

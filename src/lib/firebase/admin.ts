@@ -42,8 +42,19 @@ export function getAdminAuth(): Auth {
   return getAuth(getAdminApp());
 }
 
+let adminDb: Firestore | undefined;
+
 export function getAdminDb(): Firestore {
-  return getFirestore(getAdminApp());
+  if (!adminDb) {
+    adminDb = getFirestore(getAdminApp());
+    // Mirror the client behaviour: never let a nested `undefined` abort a write.
+    try {
+      adminDb.settings({ ignoreUndefinedProperties: true });
+    } catch {
+      // settings() can only run once; ignore if already initialised.
+    }
+  }
+  return adminDb;
 }
 
 export const isAdminConfigured = Boolean(

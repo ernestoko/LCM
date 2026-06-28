@@ -51,6 +51,6 @@ export function useCustomerComplaints(customerId: string | null | undefined) {
   return useCollection<Complaint>(
     COLLECTIONS.complaints,
     customerId ? [where("customerId", "==", customerId), orderBy("createdAt", "desc")] : [],
-    { enabled: Boolean(customerId) },
+    { enabled: Boolean(customerId), deps: ["customer-complaints", customerId] },
   );
 }

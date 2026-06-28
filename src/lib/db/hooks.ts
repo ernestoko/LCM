@@ -19,7 +19,7 @@ interface CollectionState<T> {
 export function useCollection<T extends DocumentData>(
   name: CollectionName,
   constraints: QueryConstraint[] = [],
-  options: { enabled?: boolean } = {},
+  options: { enabled?: boolean; deps?: unknown[] } = {},
 ): CollectionState<T> {
   const enabled = options.enabled ?? true;
   const [state, setState] = useState<CollectionState<T>>({
@@ -28,8 +28,13 @@ export function useCollection<T extends DocumentData>(
     error: null,
   });
 
-  // Stable key from constraint internals.
-  const key = JSON.stringify(constraints.map((c) => ({ ...c })));
+  // Firestore QueryConstraint internals are non-enumerable, so spreading them
+  // yields `{}` and cannot distinguish e.g. where("id","==",A) from ==B. Hooks
+  // whose query VALUE changes (parameterised by an id) must pass an explicit
+  // `deps` array so the listener re-subscribes when the value changes.
+  const key = JSON.stringify(
+    options.deps ?? constraints.map((c) => ({ ...c })),
+  );
 
   useEffect(() => {
     if (!enabled) {
