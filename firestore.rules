@@ -216,6 +216,17 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ---- server-only collections (no client access, ever) -----------------
+    // OTP verification challenges and rate-limit counters are written and read
+    // ONLY by the Admin SDK (which bypasses these rules). Explicitly deny all
+    // client access so a leaked code digest or limiter state can never be read.
+    match /otpChallenges/{id} {
+      allow read, write: if false;
+    }
+    match /rateLimits/{id} {
+      allow read, write: if false;
+    }
+
     // Deny everything else by default.
     match /{document=**} {
       allow read, write: if false;

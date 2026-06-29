@@ -17,6 +17,10 @@ export const COLLECTIONS = {
   settings: "settings",
   pilotTracker: "pilotTracker",
   counters: "counters",
+  /** Server-only: assistant identity-verification OTP challenges. */
+  otpChallenges: "otpChallenges",
+  /** Server-only: fixed-window rate-limit counters. */
+  rateLimits: "rateLimits",
 } as const;
 
 export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];

@@ -17,6 +17,14 @@ import { ALL_FAQS } from "@/constants/faq";
 import { BUSINESS } from "@/constants/business";
 import { WAREHOUSES } from "@/constants/warehouses";
 import { cn } from "@/lib/utils/cn";
+import {
+  startVerification,
+  confirmCode,
+  fetchSensitiveShipment,
+  type ChannelKind,
+  type ChannelOption,
+} from "@/lib/assistant/client";
+import type { SensitiveShipment } from "@/lib/assistant/verification";
 
 /* ------------------------------------------------------------------ */
 /* Handoff contacts                                                    */
@@ -90,8 +98,73 @@ const NUDGE_SEEN_KEY = "jesselyn-greeted"; // once per session
 /* ------------------------------------------------------------------ */
 const TRACK_RE = /\b[A-Za-z]{2,5}-\d{2,}-?[A-Za-z0-9-]{3,}\b/;
 
+/**
+ * Account-/shipment-specific intents that reveal personal data (recipient
+ * details, contents, declared value, invoice balance). These require identity
+ * verification before Jesselyn will answer — see the verification flow below.
+ * Deliberately excludes generic pricing words (quote/cost/rate) which are public.
+ */
+const SENSITIVE_RE =
+  /\b(balance|owe|owing|outstanding|amount\s+(due|left|owing)|how much.*(do i|i)\s+(owe|left|due)|invoice|bill|receipt|recipient|receiver|delivery address|deliver(y|ed)?\s+to|what'?s? (inside|in (it|my))|contents|declared value|full details|all (the )?details|account details|my (shipment )?details|who('?s| is)? receiving)\b/i;
+
+function isSensitiveRequest(text: string): boolean {
+  return SENSITIVE_RE.test(text);
+}
+
 function has(text: string, ...words: string[]): boolean {
   return words.some((w) => text.includes(w));
+}
+
+/** Label shown on the channel-choice chip, e.g. "Email · je•••@gmail.com". */
+function channelChipLabel(c: ChannelOption): string {
+  return `${c.kind === "email" ? "Email" : "Text"} · ${c.hint}`;
+}
+
+function money(currency: string, amount: number): string {
+  const sym = currency === "USD" ? "$" : currency === "GHS" ? "GH₵" : `${currency} `;
+  return `${sym}${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/** Render a verified shipment into a friendly, readable summary for the chat. */
+function formatSensitive(s: SensitiveShipment): string {
+  const lines: string[] = [`🔓 Verified — here are the details for ${s.trackingNumber}:`];
+  lines.push(`• Status: ${s.status.replace(/_/g, " ")}`);
+  lines.push(`• Route: ${s.routeCode} (${s.originCountry} → ${s.destinationCountry})`);
+
+  const r = s.receiver;
+  const addr = [r.address, r.city, r.country].filter(Boolean).join(", ");
+  lines.push(`• Recipient: ${r.name}${addr ? ` — ${addr}` : ""}${r.phone ? ` (${r.phone})` : ""}`);
+
+  if (s.contents.length) {
+    const items = s.contents
+      .slice(0, 6)
+      .map((i) => (i.quantity && i.quantity > 1 ? `${i.quantity}× ${i.description}` : i.description))
+      .join(", ");
+    lines.push(`• Contents: ${items}${s.contents.length > 6 ? "…" : ""}`);
+  } else if (s.packageDescription) {
+    lines.push(`• Contents: ${s.packageDescription}`);
+  }
+
+  if (typeof s.declaredValue === "number") lines.push(`• Declared value: $${s.declaredValue.toLocaleString()}`);
+  const measures = [
+    typeof s.pieces === "number" ? `${s.pieces} pc` : null,
+    typeof s.weightLb === "number" ? `${s.weightLb} lb` : null,
+    typeof s.totalCbm === "number" ? `${s.totalCbm} CBM` : null,
+  ].filter(Boolean);
+  if (measures.length) lines.push(`• Measurements: ${measures.join(" · ")}`);
+
+  if (s.invoice) {
+    const inv = s.invoice;
+    lines.push(
+      `• Invoice ${inv.invoiceNumber}: total ${money(inv.currency, inv.total)}, paid ${money(inv.currency, inv.amountPaid)}, balance ${money(inv.currency, inv.balanceDue)} (${inv.paymentStatus.replace(/_/g, " ")})`,
+    );
+  } else {
+    lines.push(`• Payment: ${s.paymentStatus.replace(/_/g, " ")}`);
+  }
+
+  if (s.expectedDeliveryDate) lines.push(`• Estimated delivery: ${s.expectedDeliveryDate}`);
+  lines.push("\nNeed anything else? I'm right here. — Jesselyn");
+  return lines.join("\n");
 }
 
 /** Best-effort keyword search across the FAQ knowledge base. */
@@ -352,6 +425,20 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  // Identity-verification flow (gates sensitive, account-specific answers).
+  const [verify, setVerify] = useState<{
+    stage: "idle" | "choosing" | "awaiting_code";
+    trackingNumber?: string;
+    channels?: ChannelOption[];
+    kind?: ChannelKind;
+    challengeId?: string;
+    hint?: string;
+  }>({ stage: "idle" });
+  // Tracking number Jesselyn is currently talking about (for follow-up asks).
+  const lastTn = useRef<string | null>(null);
+  // Sensitive details we've already unlocked this session, keyed by tracking #.
+  const verified = useRef<Map<string, { expiresAtMs: number; shipment: SensitiveShipment }>>(new Map());
+
   // Proactive outreach teaser shown above the launcher.
   const [nudge, setNudge] = useState<"hidden" | "typing" | "shown">("hidden");
   const [opener, setOpener] = useState("");
@@ -395,24 +482,148 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
     }
   }
 
+  /** Append a bot message (used by the async verification handlers). */
+  function pushBot(text: string, extra?: { actions?: ChatAction[]; chips?: string[] }) {
+    setMessages((m) => [
+      ...m,
+      { id: idRef.current++, from: "bot", text, actions: extra?.actions, chips: extra?.chips },
+    ]);
+  }
+
+  /** Start verification for a tracking number — or answer instantly if already unlocked. */
+  async function beginSensitive(tn: string) {
+    const num = tn.toUpperCase();
+    lastTn.current = num;
+
+    const cached = verified.current.get(num);
+    if (cached && cached.expiresAtMs > Date.now()) {
+      pushBot(formatSensitive(cached.shipment), {
+        actions: [{ label: "Open live tracker", href: `/track/${num}`, icon: "track" }],
+        chips: ["Talk to a human"],
+      });
+      return;
+    }
+
+    setTyping(true);
+    const r = await startVerification({ trackingNumber: num });
+    setTyping(false);
+    if (!r.ok) {
+      setVerify({ stage: "idle" });
+      pushBot(r.error, { actions: HANDOFF });
+      return;
+    }
+    if (r.stage === "choose") {
+      setVerify({ stage: "choosing", trackingNumber: num, channels: r.channels });
+      pushBot(
+        "Before I share personal details I need to confirm it's really you 🔒 — your privacy matters. Where should I send a 6-digit verification code?",
+        { chips: r.channels.map(channelChipLabel) },
+      );
+    }
+  }
+
+  /** Deliver the code to the chosen channel (also used by "Resend code"). */
+  async function chooseChannel(kind: ChannelKind) {
+    const num = verify.trackingNumber;
+    if (!num) return;
+    setTyping(true);
+    const r = await startVerification({ trackingNumber: num, channel: kind });
+    setTyping(false);
+    if (!r.ok) {
+      pushBot(r.error, { chips: ["Talk to a human"] });
+      return;
+    }
+    if (r.stage === "sent") {
+      setVerify({ stage: "awaiting_code", trackingNumber: num, kind, challengeId: r.challengeId, hint: r.hint });
+      const mins = Math.max(1, Math.round(r.expiresInSec / 60));
+      pushBot(
+        `Done ✅ I've sent a 6-digit code to ${r.hint}. Type it here and I'll unlock your shipment details. It expires in ${mins} minute${mins === 1 ? "" : "s"}.`,
+        { chips: ["Resend code", "Talk to a human"] },
+      );
+      if (r.devCode) {
+        // eslint-disable-next-line no-console
+        console.info(`[assistant] dev OTP for ${num}: ${r.devCode}`);
+      }
+    }
+  }
+
+  /** Confirm the entered code and reveal the verified shipment detail. */
+  async function submitCode(code: string) {
+    const challengeId = verify.challengeId;
+    if (!challengeId) return;
+    setTyping(true);
+    const r = await confirmCode({ challengeId, code });
+    if (!r.ok) {
+      setTyping(false);
+      const outOfAttempts = r.attemptsLeft === 0;
+      if (outOfAttempts) setVerify({ stage: "idle" });
+      pushBot(r.error, { chips: outOfAttempts ? ["Talk to a human"] : ["Resend code", "Talk to a human"] });
+      return;
+    }
+    const num = r.trackingNumber;
+    const d = await fetchSensitiveShipment(num, r.token);
+    setTyping(false);
+    setVerify({ stage: "idle" });
+    if (!d.ok) {
+      pushBot(d.error, { chips: ["Talk to a human"] });
+      return;
+    }
+    verified.current.set(num, { expiresAtMs: Date.now() + r.expiresInSec * 1000, shipment: d.shipment });
+    pushBot(formatSensitive(d.shipment), {
+      actions: [{ label: "Open live tracker", href: `/track/${num}`, icon: "track" }],
+      chips: ["Talk to a human"],
+    });
+  }
+
   function send(raw: string) {
     const text = raw.trim();
     if (!text) return;
     setMessages((m) => [...m, { id: idRef.current++, from: "user", text }]);
     setInput("");
-    setTyping(true);
+    const lc = text.toLowerCase();
 
-    // If the message contains a tracking number, confirm briefly and take the
-    // customer straight to its tracking page — no extra click needed.
+    // --- An active verification dialogue takes priority ----------------------
+    if (verify.stage === "choosing") {
+      if (lc.startsWith("email")) return void chooseChannel("email");
+      if (lc.startsWith("text") || lc.startsWith("sms")) return void chooseChannel("sms");
+      // otherwise fall through — they asked something else.
+    }
+    if (verify.stage === "awaiting_code") {
+      if (lc.includes("resend") && verify.kind) return void chooseChannel(verify.kind);
+      const code = text.replace(/\D/g, "");
+      if (code.length === 6) return void submitCode(code);
+      // not a code → let them ask other things, fall through.
+    }
+    if (lc.includes("resend") && verify.kind) return void chooseChannel(verify.kind);
+
     const tn = text.match(TRACK_RE)?.[0];
+
+    // --- Sensitive (account-specific) request → verify identity first --------
+    if (isSensitiveRequest(text)) {
+      const target = tn?.toUpperCase() || lastTn.current;
+      if (!target) {
+        setTyping(true);
+        const t = setTimeout(() => {
+          setTyping(false);
+          pushBot(
+            "I can pull that up once I know which shipment you mean — what's the tracking number? (It looks like LCM-2606-AB12CD.)",
+            { chips: ["Talk to a human"] },
+          );
+        }, 360);
+        timers.current.push(t);
+        return;
+      }
+      void beginSensitive(target);
+      return;
+    }
+
+    // --- A bare tracking number → take them to the public live tracker -------
     if (tn) {
       const num = tn.toUpperCase();
+      lastTn.current = num;
+      setTyping(true);
       const t = setTimeout(() => {
         setTyping(false);
-        setMessages((m) => [
-          ...m,
-          { id: idRef.current++, from: "bot", text: `Got it — opening live tracking for ${num} now… 📦` },
-        ]);
+        pushBot(`Got it — opening live tracking for ${num} now… 📦`);
         const t2 = setTimeout(() => router.push(`/track/${encodeURIComponent(num)}`), 650);
         timers.current.push(t2);
       }, 380);
@@ -420,6 +631,8 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
       return;
     }
 
+    // --- Everything else → the local intent router ---------------------------
+    setTyping(true);
     const reply = getReply(text);
     const t = setTimeout(() => {
       setTyping(false);

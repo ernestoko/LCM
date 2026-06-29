@@ -32,7 +32,7 @@ const DEMO_ACCOUNTS: { label: string; email: string }[] = [
 ];
 
 export default function LoginPage() {
-  const { signIn, resetPassword, firebaseUser, user, loading, configured } = useAuth();
+  const { signIn, resetPassword, firebaseUser, user, loading, configured, authNotice } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -130,6 +130,7 @@ export default function LoginPage() {
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             {error && <InfoBanner tone="warning">{error}</InfoBanner>}
+            {!error && authNotice && <InfoBanner tone="warning">{authNotice}</InfoBanner>}
             {resetSent && <InfoBanner tone="success">Password reset email sent. Check your inbox.</InfoBanner>}
 
             <Field label="Email" required htmlFor="email">

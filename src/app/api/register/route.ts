@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb, isAdminConfigured } from "@/lib/firebase/admin";
 import { formatCustomerCode } from "@/lib/utils/ids";
+import { consumeRateLimit, clientIp } from "@/lib/security/rateLimit";
+import { sendEmail } from "@/lib/notifications/email";
 import type { CustomerType } from "@/types";
+
+export const runtime = "nodejs";
+
+const COMPANY = "Liberty & Liberty Logistics";
 
 interface RegisterBody {
   fullName: string;
@@ -34,6 +40,17 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { ok: false, error: "Registration is not configured." },
       { status: 503 },
+    );
+  }
+
+  // Throttle account creation per IP so the endpoint can't be used to spam
+  // Firebase Auth or flood the customer database with bogus records.
+  const ip = clientIp(req);
+  const limit = await consumeRateLimit(`register:ip:${ip}`, 5, 60 * 60 * 1000);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { ok: false, error: "Too many sign-up attempts. Please try again later." },
+      { status: 429 },
     );
   }
 
@@ -184,6 +201,18 @@ export async function POST(req: Request) {
       }
       customerId = null;
       throw err;
+    }
+
+    // 6. Send an email-verification link (best effort — never blocks signup).
+    try {
+      const link = await auth.generateEmailVerificationLink(email);
+      await sendEmail({
+        to: email,
+        subject: `Verify your email — ${COMPANY}`,
+        text: `Hi ${fullName},\n\nWelcome to ${COMPANY}! Please confirm your email address to secure your account:\n\n${link}\n\nIf you didn't create this account, you can safely ignore this email.\n\n— ${COMPANY}`,
+      });
+    } catch {
+      /* verification email is best-effort; account is still usable */
     }
 
     return NextResponse.json({ ok: true });
