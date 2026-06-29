@@ -6,7 +6,6 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, Printer, CheckCircle2, ShieldCheck, Truck } from "lucide-react";
 import { RequirePermission } from "@/components/auth/Guard";
 import { useAuth, useActor } from "@/lib/auth/AuthProvider";
-import { isSeal } from "@/lib/auth/permissions";
 import { useDocument } from "@/lib/db/hooks";
 import { COLLECTIONS } from "@/lib/db/collections";
 import {
@@ -45,7 +44,7 @@ export default function ManifestDetailPage() {
 function ManifestDetail() {
   const params = useParams<{ id: string }>();
   const id = params.id;
-  const { can, role } = useAuth();
+  const { can } = useAuth();
   const actor = useActor();
   const { success, error: toastError } = useToast();
 
@@ -80,7 +79,9 @@ function ManifestDetail() {
     isApproved &&
     isConfirmed &&
     !isDispatched &&
-    (can("manifests.approve") || isSeal(role));
+    // Liberty (approve) or SEAL Admin/Supervisor (confirm) may dispatch — not
+    // intake/warehouse staff, who lack both permissions.
+    (can("manifests.approve") || can("manifests.confirm"));
 
   async function handleApprove() {
     setBusy("approve");

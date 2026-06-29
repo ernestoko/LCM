@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
-import { ChatWidget } from "@/components/marketing/ChatWidget";
+import { ChatWidgetLazy } from "@/components/marketing/ChatWidgetLazy";
 
 export const metadata: Metadata = {
   title: {
@@ -37,7 +37,7 @@ export default function MarketingLayout({
       <MarketingNav />
       <main className="flex-1">{children}</main>
       <MarketingFooter />
-      <ChatWidget />
+      <ChatWidgetLazy />
     </div>
   );
 }

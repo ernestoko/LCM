@@ -1,7 +1,67 @@
-import * as Icons from "lucide-react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  BellRing,
+  Boxes,
+  Building2,
+  CheckCircle2,
+  CircleAlert,
+  CircleCheck,
+  ClipboardCheck,
+  ClipboardList,
+  Clock,
+  DollarSign,
+  FileText,
+  Gauge,
+  Globe,
+  Inbox,
+  Package,
+  PackageCheck,
+  PackageOpen,
+  Plane,
+  Receipt,
+  Route,
+  Scale,
+  TrendingUp,
+  TriangleAlert,
+  Truck,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
-type IconName = keyof typeof Icons;
+/** Curated icon set used by stat cards — keeps the full lucide library out of the bundle. */
+const STAT_ICONS = {
+  AlertCircle,
+  AlertTriangle,
+  BellRing,
+  Boxes,
+  Building2,
+  CheckCircle2,
+  CircleAlert,
+  CircleCheck,
+  ClipboardCheck,
+  ClipboardList,
+  Clock,
+  DollarSign,
+  FileText,
+  Gauge,
+  Globe,
+  Inbox,
+  Package,
+  PackageCheck,
+  PackageOpen,
+  Plane,
+  Receipt,
+  Route,
+  Scale,
+  TrendingUp,
+  TriangleAlert,
+  Truck,
+  Wallet,
+} satisfies Record<string, LucideIcon>;
+
+type IconName = keyof typeof STAT_ICONS;
 
 export function StatCard({
   label,
@@ -27,7 +87,7 @@ export function StatCard({
     gold: "bg-gold-50 text-gold-600",
     navy: "bg-navy-100 text-navy-700",
   };
-  const Icon = icon ? (Icons[icon] as React.ComponentType<{ className?: string }>) : null;
+  const Icon = icon ? STAT_ICONS[icon] : null;
 
   const inner = (
     <div className="flex items-center gap-4 rounded-xl border border-navy-100 bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover">
