@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Plus, Trash2, Save, Globe } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, Globe, Upload, Image as ImageIcon } from "lucide-react";
 import { RequirePermission } from "@/components/auth/Guard";
+import { uploadFile } from "@/lib/firebase/storage";
 import { useActor } from "@/lib/auth/AuthProvider";
 import {
   PageHeader,
@@ -48,6 +49,57 @@ function SectionCard({ title, hint, children }: { title: string; hint?: string; 
         {children}
       </CardBody>
     </Card>
+  );
+}
+
+/** Image picker: live preview + upload to Storage + raw URL field. */
+function ImageField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (url: string) => void;
+}) {
+  const { error: toastError } = useToast();
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadFile("site", file);
+      onChange(url);
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : "Image upload failed.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  return (
+    <Field label={label}>
+      <div className="flex items-center gap-3">
+        {value ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value} alt="" className="h-16 w-24 shrink-0 rounded-lg object-cover ring-1 ring-navy-100" />
+        ) : (
+          <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-lg bg-navy-50 text-navy-300">
+            <ImageIcon className="h-5 w-5" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1 space-y-2">
+          <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="/images/… or an uploaded URL" />
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-navy-200 bg-white px-3 py-1.5 text-xs font-medium text-navy-700 transition-colors hover:bg-navy-50">
+            <Upload className="h-3.5 w-3.5" /> {uploading ? "Uploading…" : "Upload image"}
+            <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={uploading} />
+          </label>
+        </div>
+      </div>
+    </Field>
   );
 }
 
@@ -216,6 +268,25 @@ function Editor() {
             </div>
           ))}
         </div>
+      </SectionCard>
+
+      {/* Section images */}
+      <SectionCard title="Section images" hint="Home page imagery — upload a new image or paste a URL.">
+        <ImageField
+          label="Air & Ocean showcase"
+          value={content.media.showcaseAir}
+          onChange={(url) => patch("media", { ...content.media, showcaseAir: url })}
+        />
+        <ImageField
+          label="Warehousing & E-commerce showcase"
+          value={content.media.showcaseFulfilment}
+          onChange={(url) => patch("media", { ...content.media, showcaseFulfilment: url })}
+        />
+        <ImageField
+          label="Final call-to-action background"
+          value={content.media.ctaImage}
+          onChange={(url) => patch("media", { ...content.media, ctaImage: url })}
+        />
       </SectionCard>
 
       {/* Contact details (shown in the footer + structured data site-wide) */}

@@ -55,6 +55,8 @@ export interface SiteContent {
   stats: SiteStat[];
   testimonials: SiteTestimonial[];
   coverage: { headline: string; blurb: string; countries: string[] };
+  /** Editable section images (URLs — local /images/* or uploaded Storage URLs). */
+  media: { showcaseAir: string; showcaseFulfilment: string; ctaImage: string };
   contact: { phone: string; email: string; addresses: { usa: string; ghana: string; china: string } };
 }
 
@@ -132,6 +134,11 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
       "Germany",
     ],
   },
+  media: {
+    showcaseAir: "/images/air-freight.jpg",
+    showcaseFulfilment: "/images/fulfillment.jpg",
+    ctaImage: "/images/ocean-freight.jpg",
+  },
   contact: {
     phone: BUSINESS.phone,
     email: BUSINESS.email,
@@ -160,6 +167,7 @@ export function mergeSiteContent(stored: unknown): SiteContent {
       ...(s.coverage ?? {}),
       countries: pick((s.coverage as SiteContent["coverage"] | undefined)?.countries, d.coverage.countries),
     },
+    media: { ...d.media, ...(s.media ?? {}) },
     contact: {
       ...d.contact,
       ...(s.contact ?? {}),

@@ -212,7 +212,7 @@ export default async function HomePage() {
               icon={Plane}
               title="The right lane for every shipment — by air or by sea"
               description="Need it fast? Our priority air cargo moves time-critical goods in days. Shipping in volume? Cost-effective ocean freight carries pallets, barrels and full containers at the best rate per kilo. Either way, you get one accountable partner end to end."
-              image="/images/air-freight.jpg"
+              image={content.media.showcaseAir}
               imageAlt="Cargo aircraft on the tarmac at golden hour"
               bullets={[
                 "Priority & economy air lanes",
@@ -230,7 +230,7 @@ export default async function HomePage() {
               icon={Warehouse}
               title="Storage, fulfilment and last-mile built for sellers"
               description="Store inventory in our secure hubs, consolidate purchases from multiple suppliers, and let us pick, pack and ship to your buyers across Africa and the world. Perfect for online sellers, importers and growing brands."
-              image="/images/fulfillment.jpg"
+              image={content.media.showcaseFulfilment}
               imageAlt="Fulfilment floor stacked with labelled parcels ready to ship"
               bullets={[
                 "Secure warehousing in the USA & Ghana",
@@ -384,7 +384,7 @@ export default async function HomePage() {
           subtitle="Get a fast, transparent quote today — or track an existing shipment in seconds. Liberty & Liberty Logistics is ready when you are."
           primary={{ label: "Get a quote", href: "/contact" }}
           secondary={{ label: "Track a shipment", href: "/track" }}
-          image="/images/ocean-freight.jpg"
+          image={content.media.ctaImage}
           imageAlt="Container ship carrying cargo across the ocean"
         />
       </Reveal>
