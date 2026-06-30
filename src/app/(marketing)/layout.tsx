@@ -3,6 +3,7 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { ChatWidgetLazy } from "@/components/marketing/ChatWidgetLazy";
 import { MotionProvider } from "@/components/marketing/motion/MotionProvider";
+import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 
 export const metadata: Metadata = {
   title: {
@@ -35,6 +36,7 @@ export default function MarketingLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      <OrganizationJsonLd />
       <MarketingNav />
       <main className="flex-1">
         <MotionProvider>{children}</MotionProvider>

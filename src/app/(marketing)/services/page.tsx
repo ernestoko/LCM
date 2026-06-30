@@ -228,11 +228,8 @@ export default function ServicesPage() {
         <Container>
           <div className="space-y-20 sm:space-y-28">
             {featureServices.map((service, index) => (
-              <Reveal
-                key={service.id}
-                className="scroll-mt-24"
-              >
-                <div id={service.id}>
+              <Reveal key={service.id}>
+                <div id={service.id} className="scroll-mt-24">
                   <ImageFeature
                     eyebrow={service.eyebrow}
                     icon={service.icon}
@@ -270,8 +267,8 @@ export default function ServicesPage() {
           </Reveal>
           <RevealStagger className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {cardServices.map((service) => (
-              <RevealItem key={service.id} className="scroll-mt-24">
-                <div id={service.id}>
+              <RevealItem key={service.id}>
+                <div id={service.id} className="scroll-mt-24">
                   <ServiceCard
                     icon={service.icon}
                     title={service.title}

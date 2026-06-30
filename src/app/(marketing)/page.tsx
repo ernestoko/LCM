@@ -46,7 +46,7 @@ export const metadata: Metadata = {
       "Liberty & Liberty Logistics — Global Logistics & International Shipping",
   },
   description:
-    "Ship to and from the USA, to and from Ghana, and worldwide with Liberty & Liberty Logistics. Air & ocean freight, express parcel, door-to-door delivery, customs clearance, warehousing and e-commerce shipping — with real-time tracking and transparent pricing.",
+    "Ship to and from the USA, Ghana and China, and worldwide with Liberty & Liberty Logistics. Import from China to the USA, Ghana, Nigeria and across Africa. Air & ocean freight, express parcel, door-to-door delivery, customs clearance, warehousing and e-commerce shipping — with real-time tracking and transparent pricing.",
 };
 
 const services = [
@@ -54,7 +54,7 @@ const services = [
     icon: Plane,
     title: "Air Freight",
     description:
-      "Fast, reliable air cargo on priority lanes between the USA, Ghana and destinations worldwide.",
+      "Fast, reliable air cargo on priority lanes between the USA, Ghana, China and destinations worldwide.",
   },
   {
     icon: Ship,
@@ -84,7 +84,7 @@ const services = [
     icon: Warehouse,
     title: "Warehousing",
     description:
-      "Secure storage, consolidation and fulfilment from our hubs in the USA and Ghana.",
+      "Secure storage, consolidation and fulfilment from our hubs in the USA, Ghana and China.",
   },
   {
     icon: ShoppingCart,
@@ -135,7 +135,7 @@ const features = [
     icon: Globe2,
     title: "Global reach",
     description:
-      "One partner connecting the USA, Ghana, Africa and the wider world — wherever business takes you.",
+      "One partner connecting the USA, Ghana, China, Africa and the wider world — wherever business takes you.",
   },
 ];
 
@@ -253,7 +253,8 @@ export default function HomePage() {
               <h1 className="mt-6 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
                 Move cargo to and from the{" "}
                 <span className="text-gold-300">USA</span>,{" "}
-                <span className="text-gold-300">Ghana</span> and{" "}
+                <span className="text-gold-300">Ghana</span>,{" "}
+                <span className="text-gold-300">China</span> and{" "}
                 <span className="text-gold-300">worldwide</span>
               </h1>
             </Reveal>

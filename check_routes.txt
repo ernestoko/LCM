@@ -1,0 +1,79 @@
+VALID ROUTES (from page.tsx files):
+/(marketing):
+  /
+  /about
+  /contact
+  /coverage
+  /faq
+  /services
+/(app):
+  /audit-logs
+  /complaints
+  /country-routes
+  /customers
+  /customers/[id]
+  /customers/[id]/statement
+  /customers/import
+  /customers/new
+  /dashboard
+  /intake
+  /invoices
+  /invoices/[id]
+  /manifests
+  /manifests/[id]
+  /manifests/new
+  /payments
+  /profile
+  /rate-cards
+  /rate-cards/new
+  /reports
+  /reports/analytics
+  /reports/pilot
+  /reports/settlement
+  /request/pickup
+  /request/warehouse
+  /requests
+  /seal-operations
+  /settings
+  /settings/roles
+  /settings/users
+  /shipments
+  /shipments/[id]
+  /shipments/[id]/label
+  /shipments/[id]/waybill
+  /shipments/new
+/login
+/register
+/setup
+/track
+/track/[trackingNumber]
+
+FOUND LINKS (from earlier grep):
+/complaints
+/contact
+/country-routes
+/coverage
+/customers
+/customers/import
+/customers/new
+/dashboard
+/intake
+/invoices
+/login
+/manifests
+/manifests/new
+/payments
+/profile
+/rate-cards
+/rate-cards/new
+/reports
+/reports/pilot
+/request/pickup
+/request/warehouse
+/requests
+/services
+/settings
+/settings/users
+/shipments
+/shipments/new
+/track
