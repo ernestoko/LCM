@@ -4,6 +4,8 @@ import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { ChatWidgetLazy } from "@/components/marketing/ChatWidgetLazy";
 import { MotionProvider } from "@/components/marketing/motion/MotionProvider";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
+import { MarketingAnnouncement } from "@/components/marketing/MarketingAnnouncement";
+import { getSiteContent } from "@/lib/site/getSiteContent";
 
 export const metadata: Metadata = {
   title: {
@@ -29,14 +31,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function MarketingLayout({
+// Keep marketing routes static & fast, refreshing editable content on a schedule
+// (a Super Admin save also triggers an instant on-demand revalidation).
+export const revalidate = 300;
+
+export default async function MarketingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const content = await getSiteContent();
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <OrganizationJsonLd />
+      <MarketingAnnouncement announcement={content.announcement} />
       <MarketingNav />
       <main className="flex-1">
         <MotionProvider>{children}</MotionProvider>

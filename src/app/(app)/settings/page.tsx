@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Save, Trash2, Users } from "lucide-react";
+import { Plus, Save, Trash2, Users, Globe } from "lucide-react";
 import type {
   CommissionRule,
   CurrencyCode,
@@ -200,11 +200,18 @@ function SettingsForm() {
         title="Platform Settings"
         description="Company, commission, service fee and dispatch configuration."
         actions={
-          <Link href="/settings/users">
-            <Button variant="outline" size="sm">
-              <Users className="h-4 w-4" /> User Management
-            </Button>
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/settings/site-content">
+              <Button variant="outline" size="sm">
+                <Globe className="h-4 w-4" /> Website Content
+              </Button>
+            </Link>
+            <Link href="/settings/users">
+              <Button variant="outline" size="sm">
+                <Users className="h-4 w-4" /> User Management
+              </Button>
+            </Link>
+          </div>
         }
       />
 

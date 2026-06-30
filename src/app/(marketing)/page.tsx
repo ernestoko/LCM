@@ -1,25 +1,7 @@
 import type { Metadata } from "next";
-import {
-  Plane,
-  Ship,
-  Package,
-  Truck,
-  FileCheck2,
-  Warehouse,
-  ShoppingCart,
-  Radar,
-  BadgeDollarSign,
-  ShieldCheck,
-  Headset,
-  Gauge,
-  Globe2,
-  CalendarCheck,
-  PackageCheck,
-  Route,
-  CheckCircle2,
-  MapPin,
-  Layers,
-} from "lucide-react";
+import { Plane, Warehouse, MapPin, Truck, Radar, ShieldCheck } from "lucide-react";
+import { getSiteContent } from "@/lib/site/getSiteContent";
+import { marketingIcon } from "@/components/marketing/marketingIcons";
 import {
   Container,
   Section,
@@ -49,155 +31,37 @@ export const metadata: Metadata = {
     "Ship to and from the USA, Ghana and China, and worldwide with Liberty & Liberty Logistics. Import from China to the USA, Ghana, Nigeria and across Africa. Air & ocean freight, express parcel, door-to-door delivery, customs clearance, warehousing and e-commerce shipping — with real-time tracking and transparent pricing.",
 };
 
-const services = [
-  {
-    icon: Plane,
-    title: "Air Freight",
-    description:
-      "Fast, reliable air cargo on priority lanes between the USA, Ghana, China and destinations worldwide.",
-  },
-  {
-    icon: Ship,
-    title: "Ocean Freight",
-    description:
-      "Cost-effective FCL and LCL sea freight for bulk, pallets and oversized shipments across continents.",
-  },
-  {
-    icon: Package,
-    title: "Express Parcel",
-    description:
-      "Time-critical small parcels and documents delivered swiftly with end-to-end visibility.",
-  },
-  {
-    icon: Truck,
-    title: "Door-to-Door",
-    description:
-      "We collect at origin and deliver to the recipient's door — no terminals, no guesswork.",
-  },
-  {
-    icon: FileCheck2,
-    title: "Customs Clearance",
-    description:
-      "Expert brokerage and documentation to clear your goods quickly and keep them moving.",
-  },
-  {
-    icon: Warehouse,
-    title: "Warehousing",
-    description:
-      "Secure storage, consolidation and fulfilment from our hubs in the USA, Ghana and China.",
-  },
-  {
-    icon: ShoppingCart,
-    title: "E-commerce Shipping",
-    description:
-      "Online-seller logistics with consolidation, labelling and fast last-mile to your buyers.",
-  },
-  {
-    icon: Layers,
-    title: "Consolidation",
-    description:
-      "Combine multiple purchases into one shipment to cut cost per kilo and simplify delivery.",
-  },
-];
+// ISR: pages stay static & fast, but re-read editable content periodically; a
+// Super Admin save also triggers on-demand revalidation for an instant refresh.
+export const revalidate = 300;
 
-const features = [
-  {
-    icon: Radar,
-    title: "Real-time tracking",
-    description:
-      "Follow every shipment from pickup to delivery with live status updates and milestone alerts.",
-  },
-  {
-    icon: BadgeDollarSign,
-    title: "Transparent pricing",
-    description:
-      "Clear, upfront quotes with no hidden fees — know exactly what you pay before you ship.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Secure handling",
-    description:
-      "Careful packing, sealed consolidation and insured transit keep your cargo safe end to end.",
-  },
-  {
-    icon: Headset,
-    title: "Dedicated 24/7 support",
-    description:
-      "A real team on both sides of the ocean, ready to help whenever you need answers.",
-  },
-  {
-    icon: Gauge,
-    title: "Fast transit times",
-    description:
-      "Optimised routes and trusted carriers get your goods where they belong, on schedule.",
-  },
-  {
-    icon: Globe2,
-    title: "Global reach",
-    description:
-      "One partner connecting the USA, Ghana, China, Africa and the wider world — wherever business takes you.",
-  },
-];
+/** Render a headline, wrapping any configured `highlights` word in gold. */
+function highlightTitle(title: string, highlights: string[]): React.ReactNode {
+  const words = highlights.filter(Boolean);
+  if (words.length === 0) return title;
+  const escaped = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const re = new RegExp(`(${escaped.join("|")})`, "g");
+  return title.split(re).map((part, i) =>
+    words.includes(part) ? (
+      <span key={i} className="text-gold-300">
+        {part}
+      </span>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
+  );
+}
 
-const processSteps = [
-  {
-    icon: CalendarCheck,
-    title: "Book",
-    description:
-      "Request a quote online and schedule a pickup or drop-off in minutes — for any origin or destination.",
-  },
-  {
-    icon: PackageCheck,
-    title: "Collect",
-    description:
-      "We collect, inspect and consolidate your shipment, then handle packing and export paperwork.",
-  },
-  {
-    icon: Route,
-    title: "In Transit",
-    description:
-      "Your cargo moves by air or ocean on the fastest viable lane while you track it in real time.",
-  },
-  {
-    icon: CheckCircle2,
-    title: "Delivered",
-    description:
-      "We clear customs and deliver door-to-door, confirming receipt the moment it arrives.",
-  },
-];
+export default async function HomePage() {
+  const content = await getSiteContent();
+  // Map editable content (icon names) into the shape the section components want.
+  const services = content.services.map((s) => ({ ...s, icon: marketingIcon(s.iconName) }));
+  const features = content.features.map((s) => ({ ...s, icon: marketingIcon(s.iconName) }));
+  const processSteps = content.processSteps.map((s) => ({ ...s, icon: marketingIcon(s.iconName) }));
+  const stats = content.stats;
+  const testimonials = content.testimonials;
+  const hero = content.hero;
 
-const stats = [
-  { value: 14, suffix: "+", label: "Countries served" },
-  { value: 50000, suffix: "+", label: "Shipments delivered" },
-  { value: 99, suffix: "%", label: "On-time delivery" },
-  { value: 24, suffix: "/7", label: "Customer support" },
-];
-
-const testimonials = [
-  {
-    quote:
-      "Liberty has become the backbone of my import business. My electronics leave the USA and reach my shop in Accra faster than anyone else I've used — and I can watch every step.",
-    name: "Kwame Boateng",
-    role: "Wholesale Trader",
-    company: "Accra, Ghana",
-  },
-  {
-    quote:
-      "As an online seller I ship dozens of parcels a week to buyers across Africa. Their e-commerce consolidation cut my costs dramatically and the tracking keeps my customers happy.",
-    name: "Sarah Mensah",
-    role: "Online Seller",
-    company: "Houston, USA",
-  },
-  {
-    quote:
-      "Sending barrels and gifts home to family in Ghana used to be stressful. With Liberty it's door-to-door, clearly priced, and it always arrives. They truly handle it with care.",
-    name: "Abena Owusu",
-    role: "Family Shipper",
-    company: "New York, USA",
-  },
-];
-
-export default function HomePage() {
   return (
     <>
       {/* 1. Hero */}
@@ -240,7 +104,7 @@ export default function HomePage() {
                   aria-hidden="true"
                 />
                 <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.32em] text-gold-300 sm:text-xs">
-                  Global Logistics &amp; International Shipping
+                  {hero.eyebrow}
                 </span>
                 <span
                   className="h-px flex-1 bg-gradient-to-l from-transparent via-gold-400/40 to-gold-400/70"
@@ -251,30 +115,23 @@ export default function HomePage() {
 
             <Reveal mode="load" delay={0.1}>
               <h1 className="mt-6 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-                Move cargo to and from the{" "}
-                <span className="text-gold-300">USA</span>,{" "}
-                <span className="text-gold-300">Ghana</span>,{" "}
-                <span className="text-gold-300">China</span> and{" "}
-                <span className="text-gold-300">worldwide</span>
+                {highlightTitle(hero.title, hero.highlights)}
               </h1>
             </Reveal>
 
             <Reveal mode="load" delay={0.2}>
               <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-navy-100 sm:text-xl">
-                Liberty &amp; Liberty Logistics delivers air &amp; ocean freight,
-                express parcels and door-to-door shipping with real-time tracking
-                and transparent pricing. Whether you ship one box or a thousand
-                pallets, we get it there with confidence.
+                {hero.subtitle}
               </p>
             </Reveal>
 
             <Reveal mode="load" delay={0.3}>
               <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <MButton href="/contact" variant="primary" size="lg">
-                  Get a quote
+                <MButton href={hero.primaryCta.href} variant="primary" size="lg">
+                  {hero.primaryCta.label}
                 </MButton>
-                <MButton href="/services" variant="light" size="lg">
-                  Our services
+                <MButton href={hero.secondaryCta.href} variant="light" size="lg">
+                  {hero.secondaryCta.label}
                 </MButton>
               </div>
             </Reveal>
