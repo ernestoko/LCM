@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "seed": "tsx scripts/seed.ts",
     "seed:demo": "tsx scripts/seed-demo.ts",
+    "emulators": "firebase emulators:start --project demo-lcm --only auth,firestore,storage --import=./.emulator-data --export-on-exit",
     "firebase:rules": "firebase deploy --only firestore:rules,storage:rules",
     "firebase:deploy": "next build && firebase deploy"
   },

@@ -38,3 +38,9 @@ ui-debug.log
 
 # typescript
 *.tsbuildinfo
+
+# Firebase emulator persisted data (so seeded demo accounts survive restarts)
+.emulator-data/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
