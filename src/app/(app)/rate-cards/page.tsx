@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus, Tags, ShieldCheck, Send, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Tags, ShieldCheck, Send, CheckCircle2, XCircle, Pencil } from "lucide-react";
 import { RequirePermission } from "@/components/auth/Guard";
 import { useAuth, useActor } from "@/lib/auth/AuthProvider";
 import {
@@ -212,6 +212,13 @@ function RateCards() {
                           className="flex justify-end gap-1.5"
                           onClick={(e) => e.stopPropagation()}
                         >
+                          {(card.status === "draft" || card.status === "rejected") && canCreate && (
+                            <Link href={`/rate-cards/${card.id}/edit`}>
+                              <Button size="sm" variant="outline">
+                                <Pencil className="h-3.5 w-3.5" /> Edit
+                              </Button>
+                            </Link>
+                          )}
                           {card.status === "draft" && canCreate && (
                             <Button
                               size="sm"
