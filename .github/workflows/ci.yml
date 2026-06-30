@@ -1,0 +1,46 @@
+name: CI
+
+# Runs the full quality gate on every push and pull request to main:
+# type-check → unit tests → production build. Mirrors the local verify steps so
+# a green checkmark here means the same thing it does on a developer machine.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref to save minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Type-check, test & build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+        env:
+          # The build needs no live credentials — Firebase is gated at runtime by
+          # NEXT_PUBLIC_* presence. These keep Next quiet during the static build.
+          NEXT_TELEMETRY_DISABLED: "1"

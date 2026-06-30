@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { logError } from "@/lib/observability/logError";
 
 /**
  * Top-level error boundary. Catches errors thrown in the root layout itself,
@@ -15,7 +16,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    logError(error, { scope: "global-boundary", digest: error.digest });
   }, [error]);
 
   return (

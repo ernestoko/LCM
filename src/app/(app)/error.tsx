@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { AlertTriangle, RefreshCw, LayoutDashboard } from "lucide-react";
 import { Button, Card, CardBody } from "@/components/ui";
+import { logError } from "@/lib/observability/logError";
 
 /**
  * Error boundary scoped to the authenticated app. Rendered inside the AppShell
@@ -17,7 +18,7 @@ export default function AppError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    logError(error, { scope: "app-boundary", digest: error.digest });
   }, [error]);
 
   return (

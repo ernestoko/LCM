@@ -215,7 +215,7 @@ function getReply(input: string): BotReply {
   if (has(norm, "what can you do", "what do you do", "how can you help", "what can you help", "menu", "options", "capabilities")) {
     return {
       text:
-        "Plenty! Here's where I can help:\n• 📦 Track a shipment\n• 💵 Quote air (per lb) & sea (per CBM, drums/boxes) pricing\n• 🚚 Book a pickup or set up warehouse forwarding\n• 🛃 Customs, duties, prohibited items & delivery times\n• 👤 Open a customer account\n• 📞 Hand you to a human anytime\nWhat would you like to do?",
+        "Plenty! Here's where I can help:\n• 📦 Track a shipment\n• 🔒 Look up your shipment's details, contents & invoice balance — after a quick identity check\n• 💵 Quote air (per lb) & sea (per CBM, drums/boxes) pricing\n• 🚚 Book a pickup or set up warehouse forwarding\n• 🛃 Customs, duties, prohibited items & delivery times\n• 👤 Open a customer account\n• 📞 Hand you to a human anytime\nWhat would you like to do?",
       chips: GREETING_CHIPS,
     };
   }

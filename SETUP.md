@@ -58,10 +58,19 @@ Fill in `.env.local`:
 | `FIREBASE_ADMIN_PRIVATE_KEY` | `private_key` from the JSON — keep the `\n`s, wrap in quotes |
 | `MNOTIFY_API_KEY` / `MNOTIFY_SENDER_ID` | mNotify dashboard (optional, for SMS) |
 | `EMAIL_PROVIDER` / `RESEND_API_KEY` | `console` to log emails, or `resend` + key |
+| `ASSISTANT_VERIFY_SECRET` | **Required in production** — `openssl rand -hex 32`. Signs the chat assistant's identity-verification tokens. |
+| `TURNSTILE_SECRET_KEY` / `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Optional Cloudflare Turnstile bot-gate on the assistant. |
+| `NEXT_PUBLIC_IDLE_TIMEOUT_MIN` | Staff idle-session timeout in minutes (default 60, `0` disables). |
+| `NEXT_PUBLIC_ERROR_REPORT_URL` | Optional endpoint to receive client error beacons. |
 
 > The platform runs **without** mNotify/email configured — those channels simply
 > degrade gracefully (email logs to the server console; SMS returns
 > `not_configured`).
+>
+> **Security note:** in production, always set a strong `ASSISTANT_VERIFY_SECRET`
+> and leave `ASSISTANT_OTP_ECHO=false`. Without the secret the assistant falls
+> back to a development signing key, and `ASSISTANT_OTP_ECHO=true` would return
+> verification codes in the API response (emulator testing only).
 
 ## 4. Install dependencies
 

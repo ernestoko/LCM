@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { AlertTriangle, RefreshCw, LayoutDashboard } from "lucide-react";
 import { LogoWordmark } from "@/components/brand/Logo";
+import { logError } from "@/lib/observability/logError";
 
 /**
  * Route-level error boundary for the App Router. Catches errors thrown while
@@ -17,8 +18,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Surface the error for diagnostics; replace with a logger if one is wired.
-    console.error(error);
+    logError(error, { scope: "route-boundary", digest: error.digest });
   }, [error]);
 
   return (
