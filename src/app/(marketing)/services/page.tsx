@@ -23,6 +23,7 @@ import {
   CargoUnits,
   DeliveryBand,
 } from "@/components/marketing";
+import { Reveal, RevealStagger, RevealItem } from "@/components/marketing/motion";
 
 export const metadata: Metadata = {
   title: "Services",
@@ -193,28 +194,32 @@ export default function ServicesPage() {
           className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-gold-500/10 blur-3xl"
         />
         <Container className="relative py-16 sm:py-24">
-          <SectionHeading
-            eyebrow="Our services"
-            title="Logistics for every shipment, every lane"
-            subtitle="Air and ocean freight, express parcels, door-to-door delivery, customs clearance, warehousing and e-commerce shipping — moving your goods to and from the USA, to and from Ghana, and worldwide."
-            align="center"
-            light
-          />
-          <nav
-            aria-label="Jump to a service"
-            className="mt-10 flex flex-wrap items-center justify-center gap-2"
-          >
-            {jumpLinks.map((link) => (
-              <a
-                key={link.id}
-                href={`#${link.id}`}
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-navy-100 backdrop-blur transition-colors hover:border-gold-400/50 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
-              >
-                <link.icon className="h-4 w-4 text-gold-400" aria-hidden="true" />
-                {link.title}
-              </a>
-            ))}
-          </nav>
+          <Reveal mode="load">
+            <SectionHeading
+              eyebrow="Our services"
+              title="Logistics for every shipment, every lane"
+              subtitle="Air and ocean freight, express parcels, door-to-door delivery, customs clearance, warehousing and e-commerce shipping — moving your goods to and from the USA, to and from Ghana, and worldwide."
+              align="center"
+              light
+            />
+          </Reveal>
+          <Reveal mode="load" delay={0.12}>
+            <nav
+              aria-label="Jump to a service"
+              className="mt-10 flex flex-wrap items-center justify-center gap-2"
+            >
+              {jumpLinks.map((link) => (
+                <a
+                  key={link.id}
+                  href={`#${link.id}`}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-navy-100 backdrop-blur transition-colors hover:border-gold-400/50 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+                >
+                  <link.icon className="h-4 w-4 text-gold-400" aria-hidden="true" />
+                  {link.title}
+                </a>
+              ))}
+            </nav>
+          </Reveal>
         </Container>
       </section>
 
@@ -223,23 +228,24 @@ export default function ServicesPage() {
         <Container>
           <div className="space-y-20 sm:space-y-28">
             {featureServices.map((service, index) => (
-              <div
+              <Reveal
                 key={service.id}
-                id={service.id}
                 className="scroll-mt-24"
               >
-                <ImageFeature
-                  eyebrow={service.eyebrow}
-                  icon={service.icon}
-                  title={service.title}
-                  description={service.description}
-                  image={service.image}
-                  imageAlt={service.imageAlt}
-                  bullets={service.bullets}
-                  reverse={index % 2 === 1}
-                  cta={{ label: "Get a quote", href: "/contact" }}
-                />
-              </div>
+                <div id={service.id}>
+                  <ImageFeature
+                    eyebrow={service.eyebrow}
+                    icon={service.icon}
+                    title={service.title}
+                    description={service.description}
+                    image={service.image}
+                    imageAlt={service.imageAlt}
+                    bullets={service.bullets}
+                    reverse={index % 2 === 1}
+                    cta={{ label: "Get a quote", href: "/contact" }}
+                  />
+                </div>
+              </Reveal>
             ))}
           </div>
         </Container>
@@ -254,38 +260,44 @@ export default function ServicesPage() {
       {/* Smaller services — photo-topped cards */}
       <Section className="bg-navy-50">
         <Container>
-          <SectionHeading
-            eyebrow="More ways we help"
-            title="Specialist services to round out your shipment"
-            subtitle="Time-critical parcels, hassle-free border clearance and smart consolidation — the finishing touches that keep your cargo moving and your costs down."
-            align="center"
-          />
-          <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <Reveal>
+            <SectionHeading
+              eyebrow="More ways we help"
+              title="Specialist services to round out your shipment"
+              subtitle="Time-critical parcels, hassle-free border clearance and smart consolidation — the finishing touches that keep your cargo moving and your costs down."
+              align="center"
+            />
+          </Reveal>
+          <RevealStagger className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {cardServices.map((service) => (
-              <div key={service.id} id={service.id} className="scroll-mt-24">
-                <ServiceCard
-                  icon={service.icon}
-                  title={service.title}
-                  description={service.description}
-                  image={service.image}
-                  imageAlt={service.imageAlt}
-                />
-              </div>
+              <RevealItem key={service.id} className="scroll-mt-24">
+                <div id={service.id}>
+                  <ServiceCard
+                    icon={service.icon}
+                    title={service.title}
+                    description={service.description}
+                    image={service.image}
+                    imageAlt={service.imageAlt}
+                  />
+                </div>
+              </RevealItem>
             ))}
-          </div>
-          <div className="mt-12 flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-center">
-            <MButton href="/contact" variant="primary" size="lg">
-              Get a quote
-              <ArrowRight className="h-5 w-5" aria-hidden="true" />
-            </MButton>
-            <MButton href="/coverage" variant="outline" size="lg">
-              View coverage
-            </MButton>
-          </div>
-          <p className="mt-6 flex items-center justify-center gap-2 text-center text-sm text-navy-600">
-            <CheckCircle2 className="h-4 w-4 text-brand-600" aria-hidden="true" />
-            One accountable partner across air, ocean, road and last-mile.
-          </p>
+          </RevealStagger>
+          <Reveal>
+            <div className="mt-12 flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-center">
+              <MButton href="/contact" variant="primary" size="lg">
+                Get a quote
+                <ArrowRight className="h-5 w-5" aria-hidden="true" />
+              </MButton>
+              <MButton href="/coverage" variant="outline" size="lg">
+                View coverage
+              </MButton>
+            </div>
+            <p className="mt-6 flex items-center justify-center gap-2 text-center text-sm text-navy-600">
+              <CheckCircle2 className="h-4 w-4 text-brand-600" aria-hidden="true" />
+              One accountable partner across air, ocean, road and last-mile.
+            </p>
+          </Reveal>
         </Container>
       </Section>
 

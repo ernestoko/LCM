@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, Search, MessageCircle, Phone, Mail, HelpCircle } from "lucide-react";
 import { Container } from "@/components/marketing/Container";
+import { Reveal } from "@/components/marketing/motion";
 import { FAQ_CATEGORIES, ALL_FAQS } from "@/constants/faq";
 import { BUSINESS } from "@/constants/business";
 import { cn } from "@/lib/utils/cn";
@@ -49,6 +50,7 @@ export default function FaqPage() {
       <section className="relative overflow-hidden bg-gradient-to-br from-navy-900 via-navy-900 to-brand-900 py-20 text-white">
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-gold-400/10 blur-3xl" />
         <Container className="relative">
+          <Reveal mode="load" delay={0.12}>
           <div className="mx-auto max-w-2xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-gold-300">
               <HelpCircle className="h-3.5 w-3.5" /> Help Center
@@ -74,6 +76,7 @@ export default function FaqPage() {
               />
             </div>
           </div>
+          </Reveal>
         </Container>
       </section>
 
@@ -106,7 +109,8 @@ export default function FaqPage() {
           ) : (
             <div className="mx-auto max-w-5xl space-y-14">
               {FAQ_CATEGORIES.map((cat) => (
-                <div key={cat.key} className="grid gap-8 lg:grid-cols-[260px_1fr]">
+                <Reveal key={cat.key}>
+                <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
                   <div className="lg:sticky lg:top-24 lg:self-start">
                     <h2 className="text-xl font-bold text-navy-900">{cat.title}</h2>
                     {cat.description && (
@@ -129,6 +133,7 @@ export default function FaqPage() {
                     })}
                   </ul>
                 </div>
+                </Reveal>
               ))}
             </div>
           )}
@@ -138,6 +143,7 @@ export default function FaqPage() {
       {/* Contact CTA */}
       <section className="border-t border-navy-100 bg-navy-50/60 py-16">
         <Container>
+          <Reveal>
           <div className="mx-auto max-w-3xl rounded-3xl bg-gradient-to-br from-navy-900 to-brand-900 p-10 text-center text-white shadow-lift">
             <h2 className="text-2xl font-bold">Still have questions?</h2>
             <p className="mt-2 text-navy-200">
@@ -164,6 +170,7 @@ export default function FaqPage() {
               </a>
             </div>
           </div>
+          </Reveal>
         </Container>
       </section>
     </div>

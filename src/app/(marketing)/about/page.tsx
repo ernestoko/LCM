@@ -23,6 +23,7 @@ import {
   LibertyAcronym,
   type Stat,
 } from "@/components/marketing";
+import { Reveal, RevealStagger, RevealItem } from "@/components/marketing/motion";
 
 export const metadata: Metadata = {
   title: "About — Liberty & Liberty Logistics",
@@ -114,19 +115,22 @@ export default function AboutPage() {
           className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-gold-500/10 blur-3xl"
         />
         <Container className="relative py-16 sm:py-24">
-          <SectionHeading
-            eyebrow="About Liberty & Liberty Logistics"
-            title="Connecting people, businesses and markets"
-            subtitle="We're a global logistics and international shipping company built to move cargo confidently to and from the USA, to and from Ghana, and across Africa and the world."
-            align="center"
-            light
-          />
+          <Reveal mode="load" delay={0.12}>
+            <SectionHeading
+              eyebrow="About Liberty & Liberty Logistics"
+              title="Connecting people, businesses and markets"
+              subtitle="We're a global logistics and international shipping company built to move cargo confidently to and from the USA, to and from Ghana, and across Africa and the world."
+              align="center"
+              light
+            />
+          </Reveal>
         </Container>
       </section>
 
       {/* Story + mission */}
       <Section className="bg-white">
         <Container>
+          <Reveal>
           <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-2 lg:gap-16">
             <div>
               <span className="mb-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-gold-600">
@@ -175,8 +179,10 @@ export default function AboutPage() {
               />
             </div>
           </div>
+          </Reveal>
 
           {/* Mission + vision */}
+          <Reveal>
           <div className="mt-12 grid grid-cols-1 gap-6 lg:mt-16 lg:grid-cols-2">
             <div className="relative overflow-hidden rounded-3xl border border-navy-100 bg-navy-50 p-8 shadow-card">
               <div className="flex items-center gap-3">
@@ -207,6 +213,7 @@ export default function AboutPage() {
               </p>
             </div>
           </div>
+          </Reveal>
         </Container>
       </Section>
 
@@ -221,26 +228,29 @@ export default function AboutPage() {
           className="pointer-events-none absolute -bottom-24 left-0 h-80 w-80 rounded-full bg-gold-500/10 blur-3xl"
         />
         <Container className="relative">
-          <SectionHeading
-            light
-            eyebrow="The name we earn every day"
-            title={
-              <>
-                What <span className="text-gold-300">LIBERTY</span> stands for
-              </>
-            }
-            subtitle="More than a name — it's the promise we keep on every shipment, for every customer."
-            align="center"
-          />
-          <div className="mt-12">
-            <LibertyAcronym tone="dark" />
-          </div>
+          <Reveal>
+            <SectionHeading
+              light
+              eyebrow="The name we earn every day"
+              title={
+                <>
+                  What <span className="text-gold-300">LIBERTY</span> stands for
+                </>
+              }
+              subtitle="More than a name — it's the promise we keep on every shipment, for every customer."
+              align="center"
+            />
+            <div className="mt-12">
+              <LibertyAcronym tone="dark" />
+            </div>
+          </Reveal>
         </Container>
       </section>
 
       {/* Trust / partnership feature */}
       <Section className="bg-white">
         <Container>
+          <Reveal>
           <ImageFeature
             eyebrow="A partner you can trust"
             icon={HeartHandshake}
@@ -256,34 +266,39 @@ export default function AboutPage() {
             ]}
             cta={{ label: "Talk to our team", href: "/contact" }}
           />
+          </Reveal>
         </Container>
       </Section>
 
       {/* Values grid */}
       <Section className="bg-navy-50">
         <Container>
-          <SectionHeading
-            eyebrow="What we stand for"
-            title="The values behind every shipment"
-            subtitle="These principles guide how we route, price, pack and deliver — for every customer, on every lane."
-            align="center"
-          />
-          <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+          <Reveal>
+            <SectionHeading
+              eyebrow="What we stand for"
+              title="The values behind every shipment"
+              subtitle="These principles guide how we route, price, pack and deliver — for every customer, on every lane."
+              align="center"
+            />
+          </Reveal>
+          <RevealStagger className="mt-12 grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
             {values.map((value) => (
-              <FeatureCard
-                key={value.title}
-                icon={value.icon}
-                title={value.title}
-                description={value.description}
-              />
+              <RevealItem key={value.title}>
+                <FeatureCard
+                  icon={value.icon}
+                  title={value.title}
+                  description={value.description}
+                />
+              </RevealItem>
             ))}
-          </div>
+          </RevealStagger>
         </Container>
       </Section>
 
       {/* Global hubs (USA & Ghana) */}
       <Section className="bg-white">
         <Container>
+          <Reveal>
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
             <div className="relative lg:order-2">
               <Photo
@@ -338,6 +353,7 @@ export default function AboutPage() {
               </div>
             </div>
           </div>
+          </Reveal>
         </Container>
       </Section>
 
@@ -347,6 +363,7 @@ export default function AboutPage() {
       {/* Why we exist narrative */}
       <Section className="bg-white">
         <Container>
+          <Reveal>
           <div className="mx-auto max-w-3xl text-center">
             <span className="mb-3 inline-flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-gold-600">
               <span className="h-px w-6 bg-gold-400" aria-hidden="true" />
@@ -369,6 +386,7 @@ export default function AboutPage() {
               world. When your goods matter, we treat them like they're our own.
             </p>
           </div>
+          </Reveal>
         </Container>
       </Section>
 

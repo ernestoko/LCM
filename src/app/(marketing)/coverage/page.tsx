@@ -19,6 +19,7 @@ import {
   CTASection,
   Photo,
 } from "@/components/marketing";
+import { Reveal, RevealStagger, RevealItem } from "@/components/marketing/motion";
 
 export const metadata: Metadata = {
   title: "Coverage & Global Network",
@@ -163,41 +164,47 @@ export default function CoveragePage() {
           className="pointer-events-none absolute -bottom-40 -right-24 h-96 w-96 rounded-full bg-gold-500/10 blur-3xl"
         />
         <Container className="relative py-16 sm:py-24">
-          <SectionHeading
-            eyebrow="Global network"
-            title="One partner, connected to the world"
-            subtitle="From our hubs in the USA and Ghana, Liberty & Liberty Logistics moves your cargo across Africa and around the globe. Explore the lanes we run, how long shipments take, and how we clear customs on both sides."
-            align="center"
-            light
-          />
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-navy-100">
-            <span className="inline-flex items-center gap-2">
-              <Plane className="h-4 w-4 text-gold-300" aria-hidden="true" />
-              USA &#8644; Ghana
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-gold-300" aria-hidden="true" />
-              Worldwide &#8594; USA
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <Globe2 className="h-4 w-4 text-gold-300" aria-hidden="true" />
-              USA &#8594; Africa &amp; beyond
-            </span>
-          </div>
+          <Reveal mode="load">
+            <SectionHeading
+              eyebrow="Global network"
+              title="One partner, connected to the world"
+              subtitle="From our hubs in the USA and Ghana, Liberty & Liberty Logistics moves your cargo across Africa and around the globe. Explore the lanes we run, how long shipments take, and how we clear customs on both sides."
+              align="center"
+              light
+            />
+          </Reveal>
+          <Reveal mode="load" delay={0.12}>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-navy-100">
+              <span className="inline-flex items-center gap-2">
+                <Plane className="h-4 w-4 text-gold-300" aria-hidden="true" />
+                USA &#8644; Ghana
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-gold-300" aria-hidden="true" />
+                Worldwide &#8594; USA
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Globe2 className="h-4 w-4 text-gold-300" aria-hidden="true" />
+                USA &#8594; Africa &amp; beyond
+              </span>
+            </div>
+          </Reveal>
         </Container>
       </section>
 
       {/* Coverage strip — the global trade-lane network */}
       <Section className="bg-white">
         <Container>
-          <CoverageStrip />
+          <Reveal>
+            <CoverageStrip />
+          </Reveal>
         </Container>
       </Section>
 
       {/* Reach showcase — imagery paired with the network statement */}
       <Section className="bg-navy-50 !pt-0">
         <Container>
-          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
+          <Reveal className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
             <div className="relative order-2 lg:order-1">
               <Photo
                 src="/images/global-window.jpg"
@@ -247,24 +254,26 @@ export default function CoveragePage() {
                 ))}
               </dl>
             </div>
-          </div>
+          </Reveal>
         </Container>
       </Section>
 
       {/* Lanes we operate */}
       <Section className="bg-white">
         <Container>
-          <SectionHeading
-            eyebrow="Lanes we operate"
-            title="Trusted routes in every direction"
-            subtitle="Packages can originate almost anywhere and reach the USA, and from the USA we reach Ghana, Africa and the wider world. These are the corridors we run every week."
-            align="center"
-          />
-          <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <Reveal>
+            <SectionHeading
+              eyebrow="Lanes we operate"
+              title="Trusted routes in every direction"
+              subtitle="Packages can originate almost anywhere and reach the USA, and from the USA we reach Ghana, Africa and the wider world. These are the corridors we run every week."
+              align="center"
+            />
+          </Reveal>
+          <RevealStagger className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {lanes.map((lane) => {
               const Icon = lane.icon;
               return (
-                <div
+                <RevealItem
                   key={lane.title}
                   className="group flex h-full flex-col rounded-2xl border border-navy-100 bg-white p-6 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-brand-200 hover:shadow-card-hover"
                 >
@@ -285,126 +294,130 @@ export default function CoveragePage() {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </RevealItem>
               );
             })}
-          </div>
+          </RevealStagger>
         </Container>
       </Section>
 
       {/* Transit-time table */}
       <Section className="bg-navy-50">
         <Container>
-          <SectionHeading
-            eyebrow="Transit times"
-            title="How long your shipment takes"
-            subtitle="Typical door-to-port transit windows by mode. Actual timing depends on carrier schedules, customs and final-mile delivery — your quote will confirm exact estimates."
-            align="center"
-          />
-          <div className="mt-12 overflow-hidden rounded-2xl border border-navy-100 shadow-card">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] border-collapse text-left">
-                <caption className="sr-only">
-                  Typical transit times by origin, destination and mode of transport
-                </caption>
-                <thead>
-                  <tr className="bg-navy-900 text-white">
-                    <th scope="col" className="px-5 py-4 text-sm font-semibold">
-                      Origin
-                    </th>
-                    <th scope="col" className="px-5 py-4 text-sm font-semibold">
-                      Destination
-                    </th>
-                    <th scope="col" className="px-5 py-4 text-sm font-semibold">
-                      Mode
-                    </th>
-                    <th scope="col" className="px-5 py-4 text-sm font-semibold">
-                      Typical transit
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-navy-100 bg-white">
-                  {routes.map((route) => {
-                    const ModeIcon = route.modeIcon;
-                    return (
-                      <tr
-                        key={`${route.origin}-${route.destination}-${route.mode}`}
-                        className="transition-colors hover:bg-navy-50"
-                      >
-                        <td className="px-5 py-4 text-sm font-medium text-navy-900">
-                          {route.origin}
-                        </td>
-                        <td className="px-5 py-4 text-sm text-navy-700">
-                          <span className="inline-flex items-center gap-2">
-                            <ArrowRight
-                              className="h-4 w-4 text-gold-500"
-                              aria-hidden="true"
-                            />
-                            {route.destination}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-sm text-navy-700">
-                          <span className="inline-flex items-center gap-2">
-                            <ModeIcon
-                              className="h-4 w-4 text-brand-600"
-                              aria-hidden="true"
-                            />
-                            {route.mode}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-sm font-semibold text-navy-900">
-                          {route.transit}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+          <Reveal>
+            <SectionHeading
+              eyebrow="Transit times"
+              title="How long your shipment takes"
+              subtitle="Typical door-to-port transit windows by mode. Actual timing depends on carrier schedules, customs and final-mile delivery — your quote will confirm exact estimates."
+              align="center"
+            />
+            <div className="mt-12 overflow-hidden rounded-2xl border border-navy-100 shadow-card">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[640px] border-collapse text-left">
+                  <caption className="sr-only">
+                    Typical transit times by origin, destination and mode of transport
+                  </caption>
+                  <thead>
+                    <tr className="bg-navy-900 text-white">
+                      <th scope="col" className="px-5 py-4 text-sm font-semibold">
+                        Origin
+                      </th>
+                      <th scope="col" className="px-5 py-4 text-sm font-semibold">
+                        Destination
+                      </th>
+                      <th scope="col" className="px-5 py-4 text-sm font-semibold">
+                        Mode
+                      </th>
+                      <th scope="col" className="px-5 py-4 text-sm font-semibold">
+                        Typical transit
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-navy-100 bg-white">
+                    {routes.map((route) => {
+                      const ModeIcon = route.modeIcon;
+                      return (
+                        <tr
+                          key={`${route.origin}-${route.destination}-${route.mode}`}
+                          className="transition-colors hover:bg-navy-50"
+                        >
+                          <td className="px-5 py-4 text-sm font-medium text-navy-900">
+                            {route.origin}
+                          </td>
+                          <td className="px-5 py-4 text-sm text-navy-700">
+                            <span className="inline-flex items-center gap-2">
+                              <ArrowRight
+                                className="h-4 w-4 text-gold-500"
+                                aria-hidden="true"
+                              />
+                              {route.destination}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 text-sm text-navy-700">
+                            <span className="inline-flex items-center gap-2">
+                              <ModeIcon
+                                className="h-4 w-4 text-brand-600"
+                                aria-hidden="true"
+                              />
+                              {route.mode}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 text-sm font-semibold text-navy-900">
+                            {route.transit}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-          <p className="mt-4 text-center text-sm text-navy-500">
-            Estimates shown are business-day ranges and exclude time held for
-            inspection or duty payment.
-          </p>
+            <p className="mt-4 text-center text-sm text-navy-500">
+              Estimates shown are business-day ranges and exclude time held for
+              inspection or duty payment.
+            </p>
+          </Reveal>
         </Container>
       </Section>
 
       {/* Customs / clearance note — anchor target for footer "Customs Guidance" */}
       <Section id="customs" className="scroll-mt-24 bg-white">
         <Container>
-          <div className="relative overflow-hidden rounded-3xl border border-navy-100 bg-white p-8 shadow-card sm:p-12">
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute left-0 top-0 h-1.5 w-28 rounded-br-full bg-gold-400"
-            />
-            <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[auto,1fr]">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 ring-1 ring-inset ring-brand-100">
-                <FileCheck2 className="h-8 w-8" aria-hidden="true" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight text-navy-900 sm:text-3xl">
-                  Customs cleared on both sides
-                </h2>
-                <p className="mt-3 text-base leading-relaxed text-navy-600">
-                  Every cross-border shipment passes through customs — and that is
-                  where many shippers get stuck. Our brokerage team prepares the
-                  documentation, classifies your goods and works directly with US
-                  and Ghanaian authorities to clear cargo without unnecessary
-                  delays. We will flag restricted or prohibited items before you
-                  ship and give you a clear estimate of any duties or taxes up
-                  front, so there are no surprises at the border.
-                </p>
-                <p className="mt-4 inline-flex items-start gap-2 rounded-xl bg-navy-50 px-4 py-3 text-sm text-navy-600 ring-1 ring-inset ring-navy-100">
-                  <Info
-                    className="mt-0.5 h-4 w-4 shrink-0 text-brand-600"
-                    aria-hidden="true"
-                  />
-                  Need to check whether something can be shipped? Ask us before you
-                  book — we will confirm requirements for your specific lane.
-                </p>
+          <Reveal>
+            <div className="relative overflow-hidden rounded-3xl border border-navy-100 bg-white p-8 shadow-card sm:p-12">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute left-0 top-0 h-1.5 w-28 rounded-br-full bg-gold-400"
+              />
+              <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[auto,1fr]">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 ring-1 ring-inset ring-brand-100">
+                  <FileCheck2 className="h-8 w-8" aria-hidden="true" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight text-navy-900 sm:text-3xl">
+                    Customs cleared on both sides
+                  </h2>
+                  <p className="mt-3 text-base leading-relaxed text-navy-600">
+                    Every cross-border shipment passes through customs — and that is
+                    where many shippers get stuck. Our brokerage team prepares the
+                    documentation, classifies your goods and works directly with US
+                    and Ghanaian authorities to clear cargo without unnecessary
+                    delays. We will flag restricted or prohibited items before you
+                    ship and give you a clear estimate of any duties or taxes up
+                    front, so there are no surprises at the border.
+                  </p>
+                  <p className="mt-4 inline-flex items-start gap-2 rounded-xl bg-navy-50 px-4 py-3 text-sm text-navy-600 ring-1 ring-inset ring-navy-100">
+                    <Info
+                      className="mt-0.5 h-4 w-4 shrink-0 text-brand-600"
+                      aria-hidden="true"
+                    />
+                    Need to check whether something can be shipped? Ask us before you
+                    book — we will confirm requirements for your specific lane.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          </Reveal>
         </Container>
       </Section>
 

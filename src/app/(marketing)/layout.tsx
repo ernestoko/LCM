@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { ChatWidgetLazy } from "@/components/marketing/ChatWidgetLazy";
+import { MotionProvider } from "@/components/marketing/motion/MotionProvider";
 
 export const metadata: Metadata = {
   title: {
@@ -35,7 +36,9 @@ export default function MarketingLayout({
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <MarketingNav />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        <MotionProvider>{children}</MotionProvider>
+      </main>
       <MarketingFooter />
       <ChatWidgetLazy />
     </div>

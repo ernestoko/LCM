@@ -19,6 +19,7 @@ import {
   TrackingBar,
   Photo,
 } from "@/components/marketing";
+import { Reveal } from "@/components/marketing/motion";
 import { cn } from "@/lib/utils/cn";
 
 const SERVICE_OPTIONS = [
@@ -217,13 +218,15 @@ export default function ContactPage() {
           className="pointer-events-none absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-gold-500/10 blur-3xl"
         />
         <Container className="relative py-16 sm:py-24">
-          <SectionHeading
-            eyebrow="Get in touch"
-            title="Let's move your shipment"
-            subtitle="Request a transparent quote, ask a question, or track an existing shipment. Our team in the USA and Ghana is ready to help — wherever you're shipping to or from."
-            align="center"
-            light
-          />
+          <Reveal mode="load" delay={0.12}>
+            <SectionHeading
+              eyebrow="Get in touch"
+              title="Let's move your shipment"
+              subtitle="Request a transparent quote, ask a question, or track an existing shipment. Our team in the USA and Ghana is ready to help — wherever you're shipping to or from."
+              align="center"
+              light
+            />
+          </Reveal>
         </Container>
       </section>
 
@@ -233,13 +236,15 @@ export default function ContactPage() {
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
             {/* LEFT: contact form */}
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-navy-900 sm:text-3xl">
-                Request a quote
-              </h2>
-              <p className="mt-2 text-base leading-relaxed text-navy-600">
-                Tell us what you're shipping and where it's headed. We'll get back
-                to you with a clear, all-in price.
-              </p>
+              <Reveal>
+                <h2 className="text-2xl font-bold tracking-tight text-navy-900 sm:text-3xl">
+                  Request a quote
+                </h2>
+                <p className="mt-2 text-base leading-relaxed text-navy-600">
+                  Tell us what you're shipping and where it's headed. We'll get back
+                  to you with a clear, all-in price.
+                </p>
+              </Reveal>
 
               {submitted ? (
                 <div className="mt-8 flex flex-col items-start rounded-2xl border border-emerald-200 bg-emerald-50 p-8 shadow-card">
@@ -462,7 +467,7 @@ export default function ContactPage() {
             </div>
 
             {/* RIGHT: contact details */}
-            <div className="space-y-8">
+            <Reveal className="space-y-8">
               {/* Premium imagery panel */}
               <div className="relative overflow-hidden rounded-2xl shadow-card ring-1 ring-navy-900/5">
                 <Photo
@@ -609,7 +614,7 @@ export default function ContactPage() {
                   <TrackingBar variant="inline" />
                 </div>
               </div>
-            </div>
+            </Reveal>
           </div>
         </Container>
       </Section>
@@ -617,17 +622,19 @@ export default function ContactPage() {
       {/* FAQ */}
       <Section className="bg-navy-50">
         <Container>
-          <SectionHeading
-            eyebrow="Questions, answered"
-            title="Frequently asked questions"
-            subtitle="A few of the things customers ask us most. Don't see your question? Reach out and we'll be glad to help."
-            align="center"
-          />
-          <div className="mx-auto mt-12 max-w-3xl space-y-4">
+          <Reveal>
+            <SectionHeading
+              eyebrow="Questions, answered"
+              title="Frequently asked questions"
+              subtitle="A few of the things customers ask us most. Don't see your question? Reach out and we'll be glad to help."
+              align="center"
+            />
+          </Reveal>
+          <Reveal className="mx-auto mt-12 max-w-3xl space-y-4">
             {faqs.map((faq) => (
               <FaqItem key={faq.q} q={faq.q} a={faq.a} />
             ))}
-          </div>
+          </Reveal>
           <p className="mt-10 flex items-center justify-center gap-2 text-sm font-medium text-navy-600">
             <MapPin className="h-4 w-4 text-gold-500" aria-hidden="true" />
             Hubs in the USA &amp; Ghana, serving customers across Africa and the
