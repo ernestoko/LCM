@@ -50,6 +50,19 @@ describe("self-updating (data-derived) knowledge", () => {
   });
 });
 
+describe("China lanes are answerable", () => {
+  it("answers 'do you ship from china' with the China coverage entry", () => {
+    const r = searchKnowledge("do you ship from china to nigeria");
+    expect(r).not.toBeNull();
+    expect(r!.topic).toBe("Coverage");
+    expect(r!.a.toLowerCase()).toContain("china");
+  });
+  it("includes the China hub in the live hubs answer", () => {
+    const hubs = buildDynamicKnowledge().find((e) => e.id === "dyn-hubs")!;
+    expect(hubs.a).toContain("Guangzhou");
+  });
+});
+
 describe("jargon & acronyms are answerable", () => {
   const cases: { q: string; topic: string }[] = [
     { q: "what's the difference between FCL and LCL", topic: "Sea Cargo" },

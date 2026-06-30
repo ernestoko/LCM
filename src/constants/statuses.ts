@@ -216,6 +216,7 @@ export const ROUTE_DIRECTION_LABELS: Record<RouteDirection, string> = {
   country_to_usa: "Country → USA",
   ghana_to_country: "Ghana → Country",
   country_to_ghana: "Country → Ghana",
+  international: "International (country → country)",
 };
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {

@@ -76,6 +76,17 @@ export const WAREHOUSES: WarehouseHub[] = [
     phone: "+233 32 000 0000",
   },
   {
+    key: "china-guangzhou",
+    name: "Guangzhou Hub",
+    flag: "🇨🇳",
+    line1: "88 Baiyun Logistics Park",
+    city: "Guangzhou",
+    region: "Guangdong",
+    postal: "510000",
+    country: "China",
+    phone: "+86 20 0000 0000",
+  },
+  {
     key: "uk-london",
     name: "London Hub",
     flag: "🇬🇧",

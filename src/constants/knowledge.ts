@@ -28,7 +28,7 @@ export const KNOWLEDGE: KnowledgeEntry[] = [
     id: "company-overview",
     topic: "Company",
     q: "Who is Liberty & Liberty Logistics?",
-    a: "Liberty & Liberty Logistics is an international shipping and logistics company moving cargo to and from the USA, to and from Ghana, and across Africa and the wider world. We handle air freight, ocean freight, door-to-door delivery, customs clearance, warehousing and e-commerce fulfilment — all tracked end to end.",
+    a: "Liberty & Liberty Logistics is an international shipping and logistics company moving cargo to and from the USA, to and from Ghana, sourcing from China, and across Africa and the wider world. We handle air freight, ocean freight, door-to-door delivery, customs clearance, warehousing and e-commerce fulfilment — all tracked end to end.",
     keywords: ["who is liberty", "about liberty", "about the company", "what is liberty", "company background", "tell me about you"],
   },
   {
@@ -49,8 +49,15 @@ export const KNOWLEDGE: KnowledgeEntry[] = [
     id: "ecommerce-sellers",
     topic: "Services",
     q: "Do you help online sellers / e-commerce?",
-    a: "Absolutely. Online sellers use us to receive stock at our warehouses, store it, and fulfil orders to customers — plus consolidate inbound purchases from US/UK stores. If you sell on social media, a marketplace or your own store, we can be your fulfilment and shipping arm.",
+    a: "Absolutely. Online sellers use us to receive stock at our warehouses, store it, and fulfil orders to customers — plus consolidate inbound purchases from US/UK/China stores. If you sell on social media, a marketplace or your own store, we can be your fulfilment and shipping arm.",
     keywords: ["ecommerce", "e-commerce", "online seller", "marketplace", "fulfilment", "fulfillment", "dropship", "store", "business shipping"],
+  },
+  {
+    id: "china-sourcing",
+    topic: "Coverage",
+    q: "Do you ship from China? (China to USA, Ghana, Nigeria…)",
+    a: "Yes — China is one of our key sourcing hubs. We move cargo from China to the USA, to Ghana, to Nigeria and to other African destinations (and back the other way), by air for speed or by sea for the best price on bulky goods. You can buy from Chinese suppliers or marketplaces (1688, Alibaba, Taobao), ship to our China hub, and we'll consolidate, clear customs and deliver. Tell me your route and what you're importing and I'll point you the right way.",
+    keywords: ["china", "from china", "china to usa", "china to ghana", "china to nigeria", "guangzhou", "shenzhen", "yiwu", "alibaba", "1688", "taobao", "import from china", "china to africa", "ghana to china"],
   },
 
   // ---- Air vs Sea ---------------------------------------------------------

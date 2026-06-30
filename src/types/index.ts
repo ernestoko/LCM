@@ -232,7 +232,10 @@ export type RouteDirection =
   | "usa_to_country"
   | "country_to_usa"
   | "ghana_to_country"
-  | "country_to_ghana";
+  | "country_to_ghana"
+  /** Any other country-to-country lane (e.g. China → Nigeria) — endpoints are
+   *  carried explicitly on `origin`/`destination`. */
+  | "international";
 
 export type RouteStatus = "draft" | "testing" | "active" | "suspended";
 
@@ -242,6 +245,10 @@ export interface CountryRoute extends AuditStamp {
   countryName: string;
   countryCode: string; // ISO-2, e.g. "GH"
   direction: RouteDirection;
+  /** Explicit lane endpoints. Optional for legacy USA/Ghana-hub routes (derived
+   *  from direction + countryName); REQUIRED in spirit for "international" lanes. */
+  origin?: string;
+  destination?: string;
   pricingType: PricingType;
   /** Air or sea route. Undefined = air (legacy). Sea routes carry CBM/unit pricing + long transit. */
   cargoType?: CargoType;

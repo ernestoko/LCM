@@ -51,6 +51,7 @@ const DIRECTIONS: RouteDirection[] = [
   "country_to_usa",
   "ghana_to_country",
   "country_to_ghana",
+  "international",
 ];
 const PRICING_TYPES: PricingType[] = [
   "weight_based",
@@ -294,6 +295,9 @@ interface OnboardFormState {
   countryName: string;
   countryCode: string;
   direction: RouteDirection;
+  /** Explicit endpoints — only used (and shown) for "international" lanes. */
+  origin: string;
+  destination: string;
   pricingType: PricingType;
   defaultRate: string;
   currency: CurrencyCode;
@@ -309,6 +313,8 @@ const INITIAL_FORM: OnboardFormState = {
   countryName: "",
   countryCode: "",
   direction: "usa_to_country",
+  origin: "",
+  destination: "",
   pricingType: "weight_based",
   defaultRate: "",
   currency: "USD",
@@ -340,10 +346,18 @@ function OnboardModal({
   const [form, setForm] = useState<OnboardFormState>(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
 
+  const isInternational = form.direction === "international";
+
   const code = useMemo(() => {
-    const name = form.countryName.trim().toUpperCase().replace(/\s+/g, "");
+    const slug = (s: string) => s.trim().toUpperCase().replace(/\s+/g, "");
+    if (isInternational) {
+      const o = slug(form.origin);
+      const d = slug(form.destination);
+      return o && d ? `${o}-${d}` : "";
+    }
+    const name = slug(form.countryName);
     return name ? `USA-${name}` : "";
-  }, [form.countryName]);
+  }, [isInternational, form.origin, form.destination, form.countryName]);
 
   function set<K extends keyof OnboardFormState>(key: K, value: OnboardFormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -359,6 +373,10 @@ function OnboardModal({
       toastError("Country name and ISO code are required.");
       return;
     }
+    if (isInternational && (!form.origin.trim() || !form.destination.trim())) {
+      toastError("International routes need both an origin and a destination country.");
+      return;
+    }
     setSubmitting(true);
     try {
       const data: NewRoute = {
@@ -366,6 +384,9 @@ function OnboardModal({
         countryName: form.countryName.trim(),
         countryCode: form.countryCode.trim().toUpperCase(),
         direction: form.direction,
+        ...(isInternational
+          ? { origin: form.origin.trim(), destination: form.destination.trim() }
+          : {}),
         pricingType: form.pricingType,
         defaultRate: form.defaultRate ? Number(form.defaultRate) : undefined,
         currency: form.currency,
@@ -435,6 +456,25 @@ function OnboardModal({
             ))}
           </Select>
         </Field>
+
+        {isInternational && (
+          <>
+            <Field label="Origin country" required hint="Where cargo ships from">
+              <Input
+                value={form.origin}
+                onChange={(e) => set("origin", e.target.value)}
+                placeholder="China"
+              />
+            </Field>
+            <Field label="Destination country" required hint="Where cargo is delivered">
+              <Input
+                value={form.destination}
+                onChange={(e) => set("destination", e.target.value)}
+                placeholder="Nigeria"
+              />
+            </Field>
+          </>
+        )}
 
         <Field label="Pricing type" required>
           <Select

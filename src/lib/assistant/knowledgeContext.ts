@@ -20,7 +20,7 @@ export function buildKnowledgeContext(): string {
     `Contact: phone ${BUSINESS.phone}, email ${BUSINESS.email}, website ${BUSINESS.website}.`,
     `Warehouse hubs: ${hubs}.`,
     `Modes: Air Cargo (priced by weight, per lb) and Sea Cargo (priced by CBM volume, or by standard drums/boxes; CBM and units can mix on one invoice).`,
-    `Core lanes: to and from the USA and Ghana, plus growing routes across Africa, the UK and worldwide.`,
+    `Core lanes: to and from the USA and Ghana, sourcing from China (China → USA / Ghana / Nigeria and other African destinations, and the reverse), plus growing routes across Africa, the UK and worldwide.`,
   ].join("\n");
 
   const qa = [...KNOWLEDGE, ...buildDynamicKnowledge(), ...ALL_FAQS]

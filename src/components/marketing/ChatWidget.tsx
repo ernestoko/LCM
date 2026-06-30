@@ -347,9 +347,9 @@ function getReply(input: string): BotReply {
   }
 
   // Coverage / countries
-  if (has(norm, "countries", "coverage", "where do you ship", "do you ship to", "destination", "ghana", "nigeria", "africa", "which country")) {
+  if (has(norm, "countries", "coverage", "where do you ship", "do you ship to", "destination", "ghana", "nigeria", "africa", "china", "which country")) {
     return {
-      text: "We move cargo to and from the USA and Ghana, with growing lanes across Africa, the UK and beyond. Tell me your origin and destination and I'll confirm the route and how it's priced.",
+      text: "We move cargo to and from the USA and Ghana, source from China (China → USA, Ghana, Nigeria and across Africa — and back), and run growing lanes across Africa, the UK and beyond. Tell me your origin and destination and I'll confirm the route and how it's priced.",
       actions: [{ label: "View coverage", href: "/coverage", icon: "external" }],
       chips: ["Shipping rates", "Get a quote"],
     };

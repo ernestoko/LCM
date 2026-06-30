@@ -1,4 +1,4 @@
-import { Globe2, Plane, MapPin } from "lucide-react";
+import { Globe2, Plane, MapPin, Ship } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Container } from "./Container";
 import { Photo } from "./Photo";
@@ -146,8 +146,8 @@ export function CoverageStrip({
             </h2>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-navy-200">
               We move air and ocean freight, express parcels and full door-to-door
-              shipments along trusted lanes between the United States, Ghana and
-              destinations across Africa and beyond — with customs clearance and
+              shipments along trusted lanes between the United States, Ghana, China
+              and destinations across Africa and beyond — with customs clearance and
               real-time tracking at every step.
             </p>
             <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-white">
@@ -156,12 +156,16 @@ export function CoverageStrip({
                 USA &#8644; Ghana
               </span>
               <span className="inline-flex items-center gap-2">
+                <Ship className="h-4 w-4 text-gold-400" aria-hidden="true" />
+                China &#8594; Africa
+              </span>
+              <span className="inline-flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-gold-400" aria-hidden="true" />
-                Worldwide &#8594; USA
+                China &#8644; USA
               </span>
               <span className="inline-flex items-center gap-2">
                 <Globe2 className="h-4 w-4 text-gold-400" aria-hidden="true" />
-                USA &#8594; Africa &amp; beyond
+                Worldwide &#8594; Africa
               </span>
             </div>
           </div>

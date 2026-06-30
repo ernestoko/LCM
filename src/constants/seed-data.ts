@@ -119,6 +119,21 @@ export const SEED_ROUTES: SeedRoute[] = [
   { code: "GHANA-USA", countryName: "Ghana", countryCode: "GH", pricingType: "weight_based", pricePerLb: 12.5, transitTimeDays: 18, serviceFeeApplies: true, startActive: true, direction: "country_to_usa", origin: "Ghana", destination: "United States" },
   { code: "NIGERIA-USA", countryName: "Nigeria", countryCode: "NG", pricingType: "weight_based", pricePerLb: 8.0, transitTimeDays: 20, serviceFeeApplies: false, startActive: false, direction: "country_to_usa", origin: "Nigeria", destination: "United States" },
   { code: "UNITEDKINGDOM-USA", countryName: "United Kingdom", countryCode: "GB", pricingType: "weight_based", pricePerLb: 9.75, transitTimeDays: 9, serviceFeeApplies: true, startActive: false, direction: "country_to_usa", origin: "United Kingdom", destination: "United States" },
+
+  // --- China lanes (sourcing hub) — draft until Liberty activates + prices -----
+  // China ⇄ USA (USA-hub directions)
+  { code: "USA-CHINA", countryName: "China", countryCode: "CN", pricingType: "weight_based", pricePerLb: 9.5, transitTimeDays: 12, serviceFeeApplies: true, startActive: false, direction: "usa_to_country", origin: "United States", destination: "China" },
+  { code: "CHINA-USA", countryName: "China", countryCode: "CN", pricingType: "weight_based", pricePerLb: 8.5, transitTimeDays: 14, serviceFeeApplies: true, startActive: false, direction: "country_to_usa", origin: "China", destination: "United States" },
+  // China ⇄ Ghana (Ghana-hub directions)
+  { code: "CHINA-GHANA", countryName: "China", countryCode: "CN", pricingType: "weight_based", pricePerLb: 10.0, transitTimeDays: 35, serviceFeeApplies: true, startActive: false, direction: "country_to_ghana", origin: "China", destination: "Ghana" },
+  { code: "GHANA-CHINA", countryName: "China", countryCode: "CN", pricingType: "weight_based", pricePerLb: 11.0, transitTimeDays: 35, serviceFeeApplies: true, startActive: false, direction: "ghana_to_country", origin: "Ghana", destination: "China" },
+  // China → other African destinations (country-to-country "international" lanes)
+  { code: "CHINA-NIGERIA", countryName: "Nigeria", countryCode: "NG", pricingType: "weight_based", pricePerLb: 9.0, transitTimeDays: 38, serviceFeeApplies: false, startActive: false, direction: "international", origin: "China", destination: "Nigeria" },
+  { code: "CHINA-KENYA", countryName: "Kenya", countryCode: "KE", pricingType: "weight_based", pricePerLb: 9.5, transitTimeDays: 34, serviceFeeApplies: true, startActive: false, direction: "international", origin: "China", destination: "Kenya" },
+  { code: "CHINA-CAMEROON", countryName: "Cameroon", countryCode: "CM", pricingType: "weight_based", pricePerLb: 10.5, transitTimeDays: 40, serviceFeeApplies: true, startActive: false, direction: "international", origin: "China", destination: "Cameroon" },
+  { code: "CHINA-SOUTHAFRICA", countryName: "South Africa", countryCode: "ZA", pricingType: "weight_based", pricePerLb: 9.5, transitTimeDays: 30, serviceFeeApplies: true, startActive: false, direction: "international", origin: "China", destination: "South Africa" },
+  // Africa → China (return "international" lanes)
+  { code: "NIGERIA-CHINA", countryName: "China", countryCode: "CN", pricingType: "weight_based", pricePerLb: 9.5, transitTimeDays: 38, serviceFeeApplies: false, startActive: false, direction: "international", origin: "Nigeria", destination: "China" },
 ];
 
 /** Countries the platform serves both ways (origin AND destination). */

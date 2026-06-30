@@ -53,6 +53,10 @@ export default function NewManifestPage() {
 }
 
 function originDestination(route: CountryRoute): { origin: string; destination: string } {
+  // Prefer explicit endpoints when present (required for "international" lanes).
+  if (route.origin && route.destination) {
+    return { origin: route.origin, destination: route.destination };
+  }
   switch (route.direction) {
     case "usa_to_country":
       return { origin: "United States", destination: route.countryName };
