@@ -59,6 +59,7 @@ Fill in `.env.local`:
 | `MNOTIFY_API_KEY` / `MNOTIFY_SENDER_ID` | mNotify dashboard (optional, for SMS) |
 | `EMAIL_PROVIDER` / `RESEND_API_KEY` | `console` to log emails, or `resend` + key |
 | `ASSISTANT_VERIFY_SECRET` | **Required in production** — `openssl rand -hex 32`. Signs the chat assistant's identity-verification tokens. |
+| `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` | Optional. Jesselyn runs on a local, self-updating knowledge base with **no AI** by default; add a key to also use Claude (grounded in that KB) for hard/novel questions. |
 | `TURNSTILE_SECRET_KEY` / `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Optional Cloudflare Turnstile bot-gate on the assistant. |
 | `NEXT_PUBLIC_IDLE_TIMEOUT_MIN` | Staff idle-session timeout in minutes (default 60, `0` disables). |
 | `NEXT_PUBLIC_ERROR_REPORT_URL` | Optional endpoint to receive client error beacons. |

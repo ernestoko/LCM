@@ -53,6 +53,33 @@ export function confirmCode(input: { challengeId: string; code: string }): Promi
   return postJson<ConfirmResult>("/api/assistant/verify/confirm", input);
 }
 
+export type AssistantChatTurn = { role: "user" | "assistant"; content: string };
+
+export type AssistantChatResult =
+  | { ok: true; configured: true; text: string }
+  | { ok: false; configured: boolean; error?: string };
+
+/**
+ * Ask the optional Claude-backed layer (used only as a fallback when the local
+ * brain has no confident answer). Returns `configured: false` when no API key is
+ * set, so the caller can quietly fall back to its local reply.
+ */
+export async function askAssistant(input: {
+  message: string;
+  history: AssistantChatTurn[];
+}): Promise<AssistantChatResult> {
+  try {
+    const res = await fetch("/api/assistant/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    return (await res.json()) as AssistantChatResult;
+  } catch {
+    return { ok: false, configured: false, error: "network" };
+  }
+}
+
 /** Fetch the authorised shipment detail using the verification token. */
 export async function fetchSensitiveShipment(
   trackingNumber: string,

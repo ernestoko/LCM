@@ -13,7 +13,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Eagle } from "@/components/brand/Eagle";
-import { ALL_FAQS } from "@/constants/faq";
+import { searchKnowledge, relatedQuestions } from "@/lib/assistant/brain";
 import { BUSINESS } from "@/constants/business";
 import { WAREHOUSES } from "@/constants/warehouses";
 import { cn } from "@/lib/utils/cn";
@@ -21,6 +21,7 @@ import {
   startVerification,
   confirmCode,
   fetchSensitiveShipment,
+  askAssistant,
   type ChannelKind,
   type ChannelOption,
 } from "@/lib/assistant/client";
@@ -53,6 +54,8 @@ interface BotReply {
   text: string;
   actions?: ChatAction[];
   chips?: string[];
+  /** True on the low-confidence catch-all — the async layer may upgrade it. */
+  fallback?: boolean;
 }
 interface ChatMessage {
   id: number;
@@ -165,24 +168,6 @@ function formatSensitive(s: SensitiveShipment): string {
   if (s.expectedDeliveryDate) lines.push(`• Estimated delivery: ${s.expectedDeliveryDate}`);
   lines.push("\nNeed anything else? I'm right here. — Jesselyn");
   return lines.join("\n");
-}
-
-/** Best-effort keyword search across the FAQ knowledge base. */
-function searchFaq(norm: string): { q: string; a: string } | null {
-  const words = norm.split(/\s+/).filter((w) => w.length > 2);
-  let best: { q: string; a: string } | null = null;
-  let bestScore = 0;
-  for (const f of ALL_FAQS) {
-    const hay = `${f.q} ${f.a} ${(f.keywords ?? []).join(" ")}`.toLowerCase();
-    let score = 0;
-    for (const w of words) if (hay.includes(w)) score += 1;
-    for (const k of f.keywords ?? []) if (norm.includes(k)) score += 2;
-    if (score > bestScore) {
-      bestScore = score;
-      best = { q: f.q, a: f.a };
-    }
-  }
-  return bestScore >= 2 ? best : null;
 }
 
 /**
@@ -392,21 +377,24 @@ function getReply(input: string): BotReply {
     return GREETING;
   }
 
-  // Fall back to the FAQ knowledge base.
-  const faq = searchFaq(norm);
-  if (faq) {
+  // Search the large, self-updating knowledge base (sector knowledge, jargon,
+  // acronyms, live hub/sea-unit/status facts). Suggest related questions too.
+  const kb = searchKnowledge(input);
+  if (kb) {
+    const related = relatedQuestions(input, 3).filter((q) => q !== kb.q);
     return {
-      text: faq.a,
-      actions: [{ label: "Browse all FAQs", href: "/faq", icon: "external" }],
-      chips: ["Talk to a human"],
+      text: kb.a,
+      chips: related.length ? [...related.slice(0, 2), "Talk to a human"] : ["Browse FAQ", "Talk to a human"],
     };
   }
 
-  // Friendly catch-all — stay helpful and on-brand.
+  // Friendly catch-all — stay helpful and on-brand. Flagged `fallback` so the
+  // optional Claude layer (if configured) can try a smarter answer first.
   return {
-    text: "I want to get this right — I'm Jesselyn, and I can help with tracking, pricing, pickups, warehouse forwarding, customs, delivery times, or getting you to a human. Could you rephrase, or pick one below?",
+    text: "I want to get this right — I'm Jesselyn, and I can help with tracking, pricing, pickups, warehouse forwarding, customs, delivery times, sea-cargo terms, or getting you to a human. Could you rephrase, or pick one below?",
     actions: [{ label: "Browse FAQ", href: "/faq", icon: "external" }, ...HANDOFF],
     chips: GREETING_CHIPS,
+    fallback: true,
   };
 }
 
@@ -436,6 +424,8 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
   }>({ stage: "idle" });
   // Tracking number Jesselyn is currently talking about (for follow-up asks).
   const lastTn = useRef<string | null>(null);
+  // Optional AI fallback availability: null = unknown, false = no key (stop trying).
+  const llmAvailable = useRef<boolean | null>(null);
   // Sensitive details we've already unlocked this session, keyed by tracking #.
   const verified = useRef<Map<string, { expiresAtMs: number; shipment: SensitiveShipment }>>(new Map());
 
@@ -631,9 +621,15 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
       return;
     }
 
-    // --- Everything else → the local intent router ---------------------------
+    // --- Everything else → local brain, with an optional AI fallback ---------
     setTyping(true);
     const reply = getReply(text);
+    // Only reach for the (optional) AI layer when the local brain is unsure and
+    // we haven't already learned there's no API key configured.
+    if (reply.fallback && llmAvailable.current !== false) {
+      void askWithAi(text, reply);
+      return;
+    }
     const t = setTimeout(() => {
       setTyping(false);
       setMessages((m) => [
@@ -642,6 +638,22 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
       ]);
     }, 480);
     timers.current.push(t);
+  }
+
+  /** Try the optional Claude layer for an unmatched question; fall back locally. */
+  async function askWithAi(text: string, fallback: BotReply) {
+    const history = messages
+      .slice(-6)
+      .map((m) => ({ role: (m.from === "user" ? "user" : "assistant") as "user" | "assistant", content: m.text }));
+    const r = await askAssistant({ message: text, history });
+    setTyping(false);
+    if (r.ok) {
+      llmAvailable.current = true;
+      pushBot(r.text, { chips: ["Talk to a human"] });
+    } else {
+      if (!r.configured) llmAvailable.current = false; // no key — don't try again this session
+      pushBot(fallback.text, { actions: fallback.actions, chips: fallback.chips });
+    }
   }
 
   /** Toggle the panel (from the launcher) and dismiss any proactive teaser. */
