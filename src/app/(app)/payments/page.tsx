@@ -46,7 +46,7 @@ import {
 } from "@/components/ui";
 import { PAYMENT_METHOD_LABELS } from "@/constants/statuses";
 import { formatMoney } from "@/lib/utils/format";
-import { formatDate } from "@/lib/utils/dates";
+import { formatDate, todayISODate } from "@/lib/utils/dates";
 import type { BadgeTone } from "@/constants/statuses";
 
 const RECON_META: Record<ReconciliationStatus, { label: string; tone: BadgeTone }> = {
@@ -54,8 +54,6 @@ const RECON_META: Record<ReconciliationStatus, { label: string; tone: BadgeTone 
   reconciled: { label: "Reconciled", tone: "success" },
   disputed: { label: "Disputed", tone: "danger" },
 };
-
-const todayISODate = () => new Date().toISOString().slice(0, 10);
 
 export default function PaymentsPage() {
   return (

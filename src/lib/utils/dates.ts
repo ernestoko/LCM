@@ -7,6 +7,11 @@ export function toISO(d: Date | string | number | null | undefined): ISODate {
   return new Date(d).toISOString();
 }
 
+/** Today's date as a plain `YYYY-MM-DD` string — handy for filenames and date inputs. */
+export function todayISODate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function asDate(d?: ISODate | null): Date | null {
   if (!d) return null;
   const parsed = typeof d === "string" ? parseISO(d) : new Date(d);

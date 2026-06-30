@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Package, Layers, X } from "lucide-react";
+import { Plus, Package, Layers, X, Download } from "lucide-react";
 import { useAuth, useActor } from "@/lib/auth/AuthProvider";
 import { isCustomer, isSeal } from "@/lib/auth/permissions";
 import {
@@ -33,9 +33,10 @@ import {
   ErrorState,
   useToast,
 } from "@/components/ui";
+import { downloadCsv } from "@/components/payments/csv";
 import { SHIPMENT_STATUS_META, PAYMENT_STATUS_META } from "@/constants/statuses";
 import type { Shipment, ShipmentStatus } from "@/types";
-import { fromNow } from "@/lib/utils/dates";
+import { fromNow, todayISODate } from "@/lib/utils/dates";
 import { formatWeight } from "@/lib/utils/format";
 
 type FilterKey = "all" | "active" | "delivered" | "issues";
@@ -151,19 +152,51 @@ export default function ShipmentsPage() {
     { key: "issues", label: "Issues", count: counts.issues },
   ];
 
+  /** Export the currently-filtered shipments to CSV. */
+  function handleExport() {
+    if (filtered.length === 0) {
+      toastError("No shipments to export.");
+      return;
+    }
+    const rows = filtered.map((s) => ({
+      trackingNumber: s.trackingNumber,
+      customer: s.customerName,
+      cargoType: s.cargoType ?? "air",
+      route: s.routeCode,
+      origin: s.originCountry,
+      destination: s.destinationCountry,
+      status: SHIPMENT_STATUS_META[s.status]?.label ?? s.status,
+      paymentStatus: PAYMENT_STATUS_META[s.paymentStatus]?.label ?? s.paymentStatus,
+      pieces: s.pieces ?? "",
+      weightLb: s.weightLb ?? "",
+      totalCbm: s.totalCbm ?? "",
+      declaredValue: s.declaredValue ?? "",
+      createdAt: s.createdAt,
+    }));
+    downloadCsv(`shipments-${todayISODate()}.csv`, rows);
+    success(`Exported ${rows.length} shipment${rows.length === 1 ? "" : "s"}.`);
+  }
+
   return (
     <div>
       <PageHeader
         title="Shipments"
         description="Track every package across the operations pipeline."
         actions={
-          can("shipments.create") ? (
-            <Link href="/shipments/new">
-              <Button>
-                <Plus className="h-4 w-4" /> New Shipment
+          <>
+            {can("data.export") && filtered.length > 0 && (
+              <Button variant="outline" onClick={handleExport}>
+                <Download className="h-4 w-4" /> Export CSV
               </Button>
-            </Link>
-          ) : undefined
+            )}
+            {can("shipments.create") && (
+              <Link href="/shipments/new">
+                <Button>
+                  <Plus className="h-4 w-4" /> New Shipment
+                </Button>
+              </Link>
+            )}
+          </>
         }
       />
 

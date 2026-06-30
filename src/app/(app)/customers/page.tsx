@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Users, Upload } from "lucide-react";
+import { Plus, Users, Upload, Download } from "lucide-react";
 import { RequirePermission } from "@/components/auth/Guard";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useCustomers } from "@/lib/db/repositories/customers";
@@ -23,8 +23,11 @@ import {
   LoadingState,
   EmptyState,
   ErrorState,
+  useToast,
 } from "@/components/ui";
+import { downloadCsv } from "@/components/payments/csv";
 import { formatMoney } from "@/lib/utils/format";
+import { todayISODate } from "@/lib/utils/dates";
 import { CUSTOMER_TYPE_LABELS, CUSTOMER_SOURCE_LABELS } from "@/constants/statuses";
 import type { BadgeTone } from "@/constants/statuses";
 import type { CustomerSource } from "@/types";
@@ -51,6 +54,7 @@ export default function CustomersPage() {
 function CustomersList() {
   const router = useRouter();
   const { can } = useAuth();
+  const { success, error: toastError } = useToast();
   const { data: customers, loading, error } = useCustomers();
   const [search, setSearch] = useState("");
   const [source, setSource] = useState<string>("all");
@@ -83,26 +87,55 @@ function CustomersList() {
     [customers, sources],
   );
 
+  /** Export the currently-filtered customers to CSV (admins only). */
+  function handleExport() {
+    if (filtered.length === 0) {
+      toastError("No customers to export.");
+      return;
+    }
+    const rows = filtered.map((c) => ({
+      code: c.customerCode,
+      name: c.fullName,
+      phone: c.phone,
+      email: c.email ?? "",
+      country: c.country,
+      city: c.city ?? "",
+      type: CUSTOMER_TYPE_LABELS[c.customerType],
+      source: CUSTOMER_SOURCE_LABELS[c.source],
+      shipments: c.shipmentCount,
+      totalSpend: c.totalSpend,
+    }));
+    downloadCsv(`customers-${todayISODate()}.csv`, rows);
+    success(`Exported ${rows.length} customer${rows.length === 1 ? "" : "s"}.`);
+  }
+
   return (
     <div>
       <PageHeader
         title="Customers"
         description="People and organisations shipping with Liberty & Liberty Logistics."
         actions={
-          can("customers.create") && (
-            <>
-              <Link href="/customers/import">
-                <Button variant="outline">
-                  <Upload className="h-4 w-4" /> Import CSV
-                </Button>
-              </Link>
-              <Link href="/customers/new">
-                <Button>
-                  <Plus className="h-4 w-4" /> Add Customer
-                </Button>
-              </Link>
-            </>
-          )
+          <>
+            {can("data.export") && (
+              <Button variant="outline" onClick={handleExport}>
+                <Download className="h-4 w-4" /> Export CSV
+              </Button>
+            )}
+            {can("customers.create") && (
+              <>
+                <Link href="/customers/import">
+                  <Button variant="outline">
+                    <Upload className="h-4 w-4" /> Import CSV
+                  </Button>
+                </Link>
+                <Link href="/customers/new">
+                  <Button>
+                    <Plus className="h-4 w-4" /> Add Customer
+                  </Button>
+                </Link>
+              </>
+            )}
+          </>
         }
       />
 

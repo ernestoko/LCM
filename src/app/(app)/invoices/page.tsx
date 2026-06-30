@@ -3,12 +3,13 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText } from "lucide-react";
+import { FileText, Download } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { isCustomer } from "@/lib/auth/permissions";
 import { useInvoices, useCustomerInvoices } from "@/lib/db/repositories/invoices";
 import {
   PageHeader,
+  Button,
   Card,
   Table,
   THead,
@@ -22,10 +23,12 @@ import {
   LoadingState,
   EmptyState,
   ErrorState,
+  useToast,
 } from "@/components/ui";
+import { downloadCsv } from "@/components/payments/csv";
 import { PAYMENT_STATUS_META } from "@/constants/statuses";
 import { formatMoney } from "@/lib/utils/format";
-import { formatDate } from "@/lib/utils/dates";
+import { formatDate, todayISODate } from "@/lib/utils/dates";
 import type { Invoice, PaymentStatus } from "@/types";
 
 type FilterKey = "all" | "unpaid" | "partial" | "paid";
@@ -39,7 +42,8 @@ function statusGroup(status: PaymentStatus): FilterKey {
 
 export default function InvoicesPage() {
   const router = useRouter();
-  const { user, role } = useAuth();
+  const { user, role, can } = useAuth();
+  const { success, error: toastError } = useToast();
 
   // Role-aware data source. Customers only see their own invoices
   // (permission `invoices.view.own`); staff/finance see all (`invoices.view`).
@@ -76,6 +80,28 @@ export default function InvoicesPage() {
     { key: "paid", label: "Paid", count: counts.paid },
   ];
 
+  /** Export the currently-filtered invoices to CSV (admins only). */
+  function handleExport() {
+    if (filtered.length === 0) {
+      toastError("No invoices to export.");
+      return;
+    }
+    const rows = filtered.map((inv) => ({
+      invoiceNumber: inv.invoiceNumber,
+      customer: inv.customerName,
+      trackingNumber: inv.trackingNumber,
+      route: inv.routeCode,
+      currency: inv.currency,
+      total: inv.total,
+      amountPaid: inv.amountPaid,
+      balanceDue: inv.balanceDue,
+      paymentStatus: PAYMENT_STATUS_META[inv.paymentStatus]?.label ?? inv.paymentStatus,
+      date: formatDate(inv.createdAt),
+    }));
+    downloadCsv(`invoices-${todayISODate()}.csv`, rows);
+    success(`Exported ${rows.length} invoice${rows.length === 1 ? "" : "s"}.`);
+  }
+
   return (
     <div>
       <PageHeader
@@ -84,6 +110,13 @@ export default function InvoicesPage() {
           isCustomer(role)
             ? "Your invoices and balances."
             : "Invoices generated from our approved rate card."
+        }
+        actions={
+          can("data.export") && !isCustomer(role) ? (
+            <Button variant="outline" onClick={handleExport}>
+              <Download className="h-4 w-4" /> Export CSV
+            </Button>
+          ) : undefined
         }
       />
 
