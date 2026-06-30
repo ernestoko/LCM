@@ -14,24 +14,13 @@ import { useCollection } from "@/lib/db/hooks";
 import { COLLECTIONS } from "@/lib/db/collections";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { cn } from "@/lib/utils/cn";
+import { useCommandPalette, OPEN_EVENT } from "./useCommandPalette";
 import type { Customer, Shipment, Invoice } from "@/types";
 
-// ---------------------------------------------------------------------------
-// Public hook + module event — lets any component (e.g. a Topbar button) open
-// the palette without prop drilling, by dispatching a window event.
-// ---------------------------------------------------------------------------
-
-const OPEN_EVENT = "lcm:open-search";
-
-/** Returns `{ open }` — call `open()` to launch the command palette. */
-export function useCommandPalette() {
-  const open = useCallback(() => {
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent(OPEN_EVENT));
-    }
-  }, []);
-  return { open };
-}
+// The opener hook + OPEN_EVENT live in a tiny separate module (imported at the
+// top) so trigger buttons don't pull this whole Firestore-subscribing component
+// into the initial bundle. Re-exported here for backwards compatibility.
+export { useCommandPalette, OPEN_EVENT };
 
 // ---------------------------------------------------------------------------
 // Result modelling

@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { useCommandPalette } from "./CommandPalette";
+import { useCommandPalette } from "./useCommandPalette";
 
 /**
  * Topbar search affordance. Dispatches the `lcm:open-search` window event
