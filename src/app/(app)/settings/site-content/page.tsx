@@ -218,6 +218,71 @@ function Editor() {
         </div>
       </SectionCard>
 
+      {/* Contact details (shown in the footer + structured data site-wide) */}
+      <SectionCard title="Contact details" hint="Shown in the footer on every public page and in search structured data.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Phone">
+            <Input
+              value={content.contact.phone}
+              onChange={(e) => patch("contact", { ...content.contact, phone: e.target.value })}
+            />
+          </Field>
+          <Field label="Email">
+            <Input
+              value={content.contact.email}
+              onChange={(e) => patch("contact", { ...content.contact, email: e.target.value })}
+            />
+          </Field>
+        </div>
+        <Field label="USA address">
+          <Input
+            value={content.contact.addresses.usa}
+            onChange={(e) => patch("contact", { ...content.contact, addresses: { ...content.contact.addresses, usa: e.target.value } })}
+          />
+        </Field>
+        <Field label="Ghana address">
+          <Input
+            value={content.contact.addresses.ghana}
+            onChange={(e) => patch("contact", { ...content.contact, addresses: { ...content.contact.addresses, ghana: e.target.value } })}
+          />
+        </Field>
+        <Field label="China address">
+          <Input
+            value={content.contact.addresses.china}
+            onChange={(e) => patch("contact", { ...content.contact, addresses: { ...content.contact.addresses, china: e.target.value } })}
+          />
+        </Field>
+      </SectionCard>
+
+      {/* Coverage */}
+      <SectionCard title="Coverage / global network" hint="The 'Global Network' band on the home and coverage pages.">
+        <Field label="Headline">
+          <Input
+            value={content.coverage.headline}
+            onChange={(e) => patch("coverage", { ...content.coverage, headline: e.target.value })}
+          />
+        </Field>
+        <Field label="Blurb">
+          <Textarea
+            value={content.coverage.blurb}
+            onChange={(e) => patch("coverage", { ...content.coverage, blurb: e.target.value })}
+            rows={3}
+          />
+        </Field>
+        <Field label="Countries" hint="Comma-separated list shown in the coverage grid.">
+          <Textarea
+            value={content.coverage.countries.join(", ")}
+            onChange={(e) =>
+              patch("coverage", {
+                ...content.coverage,
+                countries: e.target.value.split(",").map((w) => w.trim()).filter(Boolean),
+              })
+            }
+            rows={2}
+          />
+        </Field>
+      </SectionCard>
+
       {/* Card sections: services, features, process */}
       {(
         [

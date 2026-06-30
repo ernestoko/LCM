@@ -104,10 +104,14 @@ function WorldRoutes() {
 
 export function CoverageStrip({
   countries = DEFAULT_COUNTRIES,
+  headline = "To & from the USA. Across Africa. Worldwide.",
+  blurb = "We move air and ocean freight, express parcels and full door-to-door shipments along trusted lanes between the United States, Ghana, China and destinations across Africa and beyond — with customs clearance and real-time tracking at every step.",
   image = "/images/world-map.jpg",
   className,
 }: {
   countries?: string[];
+  headline?: string;
+  blurb?: string;
   image?: string;
   className?: string;
 }) {
@@ -142,14 +146,9 @@ export function CoverageStrip({
               Global Network
             </span>
             <h2 className="mt-4 text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              To &amp; from the USA. Across Africa. Worldwide.
+              {headline}
             </h2>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-navy-200">
-              We move air and ocean freight, express parcels and full door-to-door
-              shipments along trusted lanes between the United States, Ghana, China
-              and destinations across Africa and beyond — with customs clearance and
-              real-time tracking at every step.
-            </p>
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-navy-200">{blurb}</p>
             <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-white">
               <span className="inline-flex items-center gap-2">
                 <Plane className="h-4 w-4 text-gold-400" aria-hidden="true" />

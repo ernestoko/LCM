@@ -248,7 +248,11 @@ export default async function HomePage() {
       <Section className="bg-navy-50 !py-12 sm:!py-16">
         <Container>
           <Reveal>
-            <CoverageStrip />
+            <CoverageStrip
+              countries={content.coverage.countries}
+              headline={content.coverage.headline}
+              blurb={content.coverage.blurb}
+            />
           </Reveal>
         </Container>
       </Section>

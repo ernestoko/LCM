@@ -43,13 +43,13 @@ export default async function MarketingLayout({
   const content = await getSiteContent();
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <OrganizationJsonLd />
+      <OrganizationJsonLd contact={content.contact} />
       <MarketingAnnouncement announcement={content.announcement} />
       <MarketingNav />
       <main className="flex-1">
         <MotionProvider>{children}</MotionProvider>
       </main>
-      <MarketingFooter />
+      <MarketingFooter contact={content.contact} />
       <ChatWidgetLazy />
     </div>
   );

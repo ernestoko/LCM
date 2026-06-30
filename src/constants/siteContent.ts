@@ -54,6 +54,7 @@ export interface SiteContent {
   processSteps: SiteCard[];
   stats: SiteStat[];
   testimonials: SiteTestimonial[];
+  coverage: { headline: string; blurb: string; countries: string[] };
   contact: { phone: string; email: string; addresses: { usa: string; ghana: string; china: string } };
 }
 
@@ -112,6 +113,25 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
     { quote: "As an online seller I ship dozens of parcels a week to buyers across Africa. Their e-commerce consolidation cut my costs dramatically and the tracking keeps my customers happy.", name: "Sarah Mensah", role: "Online Seller", company: "Houston, USA" },
     { quote: "Sending barrels and gifts home to family in Ghana used to be stressful. With Liberty it's door-to-door, clearly priced, and it always arrives. They truly handle it with care.", name: "Abena Owusu", role: "Family Shipper", company: "New York, USA" },
   ],
+  coverage: {
+    headline: "To & from the USA. Across Africa. Worldwide.",
+    blurb:
+      "We move air and ocean freight, express parcels and full door-to-door shipments along trusted lanes between the United States, Ghana, China and destinations across Africa and beyond — with customs clearance and real-time tracking at every step.",
+    countries: [
+      "United States",
+      "Ghana",
+      "Liberia",
+      "Nigeria",
+      "Cameroon",
+      "Kenya",
+      "South Africa",
+      "United Kingdom",
+      "Canada",
+      "China",
+      "UAE",
+      "Germany",
+    ],
+  },
   contact: {
     phone: BUSINESS.phone,
     email: BUSINESS.email,
@@ -135,6 +155,11 @@ export function mergeSiteContent(stored: unknown): SiteContent {
     processSteps: pick(s.processSteps as SiteCard[] | undefined, d.processSteps),
     stats: pick(s.stats as SiteStat[] | undefined, d.stats),
     testimonials: pick(s.testimonials as SiteTestimonial[] | undefined, d.testimonials),
+    coverage: {
+      ...d.coverage,
+      ...(s.coverage ?? {}),
+      countries: pick((s.coverage as SiteContent["coverage"] | undefined)?.countries, d.coverage.countries),
+    },
     contact: {
       ...d.contact,
       ...(s.contact ?? {}),

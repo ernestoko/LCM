@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getSiteContent } from "@/lib/site/getSiteContent";
 import {
   ArrowLeftRight,
   ArrowRight,
@@ -132,7 +133,10 @@ const routes: Route[] = [
   },
 ];
 
-export default function CoveragePage() {
+export const revalidate = 300;
+
+export default async function CoveragePage() {
+  const content = await getSiteContent();
   return (
     <>
       {/* Hero — navy band over a real container-port photo */}
@@ -196,7 +200,11 @@ export default function CoveragePage() {
       <Section className="bg-white">
         <Container>
           <Reveal>
-            <CoverageStrip />
+            <CoverageStrip
+              countries={content.coverage.countries}
+              headline={content.coverage.headline}
+              blurb={content.coverage.blurb}
+            />
           </Reveal>
         </Container>
       </Section>

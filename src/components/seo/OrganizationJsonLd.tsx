@@ -1,14 +1,17 @@
 import { BUSINESS } from "@/constants/business";
 import { WAREHOUSES } from "@/constants/warehouses";
+import type { SiteContent } from "@/constants/siteContent";
 
 /**
  * Organization structured data (schema.org) for rich results. Server-rendered
- * once on the public marketing surface. Built from the business + warehouse
- * constants so it stays correct as those change (e.g. new China hub) — no AI,
- * no hand-maintenance. Safe: all values come from our own constants.
+ * once on the public marketing surface. Phone/email come from editable site
+ * content (falling back to the business constant); hubs come from the warehouse
+ * constants — so it stays correct as those change. Safe: no user input.
  */
-export function OrganizationJsonLd() {
+export function OrganizationJsonLd({ contact }: { contact?: SiteContent["contact"] }) {
   const url = `https://${BUSINESS.website}`;
+  const phone = contact?.phone ?? BUSINESS.phone;
+  const email = contact?.email ?? BUSINESS.email;
   const data = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -17,14 +20,14 @@ export function OrganizationJsonLd() {
     url,
     logo: `${url}/favicon.svg`,
     description: `${BUSINESS.tagline}. Air & ocean freight, door-to-door delivery, customs clearance and warehousing to and from the USA, Ghana, China and across Africa and the world.`,
-    email: BUSINESS.email,
-    telephone: BUSINESS.phone,
+    email,
+    telephone: phone,
     areaServed: ["United States", "Ghana", "China", "Nigeria", "Africa", "Worldwide"],
     contactPoint: [
       {
         "@type": "ContactPoint",
-        telephone: BUSINESS.phone,
-        email: BUSINESS.email,
+        telephone: phone,
+        email,
         contactType: "customer support",
         availableLanguage: ["English"],
       },

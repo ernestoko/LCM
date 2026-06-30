@@ -3,6 +3,7 @@ import { Phone, Mail, MapPin } from "lucide-react";
 import { Container } from "./Container";
 import { LibertyWordmark } from "./Brand";
 import { TrackingBar } from "./TrackingBar";
+import { DEFAULT_SITE_CONTENT, type SiteContent } from "@/constants/siteContent";
 
 const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] = [
   {
@@ -46,8 +47,11 @@ const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] =
   },
 ];
 
-export function MarketingFooter() {
+export function MarketingFooter({ contact }: { contact?: SiteContent["contact"] }) {
   const year = new Date().getFullYear();
+  const c = contact ?? DEFAULT_SITE_CONTENT.contact;
+  const tel = `tel:${c.phone.replace(/[^\d+]/g, "")}`;
+  const mailto = `mailto:${c.email}`;
 
   return (
     <footer className="bg-navy-950 text-navy-200">
@@ -103,25 +107,24 @@ export function MarketingFooter() {
             <ul className="mt-4 space-y-3 text-sm text-navy-300">
               <li className="flex items-start gap-3">
                 <Phone className="mt-0.5 h-4 w-4 shrink-0 text-gold-400" aria-hidden="true" />
-                <a href="tel:+18005265555" className="transition-colors hover:text-white">
-                  +1 (800) 526-5555
+                <a href={tel} className="transition-colors hover:text-white">
+                  {c.phone}
                 </a>
               </li>
               <li className="flex items-start gap-3">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-gold-400" aria-hidden="true" />
-                <a
-                  href="mailto:hello@libertylogistics.com"
-                  className="transition-colors hover:text-white"
-                >
-                  hello@libertylogistics.com
+                <a href={mailto} className="transition-colors hover:text-white">
+                  {c.email}
                 </a>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold-400" aria-hidden="true" />
                 <span>
-                  USA: 1200 Logistics Way, Houston, TX
+                  USA: {c.addresses.usa}
                   <br />
-                  Ghana: 24 Harbour Road, Tema, Accra
+                  Ghana: {c.addresses.ghana}
+                  <br />
+                  China: {c.addresses.china}
                 </span>
               </li>
             </ul>
