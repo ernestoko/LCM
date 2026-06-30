@@ -5,6 +5,7 @@ import { ChatWidgetLazy } from "@/components/marketing/ChatWidgetLazy";
 import { MotionProvider } from "@/components/marketing/motion/MotionProvider";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 import { MarketingAnnouncement } from "@/components/marketing/MarketingAnnouncement";
+import { PageViewTracker } from "@/components/analytics/PageViewTracker";
 import { getSiteContent } from "@/lib/site/getSiteContent";
 
 export const metadata: Metadata = {
@@ -43,6 +44,7 @@ export default async function MarketingLayout({
   const content = await getSiteContent();
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      <PageViewTracker />
       <OrganizationJsonLd contact={content.contact} />
       <MarketingAnnouncement announcement={content.announcement} />
       <MarketingNav />

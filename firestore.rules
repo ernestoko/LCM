@@ -216,6 +216,14 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ---- site traffic (aggregate, non-personal) ---------------------------
+    // Daily visit counters: written ONLY by the Admin SDK (server), read by
+    // Liberty staff for the Site Traffic report. No personal data is stored.
+    match /siteTraffic/{day} {
+      allow read: if isLiberty();
+      allow write: if false;
+    }
+
     // ---- server-only collections (no client access, ever) -----------------
     // OTP verification challenges and rate-limit counters are written and read
     // ONLY by the Admin SDK (which bypasses these rules). Explicitly deny all

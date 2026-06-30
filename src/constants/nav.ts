@@ -51,6 +51,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Analytics", href: "/reports/analytics", icon: "PieChart", permission: "reports.view" },
       { label: "Settlement", href: "/reports/settlement", icon: "Scale", permission: "commission.view" },
       { label: "Pilot Tracker", href: "/reports/pilot", icon: "Gauge", permission: "reports.view" },
+      { label: "Site Traffic", href: "/reports/traffic", icon: "Globe", permission: "reports.view" },
       { label: "Complaints", href: "/complaints", icon: "MessageSquareWarning", permission: "complaints.view" },
     ],
   },

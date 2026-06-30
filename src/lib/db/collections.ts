@@ -21,6 +21,8 @@ export const COLLECTIONS = {
   otpChallenges: "otpChallenges",
   /** Server-only: fixed-window rate-limit counters. */
   rateLimits: "rateLimits",
+  /** Privacy-safe daily site-visit counters (no PII). */
+  siteTraffic: "siteTraffic",
 } as const;
 
 export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];
