@@ -1,0 +1,140 @@
+# ============================================================================
+# Firebase App Hosting configuration — Liberty Cargo Movers
+# Docs: https://firebase.google.com/docs/app-hosting/configure
+#
+# App Hosting builds this Next.js app on Cloud Build and serves SSR from a
+# Cloud Run backend. Env vars below are injected at BUILD and/or RUNTIME.
+#
+#   * NEXT_PUBLIC_* values are baked into the client bundle at BUILD time, so
+#     they must be plain `value:` entries available to BUILD (they are public).
+#   * Server-only credentials use `secret:` and are pulled from Cloud Secret
+#     Manager at RUNTIME. Create each one first, e.g.:
+#         firebase apphosting:secrets:set FIREBASE_ADMIN_PRIVATE_KEY
+#     then grant the backend access when the CLI prompts you.
+#
+# A referenced secret that does NOT yet exist will FAIL the rollout — so the
+# optional integrations at the bottom are commented out. Uncomment only after
+# you have created the matching secret.
+# ============================================================================
+
+runConfig:
+  # Scale to zero when idle to keep costs near-zero; raise minInstances to 1+
+  # if you want to avoid cold starts. maxInstances caps autoscaling.
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  # --- Firebase Web SDK (client) — PUBLIC, safe to commit -------------------
+  # Copy these from Firebase console → Project settings → General → Your apps.
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: REPLACE_WITH_FIREBASE_API_KEY
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: liberty522.firebaseapp.com
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: liberty522
+    availability: [BUILD, RUNTIME]
+  # VERIFY: newer projects use "<id>.firebasestorage.app", older ones
+  # "<id>.appspot.com". Copy the exact storageBucket from your Web app config.
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: liberty522.firebasestorage.app
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: REPLACE_WITH_SENDER_ID
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: REPLACE_WITH_APP_ID
+    availability: [BUILD, RUNTIME]
+
+  # --- Emulator gate — MUST be false in the cloud --------------------------
+  - variable: NEXT_PUBLIC_USE_FIREBASE_EMULATOR
+    value: "false"
+    availability: [BUILD, RUNTIME]
+
+  # --- Public platform settings --------------------------------------------
+  - variable: NEXT_PUBLIC_APP_NAME
+    value: "Liberty Cargo Movers"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_SUPPORT_PHONE
+    value: "+233 00 000 0000"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_SUPPORT_EMAIL
+    value: "support@libertycargomovers.com"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_IDLE_TIMEOUT_MIN
+    value: "60"
+    availability: [BUILD, RUNTIME]
+
+  # --- Firebase Admin SDK (server) — REQUIRED for API routes ---------------
+  # PROJECT_ID is public; email + private key are secrets. Create them with:
+  #   firebase apphosting:secrets:set FIREBASE_ADMIN_CLIENT_EMAIL
+  #   firebase apphosting:secrets:set FIREBASE_ADMIN_PRIVATE_KEY
+  # (paste the full PEM, including the -----BEGIN/END----- lines, for the key)
+  - variable: FIREBASE_ADMIN_PROJECT_ID
+    value: liberty522
+    availability: [RUNTIME]
+  - variable: FIREBASE_ADMIN_CLIENT_EMAIL
+    secret: FIREBASE_ADMIN_CLIENT_EMAIL
+    availability: [RUNTIME]
+  - variable: FIREBASE_ADMIN_PRIVATE_KEY
+    secret: FIREBASE_ADMIN_PRIVATE_KEY
+    availability: [RUNTIME]
+
+  # --- Assistant identity verification -------------------------------------
+  # Needed if the "Jesselyn" assistant verify-before-reveal flow is used.
+  # Create with:  firebase apphosting:secrets:set ASSISTANT_VERIFY_SECRET
+  #   (generate a value with: openssl rand -hex 32)
+  - variable: ASSISTANT_VERIFY_SECRET
+    secret: ASSISTANT_VERIFY_SECRET
+    availability: [RUNTIME]
+  - variable: ASSISTANT_OTP_ECHO
+    value: "false"
+    availability: [RUNTIME]
+
+  # --- Optional integrations — uncomment AFTER creating each secret --------
+  # Email (Resend): also set EMAIL_PROVIDER=resend below.
+  # - variable: EMAIL_PROVIDER
+  #   value: "resend"
+  #   availability: [RUNTIME]
+  # - variable: EMAIL_FROM
+  #   value: "Liberty Cargo Movers <no-reply@libertycargomovers.com>"
+  #   availability: [RUNTIME]
+  # - variable: RESEND_API_KEY
+  #   secret: RESEND_API_KEY
+  #   availability: [RUNTIME]
+  #
+  # SMS (mNotify):
+  # - variable: MNOTIFY_SENDER_ID
+  #   value: "LibertyCM"
+  #   availability: [RUNTIME]
+  # - variable: MNOTIFY_API_KEY
+  #   secret: MNOTIFY_API_KEY
+  #   availability: [RUNTIME]
+  #
+  # WhatsApp Cloud API:
+  # - variable: WHATSAPP_PHONE_NUMBER_ID
+  #   secret: WHATSAPP_PHONE_NUMBER_ID
+  #   availability: [RUNTIME]
+  # - variable: WHATSAPP_TOKEN
+  #   secret: WHATSAPP_TOKEN
+  #   availability: [RUNTIME]
+  #
+  # AI layer for the assistant (Anthropic):
+  # - variable: ANTHROPIC_MODEL
+  #   value: "claude-haiku-4-5-20251001"
+  #   availability: [RUNTIME]
+  # - variable: ANTHROPIC_API_KEY
+  #   secret: ANTHROPIC_API_KEY
+  #   availability: [RUNTIME]
+  #
+  # Cloudflare Turnstile (bot gate on the assistant):
+  # - variable: NEXT_PUBLIC_TURNSTILE_SITE_KEY
+  #   value: REPLACE_WITH_TURNSTILE_SITE_KEY
+  #   availability: [BUILD, RUNTIME]
+  # - variable: TURNSTILE_SECRET_KEY
+  #   secret: TURNSTILE_SECRET_KEY
+  #   availability: [RUNTIME]
