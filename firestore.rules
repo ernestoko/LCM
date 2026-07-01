@@ -235,6 +235,15 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ---- contact / quote leads -------------------------------------------
+    // Written ONLY by the Admin SDK (server) from the public /api/contact
+    // endpoint. Contains contact PII, so reads are limited to Liberty staff;
+    // clients can never write directly.
+    match /contactSubmissions/{id} {
+      allow read: if isLiberty();
+      allow write: if false;
+    }
+
     // Deny everything else by default.
     match /{document=**} {
       allow read, write: if false;

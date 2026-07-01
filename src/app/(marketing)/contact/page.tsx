@@ -21,6 +21,7 @@ import {
 } from "@/components/marketing";
 import { Reveal } from "@/components/marketing/motion";
 import { cn } from "@/lib/utils/cn";
+import { BUSINESS } from "@/constants/business";
 
 const SERVICE_OPTIONS = [
   "Air Freight",
@@ -79,7 +80,7 @@ const offices = [
     country: "United States Hub",
     flag: "USA",
     lines: ["1200 Logistics Way, Suite 410", "Houston, TX 77032, USA"],
-    phone: "+1 (713) 555-0192",
+    phone: BUSINESS.phone,
   },
   {
     country: "Ghana Hub",
@@ -117,7 +118,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl"
+          className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-2xl"
         >
           <span className="text-base font-bold text-navy-900">{q}</span>
           <ChevronDown
@@ -140,6 +141,10 @@ export default function ContactPage() {
   const [values, setValues] = useState<FormState>(initialForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  // Honeypot: a hidden field real users never see/fill. Bots do — we drop those.
+  const [company, setCompany] = useState("");
 
   const mailtoHref = useMemo(() => {
     const subject = encodeURIComponent(
@@ -155,7 +160,7 @@ export default function ContactPage() {
         values.message,
       ].join("\n"),
     );
-    return `mailto:hello@libertylogistics.com?subject=${subject}&body=${body}`;
+    return `mailto:${BUSINESS.email}?subject=${subject}&body=${body}`;
   }, [values]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -168,23 +173,47 @@ export default function ContactPage() {
     });
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const nextErrors = validate(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
-    // No backend — show an inline success state.
-    setSubmitted(true);
+
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...values, company }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (res.ok && data.ok) {
+        setSubmitted(true);
+      } else {
+        setSubmitError(
+          data.error ?? "We couldn't send your request. Please email us instead.",
+        );
+      }
+    } catch {
+      setSubmitError(
+        "We couldn't reach the server. Please check your connection or email us instead.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function resetForm() {
     setValues(initialForm);
     setErrors({});
     setSubmitted(false);
+    setSubmitError(null);
+    setCompany("");
   }
 
   const inputBase =
-    "w-full rounded-xl border bg-white px-4 py-3 text-sm text-navy-900 placeholder:text-navy-400 transition-colors focus:outline-none focus:ring-4 focus:ring-brand-500/15";
+    "w-full rounded-xl border bg-white px-4 py-3 text-sm text-navy-900 placeholder:text-navy-400 transition-colors focus:outline-hidden focus:ring-4 focus:ring-brand-500/15";
 
   return (
     <>
@@ -263,7 +292,7 @@ export default function ContactPage() {
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="mt-6 inline-flex items-center gap-2 rounded-xl border border-navy-200 bg-white px-4 py-2.5 text-sm font-semibold text-navy-800 transition-colors hover:border-brand-400 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                    className="mt-6 inline-flex items-center gap-2 rounded-xl border border-navy-200 bg-white px-4 py-2.5 text-sm font-semibold text-navy-800 transition-colors hover:border-brand-400 hover:text-brand-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                   >
                     Send another request
                   </button>
@@ -275,6 +304,20 @@ export default function ContactPage() {
                   className="mt-8 space-y-5"
                   aria-label="Quote request form"
                 >
+                  {/* Honeypot — hidden from users, catches bots. */}
+                  <div className="hidden" aria-hidden="true">
+                    <label htmlFor="company">Company (leave blank)</label>
+                    <input
+                      id="company"
+                      name="company"
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={company}
+                      onChange={(e) => setCompany(e.target.value)}
+                    />
+                  </div>
+
                   {/* Name */}
                   <div>
                     <label
@@ -443,17 +486,27 @@ export default function ContactPage() {
                     ) : null}
                   </div>
 
+                  {submitError ? (
+                    <p
+                      role="alert"
+                      className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                    >
+                      {submitError}
+                    </p>
+                  ) : null}
+
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <button
                       type="submit"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-7 py-3.5 text-base font-semibold text-white shadow-card transition-all hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                      disabled={submitting}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-7 py-3.5 text-base font-semibold text-white shadow-card transition-all hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card-hover focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
                     >
-                      Send request
+                      {submitting ? "Sending…" : "Send request"}
                       <Send className="h-4 w-4" aria-hidden="true" />
                     </button>
                     <a
                       href={mailtoHref}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy-200 bg-white px-5 py-3.5 text-sm font-semibold text-navy-800 transition-colors hover:border-brand-400 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy-200 bg-white px-5 py-3.5 text-sm font-semibold text-navy-800 transition-colors hover:border-brand-400 hover:text-brand-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                     >
                       <Mail className="h-4 w-4" aria-hidden="true" />
                       Email us instead
@@ -501,10 +554,10 @@ export default function ContactPage() {
                       </dt>
                       <dd>
                         <a
-                          href="tel:+17135550192"
+                          href={`tel:${BUSINESS.phone.replace(/[^\d+]/g, "")}`}
                           className="text-sm font-semibold text-navy-900 hover:text-brand-700"
                         >
-                          +1 (713) 555-0192
+                          {BUSINESS.phone}
                         </a>
                       </dd>
                     </div>
@@ -519,10 +572,10 @@ export default function ContactPage() {
                       </dt>
                       <dd>
                         <a
-                          href="mailto:hello@libertylogistics.com"
+                          href={`mailto:${BUSINESS.email}`}
                           className="text-sm font-semibold text-navy-900 hover:text-brand-700"
                         >
-                          hello@libertylogistics.com
+                          {BUSINESS.email}
                         </a>
                       </dd>
                     </div>
@@ -624,7 +677,6 @@ export default function ContactPage() {
         <Container>
           <Reveal>
             <SectionHeading
-              eyebrow="Questions, answered"
               title="Frequently asked questions"
               subtitle="A few of the things customers ask us most. Don't see your question? Reach out and we'll be glad to help."
               align="center"

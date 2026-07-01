@@ -42,14 +42,14 @@ export default function Error({
           <button
             type="button"
             onClick={() => reset()}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-medium text-white shadow-xs transition-colors hover:bg-brand-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1"
           >
             <RefreshCw className="h-4 w-4" />
             Try again
           </button>
           <Link
             href="/dashboard"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-navy-200 bg-white px-4 text-sm font-medium text-navy-800 transition-colors hover:bg-navy-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-1"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-navy-200 bg-white px-4 text-sm font-medium text-navy-800 transition-colors hover:bg-navy-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-1"
           >
             <LayoutDashboard className="h-4 w-4" />
             Go to dashboard

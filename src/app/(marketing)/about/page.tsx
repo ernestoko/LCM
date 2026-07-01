@@ -231,7 +231,6 @@ export default function AboutPage() {
           <Reveal>
             <SectionHeading
               light
-              eyebrow="The name we earn every day"
               title={
                 <>
                   What <span className="text-gold-300">LIBERTY</span> stands for
@@ -275,7 +274,6 @@ export default function AboutPage() {
         <Container>
           <Reveal>
             <SectionHeading
-              eyebrow="What we stand for"
               title="The values behind every shipment"
               subtitle="These principles guide how we route, price, pack and deliver — for every customer, on every lane."
               align="center"

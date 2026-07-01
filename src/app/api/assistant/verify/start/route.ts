@@ -131,14 +131,36 @@ export async function POST(req: Request) {
   });
 
   const message = `${COMPANY}: your verification code is ${code}. It expires in 10 minutes. Never share this code.`;
-  if (chosen.kind === "email") {
-    await sendEmail({
-      to: chosen.value,
-      subject: `Your ${COMPANY} verification code`,
-      text: `Hi,\n\nYour verification code is ${code}.\nIt expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\n— ${COMPANY}`,
-    });
-  } else {
-    await sendSms([chosen.value], message);
+  const delivery =
+    chosen.kind === "email"
+      ? await sendEmail({
+          to: chosen.value,
+          subject: `Your ${COMPANY} verification code`,
+          text: `Hi,\n\nYour verification code is ${code}.\nIt expires in 10 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\n— ${COMPANY}`,
+        })
+      : await sendSms([chosen.value], message);
+
+  const echo = process.env.ASSISTANT_OTP_ECHO === "true";
+
+  // If the provider couldn't actually deliver the code (e.g. SMS/email isn't
+  // configured) don't pretend it was sent — that would dead-end the user at the
+  // code-entry step waiting for a code that never arrives. Remove the dangling
+  // challenge and report the failure so they can pick another channel. In
+  // dev-echo mode we proceed regardless (the code is returned for testing).
+  if (!delivery.ok && !echo) {
+    try {
+      await ref.delete();
+    } catch {
+      /* best effort */
+    }
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "We couldn't send your code right now. Please try another contact method or reach our team.",
+      },
+      { status: 502 },
+    );
   }
 
   return NextResponse.json({
@@ -149,6 +171,6 @@ export async function POST(req: Request) {
     hint: chosen.hint,
     expiresInSec: Math.round(OTP_TTL_MS / 1000),
     // Dev-only convenience for emulator testing (never enabled in production).
-    ...(process.env.ASSISTANT_OTP_ECHO === "true" ? { devCode: code } : {}),
+    ...(echo ? { devCode: code } : {}),
   });
 }

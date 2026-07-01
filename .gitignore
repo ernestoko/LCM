@@ -39,6 +39,9 @@ ui-debug.log
 # typescript
 *.tsbuildinfo
 
+# impeccable design skill — local tool state / critique output
+.impeccable/
+
 # Firebase emulator persisted data (so seeded demo accounts survive restarts)
 .emulator-data/
 firebase-debug.log

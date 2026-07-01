@@ -16,6 +16,10 @@ const PUBLIC_PATHS: { path: string; priority: number; changeFrequency: MetadataR
   { path: "/contact", priority: 0.8, changeFrequency: "monthly" },
   { path: "/track", priority: 0.6, changeFrequency: "monthly" },
   { path: "/register", priority: 0.5, changeFrequency: "yearly" },
+  { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/shipping-policy", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/prohibited-items", priority: 0.4, changeFrequency: "yearly" },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

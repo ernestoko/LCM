@@ -74,7 +74,7 @@ export function ServiceCard({
     return (
       <Link
         href={href}
-        className="rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+        className="rounded-2xl focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
       >
         {content}
       </Link>

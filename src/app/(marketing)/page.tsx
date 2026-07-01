@@ -35,6 +35,19 @@ export const metadata: Metadata = {
 // Super Admin save also triggers on-demand revalidation for an instant refresh.
 export const revalidate = 300;
 
+/** Deep-link each homepage service card to its section on /services, so the
+ *  grid is real navigation instead of eight links to the same page. */
+const SERVICE_ANCHORS: Record<string, string> = {
+  "Air Freight": "air-freight",
+  "Ocean Freight": "ocean-freight",
+  "Express Parcel": "express-parcel",
+  "Door-to-Door": "door-to-door",
+  "Customs Clearance": "customs",
+  Warehousing: "warehousing",
+  "E-commerce Shipping": "ecommerce",
+  Consolidation: "consolidation",
+};
+
 /** Render a headline, wrapping any configured `highlights` word in gold. */
 function highlightTitle(title: string, highlights: string[]): React.ReactNode {
   const words = highlights.filter(Boolean);
@@ -103,7 +116,7 @@ export default async function HomePage() {
                   className="h-px flex-1 bg-gradient-to-r from-transparent via-gold-400/40 to-gold-400/70"
                   aria-hidden="true"
                 />
-                <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.32em] text-gold-300 sm:text-xs">
+                <span className="text-center text-[10px] font-bold uppercase tracking-[0.14em] text-gold-300 sm:whitespace-nowrap sm:text-xs sm:tracking-[0.32em]">
                   {hero.eyebrow}
                 </span>
                 <span
@@ -130,7 +143,7 @@ export default async function HomePage() {
                 <MButton href={hero.primaryCta.href} variant="primary" size="lg">
                   {hero.primaryCta.label}
                 </MButton>
-                <MButton href={hero.secondaryCta.href} variant="light" size="lg">
+                <MButton href={hero.secondaryCta.href} variant="outline" size="lg">
                   {hero.secondaryCta.label}
                 </MButton>
               </div>
@@ -155,14 +168,13 @@ export default async function HomePage() {
             </Reveal>
           </div>
 
-          {/* prominent tracking bar */}
+          {/* Secondary path: existing customers track a shipment. */}
           <Reveal mode="load" delay={0.5}>
             <div className="mx-auto mt-12 max-w-3xl">
-              <TrackingBar variant="hero" />
-              <p className="mt-3 text-center text-sm text-navy-100">
-                Already shipping with us? Enter your tracking number above for a
-                live status.
+              <p className="mb-2.5 text-center text-sm font-medium text-navy-100">
+                Already shipping with us? Track your package.
               </p>
+              <TrackingBar variant="hero" />
             </div>
           </Reveal>
         </Container>
@@ -182,7 +194,6 @@ export default async function HomePage() {
         <Container>
           <Reveal>
             <SectionHeading
-              eyebrow="What we do"
               title="Complete logistics for every shipment"
               subtitle="From a single express parcel to full ocean containers, Liberty & Liberty Logistics moves your goods across the USA, Ghana, Africa and beyond."
               align="center"
@@ -195,7 +206,11 @@ export default async function HomePage() {
                   icon={service.icon}
                   title={service.title}
                   description={service.description}
-                  href="/services"
+                  href={
+                    SERVICE_ANCHORS[service.title]
+                      ? `/services#${SERVICE_ANCHORS[service.title]}`
+                      : "/services"
+                  }
                 />
               </RevealItem>
             ))}
@@ -262,7 +277,6 @@ export default async function HomePage() {
         <Container>
           <Reveal>
             <SectionHeading
-              eyebrow="Why Liberty"
               title="Shipping made simple, secure and dependable"
               subtitle="We built Liberty & Liberty Logistics around the things that matter most to traders, online sellers and families moving goods across the world."
               align="center"
@@ -311,7 +325,6 @@ export default async function HomePage() {
           <Reveal>
             <SectionHeading
               light
-              eyebrow="The name we earn every day"
               title={
                 <>
                   What <span className="text-gold-300">LIBERTY</span> stands for
@@ -332,7 +345,6 @@ export default async function HomePage() {
         <Container>
           <Reveal>
             <SectionHeading
-              eyebrow="How it works"
               title="From booking to your door in four steps"
               subtitle="A clear, guided process keeps you informed at every milestone — no surprises, just delivery."
               align="center"
@@ -358,7 +370,6 @@ export default async function HomePage() {
         <Container>
           <Reveal>
             <SectionHeading
-              eyebrow="Trusted worldwide"
               title="Loved by traders, sellers and families"
               subtitle="Thousands of customers rely on Liberty & Liberty Logistics to connect them with the people and markets that matter."
               align="center"

@@ -23,6 +23,8 @@ export const COLLECTIONS = {
   rateLimits: "rateLimits",
   /** Privacy-safe daily site-visit counters (no PII). */
   siteTraffic: "siteTraffic",
+  /** Public "Get a quote" / contact-form leads (server-written). */
+  contactSubmissions: "contactSubmissions",
 } as const;
 
 export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];

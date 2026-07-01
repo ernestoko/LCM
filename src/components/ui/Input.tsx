@@ -4,26 +4,32 @@ import { forwardRef, type InputHTMLAttributes, type SelectHTMLAttributes, type T
 import { cn } from "@/lib/utils/cn";
 
 const base =
-  "w-full rounded-lg border border-navy-200 bg-white px-3 py-2 text-sm text-navy-900 placeholder:text-navy-400 " +
-  "focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 disabled:bg-navy-50 disabled:text-navy-400";
+  // placeholder is navy-600 (≥4.5:1 on white) so hint examples stay legible, not the
+  // washed-out gray that fails WCAG AA; disabled text may sit lighter (state is exempt).
+  "w-full rounded-lg border border-navy-200 bg-white px-3 py-2 text-sm text-navy-900 placeholder:text-navy-600 " +
+  "focus:border-brand-500 focus:outline-hidden focus:ring-2 focus:ring-brand-200 disabled:bg-navy-50 disabled:text-navy-400";
 
+// suppressHydrationWarning: form-filler / autofill browser extensions inject
+// attributes (e.g. `fdprocessedid`) onto inputs before React hydrates, which
+// would otherwise trip a hydration mismatch. It only affects this element's
+// own attributes, so real prop mismatches elsewhere are still caught.
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   ({ className, ...props }, ref) => (
-    <input ref={ref} className={cn(base, className)} {...props} />
+    <input ref={ref} suppressHydrationWarning className={cn(base, className)} {...props} />
   ),
 );
 Input.displayName = "Input";
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(
   ({ className, ...props }, ref) => (
-    <textarea ref={ref} className={cn(base, "min-h-[80px] resize-y", className)} {...props} />
+    <textarea ref={ref} suppressHydrationWarning className={cn(base, "min-h-[80px] resize-y", className)} {...props} />
   ),
 );
 Textarea.displayName = "Textarea";
 
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(
   ({ className, children, ...props }, ref) => (
-    <select ref={ref} className={cn(base, "appearance-none bg-no-repeat pr-8", className)} {...props}>
+    <select ref={ref} suppressHydrationWarning className={cn(base, "appearance-none bg-no-repeat pr-8", className)} {...props}>
       {children}
     </select>
   ),
@@ -74,7 +80,7 @@ export function Field({
         </Label>
       )}
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-navy-400">{hint}</p>}
+      {hint && !error && <p className="mt-1 text-xs text-navy-600">{hint}</p>}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );

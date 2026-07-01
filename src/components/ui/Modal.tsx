@@ -83,12 +83,12 @@ export function Modal({
       aria-modal="true"
       aria-label={title || "Dialog"}
     >
-      <div className="absolute inset-0 bg-navy-950/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-navy-950/40 backdrop-blur-xs" onClick={onClose} />
       <div
         ref={panelRef}
         tabIndex={-1}
         className={cn(
-          "relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-white shadow-xl outline-none sm:rounded-2xl",
+          "relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-white shadow-xl outline-hidden sm:rounded-2xl",
           widths[size],
         )}
       >

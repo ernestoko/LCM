@@ -271,7 +271,6 @@ export default async function CoveragePage() {
         <Container>
           <Reveal>
             <SectionHeading
-              eyebrow="Lanes we operate"
               title="Trusted routes in every direction"
               subtitle="Packages can originate almost anywhere and reach the USA, and from the USA we reach Ghana, Africa and the wider world. These are the corridors we run every week."
               align="center"
@@ -314,7 +313,6 @@ export default async function CoveragePage() {
         <Container>
           <Reveal>
             <SectionHeading
-              eyebrow="Transit times"
               title="How long your shipment takes"
               subtitle="Typical door-to-port transit windows by mode. Actual timing depends on carrier schedules, customs and final-mile delivery — your quote will confirm exact estimates."
               align="center"

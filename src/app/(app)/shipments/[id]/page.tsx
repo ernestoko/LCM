@@ -591,6 +591,7 @@ export default function ShipmentDetailPage() {
                   className="w-full"
                   onClick={handleGenerateInvoice}
                   loading={busy}
+                  disabled={shipment.locked}
                 >
                   <FileText className="h-4 w-4" /> Generate invoice
                 </Button>

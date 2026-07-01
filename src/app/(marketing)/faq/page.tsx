@@ -72,7 +72,7 @@ export default function FaqPage() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search questions…"
                 aria-label="Search FAQs"
-                className="w-full rounded-xl border border-white/15 bg-white/95 py-3.5 pl-12 pr-4 text-navy-900 shadow-lift outline-none placeholder:text-navy-400 focus:ring-2 focus:ring-gold-400"
+                className="w-full rounded-xl border border-white/15 bg-white/95 py-3.5 pl-12 pr-4 text-navy-900 shadow-lift outline-hidden placeholder:text-navy-400 focus:ring-2 focus:ring-gold-400"
               />
             </div>
           </div>

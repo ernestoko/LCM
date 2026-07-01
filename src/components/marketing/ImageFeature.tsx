@@ -46,11 +46,6 @@ export function ImageFeature({
           sizes="(min-width: 1024px) 50vw, 100vw"
           className="aspect-[4/3] w-full rounded-3xl shadow-lift ring-1 ring-navy-900/5"
         />
-        {/* Gold corner accent */}
-        <span
-          className="pointer-events-none absolute -left-3 -top-3 h-16 w-16 rounded-2xl border-2 border-gold-400/60"
-          aria-hidden="true"
-        />
       </div>
 
       {/* Content */}
@@ -82,7 +77,7 @@ export function ImageFeature({
         {cta ? (
           <Link
             href={cta.href}
-            className="mt-8 inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-card transition-all hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+            className="mt-8 inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-card transition-all hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card-hover focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
           >
             {cta.label}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />

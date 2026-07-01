@@ -35,7 +35,7 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
     });
     return (await res.json()) as T;
   } catch {
-    return { ok: false, error: "Network problem — please try again." } as T;
+    return { ok: false, error: "Network problem, please try again." } as T;
   }
 }
 
@@ -91,6 +91,6 @@ export async function fetchSensitiveShipment(
     });
     return (await res.json()) as DetailResult;
   } catch {
-    return { ok: false, error: "Network problem — please try again." };
+    return { ok: false, error: "Network problem, please try again." };
   }
 }

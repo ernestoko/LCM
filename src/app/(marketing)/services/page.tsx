@@ -212,7 +212,7 @@ export default function ServicesPage() {
                 <a
                   key={link.id}
                   href={`#${link.id}`}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-navy-100 backdrop-blur transition-colors hover:border-gold-400/50 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-navy-100 backdrop-blur transition-colors hover:border-gold-400/50 hover:bg-white/10 hover:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-gold-400"
                 >
                   <link.icon className="h-4 w-4 text-gold-400" aria-hidden="true" />
                   {link.title}
@@ -259,7 +259,6 @@ export default function ServicesPage() {
         <Container>
           <Reveal>
             <SectionHeading
-              eyebrow="More ways we help"
               title="Specialist services to round out your shipment"
               subtitle="Time-critical parcels, hassle-free border clearance and smart consolidation — the finishing touches that keep your cargo moving and your costs down."
               align="center"

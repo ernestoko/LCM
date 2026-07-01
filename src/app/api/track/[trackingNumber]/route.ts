@@ -91,10 +91,8 @@ function toPublicTimeline(
   }));
 }
 
-export async function GET(
-  _request: Request,
-  { params }: { params: { trackingNumber: string } },
-): Promise<NextResponse<TrackResponse>> {
+export async function GET(_request: Request, props: { params: Promise<{ trackingNumber: string }> }): Promise<NextResponse<TrackResponse>> {
+  const params = await props.params;
   if (!isAdminConfigured) {
     return NextResponse.json(
       { ok: false, error: "Tracking is not configured." },

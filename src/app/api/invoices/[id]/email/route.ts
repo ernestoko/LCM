@@ -273,7 +273,8 @@ function buildText(invoice: Invoice): string {
   return lines.join("\n");
 }
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   if (!isAdminConfigured) {
     return NextResponse.json(
       { ok: false, error: "Admin SDK not configured." },

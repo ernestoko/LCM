@@ -1,9 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+
+/** Lenient sanity check: a tracking number is a few letters/digits, often with
+ *  a dash (e.g. LCM-2606-AB12CD). We only reject input that clearly cannot be
+ *  one, so we never block a valid number — just steer obvious typos. */
+const TRACKING_RE = /^[A-Za-z0-9][A-Za-z0-9-]{3,}$/;
 
 export function TrackingBar({
   className,
@@ -14,12 +20,26 @@ export function TrackingBar({
 }) {
   const router = useRouter();
   const [value, setValue] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const trimmed = value.trim().toUpperCase();
-    if (!trimmed) return;
+    if (!trimmed) {
+      setError("Enter your tracking number to see live status.");
+      return;
+    }
+    if (!TRACKING_RE.test(trimmed)) {
+      setError("That doesn't look like a tracking number — check for typos (e.g. LCM-2606-AB12CD).");
+      return;
+    }
+    setError(null);
     router.push(`/track/${encodeURIComponent(trimmed)}`);
+  }
+
+  function onChange(next: string) {
+    setValue(next);
+    if (error) setError(null);
   }
 
   if (variant === "inline") {
@@ -43,15 +63,19 @@ export function TrackingBar({
             inputMode="text"
             autoComplete="off"
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={(e) => onChange(e.target.value)}
             placeholder="Enter tracking number"
             aria-label="Tracking number"
-            className="w-full rounded-lg bg-transparent py-2 pl-9 pr-3 text-sm text-navy-900 placeholder:text-navy-400 focus:outline-none"
+            aria-invalid={!!error}
+            title={error ?? undefined}
+            suppressHydrationWarning
+            className="w-full rounded-lg bg-transparent py-2 pl-9 pr-3 text-sm text-navy-900 placeholder:text-navy-400 focus:outline-hidden"
           />
         </div>
         <button
           type="submit"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1"
+          suppressHydrationWarning
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1"
         >
           Track
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -85,18 +109,46 @@ export function TrackingBar({
             inputMode="text"
             autoComplete="off"
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={(e) => onChange(e.target.value)}
             placeholder="Enter your tracking number"
-            className="w-full rounded-xl border border-navy-200 bg-white py-3.5 pl-12 pr-4 text-base text-navy-900 placeholder:text-navy-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/15"
+            aria-invalid={!!error}
+            aria-describedby="hero-tracking-msg"
+            suppressHydrationWarning
+            className={cn(
+              "w-full rounded-xl border bg-white py-3.5 pl-12 pr-4 text-base text-navy-900 placeholder:text-navy-600 transition-colors focus:outline-hidden focus:ring-4",
+              error
+                ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
+                : "border-navy-200 focus:border-brand-400 focus:ring-brand-500/15",
+            )}
           />
         </div>
         <button
           type="submit"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-7 py-3.5 text-base font-semibold text-white shadow-card transition-all hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+          suppressHydrationWarning
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-7 py-3.5 text-base font-semibold text-white shadow-card transition-all hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card-hover focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
         >
           Track Shipment
           <ArrowRight className="h-5 w-5" aria-hidden="true" />
         </button>
+      </div>
+
+      {/* Format hint by default; a clear, recoverable error on bad input. */}
+      <div id="hero-tracking-msg" className="mt-2 px-1 text-sm">
+        {error ? (
+          <p role="alert" className="flex flex-wrap items-center gap-x-2 font-medium text-red-600">
+            <span>{error}</span>
+            <Link href="/contact" className="font-semibold text-red-700 underline underline-offset-2 hover:text-red-800">
+              Can't find your number?
+            </Link>
+          </p>
+        ) : (
+          <p className="text-navy-600">
+            Looks like <span className="font-mono font-medium text-navy-700">LCM-2606-AB12CD</span>. Not sure?{" "}
+            <Link href="/contact" className="font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800">
+              We'll help you find it.
+            </Link>
+          </p>
+        )}
       </div>
     </form>
   );

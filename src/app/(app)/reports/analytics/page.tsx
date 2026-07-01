@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { ArrowLeft } from "lucide-react";
 import type { ShipmentStatus } from "@/types";
 import type { BadgeTone } from "@/constants/statuses";
@@ -24,9 +25,26 @@ import {
   LoadingState,
   ErrorState,
 } from "@/components/ui";
-import { BarChart, DonutChart, LineChart } from "@/components/charts";
 import { SHIPMENT_STATUS_META } from "@/constants/statuses";
 import { formatMoney, formatNumber } from "@/lib/utils/format";
+
+// Charts are below the fold and only on this report — load them on demand so
+// they don't weigh down the page's initial bundle.
+const chartFallback = () => (
+  <div className="h-64 animate-pulse rounded-xl bg-navy-50" />
+);
+const BarChart = dynamic(() => import("@/components/charts").then((m) => m.BarChart), {
+  ssr: false,
+  loading: chartFallback,
+});
+const DonutChart = dynamic(() => import("@/components/charts").then((m) => m.DonutChart), {
+  ssr: false,
+  loading: chartFallback,
+});
+const LineChart = dynamic(() => import("@/components/charts").then((m) => m.LineChart), {
+  ssr: false,
+  loading: chartFallback,
+});
 
 // Concrete hex colours so SVG fills never depend on Tailwind classes.
 const HEX = {

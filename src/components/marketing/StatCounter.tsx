@@ -19,17 +19,29 @@ export function StatCounter({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [display, setDisplay] = useState(0);
+  // Start at the REAL value so the server, no-JS, crawlers, social previews and
+  // reduced-motion users always see the true number — never "0 shipments". The
+  // count-up is a pure enhancement layered on top (and only when the stat is
+  // still below the fold, so resetting to 0 is never visible).
+  const [display, setDisplay] = useState(value);
   const [started, setStarted] = useState(false);
 
   useEffect(() => {
     const node = ref.current;
     if (!node || started) return;
 
-    // Respect reduced-motion: jump straight to the final value.
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced || typeof IntersectionObserver === "undefined") return; // keep the real value
+
+    // If the stat is already on screen at mount, don't reset it (would flash);
+    // keep the true value. Only animate stats the user hasn't reached yet.
+    const rect = node.getBoundingClientRect();
+    const alreadyInView = rect.top < window.innerHeight && rect.bottom > 0;
+    if (alreadyInView) return;
+
+    setDisplay(0); // safe: node is below the fold, so this reset is unseen
 
     let raf = 0;
 
@@ -39,11 +51,6 @@ export function StatCounter({
         if (!entry?.isIntersecting) return;
         setStarted(true);
         observer.disconnect();
-
-        if (prefersReduced) {
-          setDisplay(value);
-          return;
-        }
 
         const duration = 1600;
         const start = performance.now();

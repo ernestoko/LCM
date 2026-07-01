@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { ChatWidgetLazy } from "@/components/marketing/ChatWidgetLazy";
-import { MotionProvider } from "@/components/marketing/motion/MotionProvider";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 import { MarketingAnnouncement } from "@/components/marketing/MarketingAnnouncement";
 import { PageViewTracker } from "@/components/analytics/PageViewTracker";
@@ -48,9 +47,7 @@ export default async function MarketingLayout({
       <OrganizationJsonLd contact={content.contact} />
       <MarketingAnnouncement announcement={content.announcement} />
       <MarketingNav />
-      <main className="flex-1">
-        <MotionProvider>{children}</MotionProvider>
-      </main>
+      <main className="flex-1">{children}</main>
       <MarketingFooter contact={content.contact} />
       <ChatWidgetLazy />
     </div>

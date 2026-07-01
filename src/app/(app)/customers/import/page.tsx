@@ -1,11 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { RequirePermission } from "@/components/auth/Guard";
 import { PageHeader, InfoBanner } from "@/components/ui";
-import { CsvImport } from "@/components/customers/CsvImport";
+
+// The CSV importer (parser + mapping UI) is only needed on this page, so load
+// it on demand rather than shipping it in the route's initial bundle.
+const CsvImport = dynamic(
+  () => import("@/components/customers/CsvImport").then((m) => m.CsvImport),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-64 animate-pulse rounded-2xl border border-navy-100 bg-navy-50" />
+    ),
+  },
+);
 
 export default function ImportCustomersPage() {
   return (

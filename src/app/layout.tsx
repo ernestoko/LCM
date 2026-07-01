@@ -29,9 +29,24 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // suppressHydrationWarning on <html>: the inline guard below adds a `js` class
+  // before hydration (intentional server/client className diff). On <body>:
+  // browser extensions (password managers, Grammarly, etc.) inject attributes
+  // into <body> before React hydrates; without this, that mismatch makes React
+  // re-render the whole root — a visible flash. Both scope to the element's own
+  // attributes only, not children.
   return (
-    <html lang="en" className={inter.variable}>
-      <body>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <body suppressHydrationWarning>
+        {/* Progressive-enhancement guard: mark that JS is active *before* the
+            first paint so the marketing scroll-reveal styles (which hide content
+            until revealed) only ever apply when they can also reveal it. Without
+            JS the page stays fully visible. See motion/Reveal.tsx + globals.css. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "document.documentElement.classList.add('js')",
+          }}
+        />
         <AuthProvider>
           <ToastProvider>{children}</ToastProvider>
         </AuthProvider>

@@ -263,7 +263,7 @@ export function CommandPalette() {
       aria-label="Search"
     >
       <div
-        className="absolute inset-0 bg-navy-950/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-navy-950/40 backdrop-blur-xs"
         onClick={close}
       />
       <div className="relative z-10 flex max-h-[70vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-navy-100">
@@ -279,7 +279,7 @@ export function CommandPalette() {
             }}
             onKeyDown={onInputKeyDown}
             placeholder="Search customers, shipments, invoices…"
-            className="w-full bg-transparent text-sm text-navy-900 placeholder:text-navy-400 focus:outline-none"
+            className="w-full bg-transparent text-sm text-navy-900 placeholder:text-navy-400 focus:outline-hidden"
             aria-label="Search query"
             autoComplete="off"
             spellCheck={false}

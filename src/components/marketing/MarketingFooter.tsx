@@ -39,10 +39,10 @@ const COLUMNS: { heading: string; links: { label: string; href: string }[] }[] =
   {
     heading: "Legal",
     links: [
-      { label: "Terms of Service", href: "/contact" },
-      { label: "Privacy Policy", href: "/contact" },
-      { label: "Shipping Policy", href: "/services" },
-      { label: "Prohibited Items", href: "/services" },
+      { label: "Terms of Service", href: "/terms" },
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Shipping Policy", href: "/shipping-policy" },
+      { label: "Prohibited Items", href: "/prohibited-items" },
     ],
   },
 ];
@@ -89,7 +89,7 @@ export function MarketingFooter({ contact }: { contact?: SiteContent["contact"] 
                   <li key={`${col.heading}-${link.label}`}>
                     <Link
                       href={link.href}
-                      className="text-sm text-navy-300 transition-colors hover:text-gold-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-950"
+                      className="text-sm text-navy-300 transition-colors hover:text-gold-400 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-950"
                     >
                       {link.label}
                     </Link>

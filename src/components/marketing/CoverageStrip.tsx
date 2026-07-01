@@ -173,7 +173,7 @@ export function CoverageStrip({
             {countries.map((country) => (
               <li
                 key={country}
-                className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:border-gold-400/50 hover:bg-white/10"
+                className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-white backdrop-blur-xs transition-colors hover:border-gold-400/50 hover:bg-white/10"
               >
                 <MapPin className="h-3.5 w-3.5 shrink-0 text-gold-400" aria-hidden="true" />
                 {country}

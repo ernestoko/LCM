@@ -17,10 +17,8 @@ export const dynamic = "force-dynamic";
  * shipment-scoped projection (recipient details, contents, invoice/balance,
  * timeline with locations) — never any OTHER shipment's data.
  */
-export async function GET(
-  req: Request,
-  { params }: { params: { trackingNumber: string } },
-): Promise<NextResponse> {
+export async function GET(req: Request, props: { params: Promise<{ trackingNumber: string }> }): Promise<NextResponse> {
+  const params = await props.params;
   if (!isAdminConfigured) {
     return NextResponse.json({ ok: false, error: "Not configured." }, { status: 503 });
   }

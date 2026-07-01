@@ -141,7 +141,7 @@ export function DonutChart({
         {segments.map((s) => (
           <li key={`legend-${s.key}`} className="flex items-center gap-2.5 text-sm">
             <span
-              className="h-3 w-3 shrink-0 rounded-sm"
+              className="h-3 w-3 shrink-0 rounded-xs"
               style={{ backgroundColor: s.color }}
               aria-hidden
             />

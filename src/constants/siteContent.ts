@@ -146,14 +146,19 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
   },
 };
 
-/** Deep-merge a stored (partial) content tree over the defaults. Arrays are
- *  replaced wholesale when present (so edits to a list are authoritative),
- *  objects merged key-by-key. Never throws. */
+/** Deep-merge a stored (partial) content tree over the defaults. Non-empty
+ *  arrays are replaced wholesale when present (so edits to a list are
+ *  authoritative), objects merged key-by-key. An empty array falls back to the
+ *  default so a mistaken admin save can never render a heading over a blank
+ *  section. Never throws. */
 export function mergeSiteContent(stored: unknown): SiteContent {
   const d = DEFAULT_SITE_CONTENT;
   if (!stored || typeof stored !== "object") return d;
   const s = stored as PartialSiteContent;
-  const pick = <T>(val: T | undefined, fallback: T): T => (val === undefined || val === null ? fallback : val);
+  const pick = <T>(val: T | undefined, fallback: T): T =>
+    val === undefined || val === null || (Array.isArray(val) && val.length === 0)
+      ? fallback
+      : val;
   return {
     announcement: { ...d.announcement, ...(s.announcement ?? {}) },
     hero: { ...d.hero, ...(s.hero ?? {}) },

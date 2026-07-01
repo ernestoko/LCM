@@ -29,7 +29,7 @@ async function requireSuperAdmin(req: Request): Promise<{ uid: string } | null> 
 
 export async function POST(req: Request) {
   if (!isAdminConfigured) {
-    return NextResponse.json({ ok: false, error: "Admin SDK not configured." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Admin SDK not configured." }, { status: 503 });
   }
   const caller = await requireSuperAdmin(req);
   if (!caller) {

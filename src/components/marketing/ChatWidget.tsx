@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Eagle } from "@/components/brand/Eagle";
 import { searchKnowledge, relatedQuestions } from "@/lib/assistant/brain";
+import { deDash } from "@/lib/assistant/voice";
 import { BUSINESS } from "@/constants/business";
 import { WAREHOUSES } from "@/constants/warehouses";
 import { cn } from "@/lib/utils/cn";
@@ -77,7 +78,7 @@ const GREETING_CHIPS = [
 ];
 
 const GREETING: BotReply = {
-  text: "Hi, I'm Jesselyn 👋 — your Liberty & Liberty Logistics assistant. I can track a shipment, explain air & sea pricing, set up a pickup or warehouse forwarding, answer customs questions, or connect you with a person. How can I help?",
+  text: "Hi, I'm Jesselyn, your Liberty & Liberty Logistics assistant 👋. I can track a shipment, explain air and sea pricing, set up a pickup or warehouse forwarding, answer customs questions, or put you through to a teammate. How can I help?",
   chips: GREETING_CHIPS,
 };
 
@@ -87,7 +88,7 @@ const GREETING: BotReply = {
  * once per browser session. One opener is picked at random for variety.
  */
 const PROACTIVE_OPENERS = [
-  "Hi there! 👋 I'm Jesselyn. Shipping to Ghana — or anywhere — today? I can grab you a quick quote or track a package.",
+  "Hi there! 👋 I'm Jesselyn. Shipping to Ghana, or somewhere else in the world? I can grab you a quick quote or track a package.",
   "Hey! 😊 Jesselyn here. Need a hand sending a package or getting a rate? I'm right here whenever you're ready.",
   "Welcome! 👋 I'm Jesselyn, your shipping assistant. Want me to track a parcel, compare air vs sea, or set up a pickup?",
 ];
@@ -166,7 +167,7 @@ function formatSensitive(s: SensitiveShipment): string {
   }
 
   if (s.expectedDeliveryDate) lines.push(`• Estimated delivery: ${s.expectedDeliveryDate}`);
-  lines.push("\nNeed anything else? I'm right here. — Jesselyn");
+  lines.push("\nAnything else I can help with? I'm right here. 😊");
   return lines.join("\n");
 }
 
@@ -208,7 +209,7 @@ function getReply(input: string): BotReply {
   // Thanks / sign-off
   if (has(norm, "thank", "thanks", "thx", "appreciate", "cheers", "great help")) {
     return {
-      text: "You're very welcome! 🙌 I'm always here if you need anything else. — Jesselyn",
+      text: "You're very welcome! 🙌 I'm always here if you need anything else.",
       chips: ["Track a package", "Shipping rates", "Talk to a human"],
     };
   }
@@ -754,7 +755,7 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
         aria-label={open ? "Close chat" : `Chat with ${ASSISTANT_NAME}`}
         aria-expanded={open}
         className={cn(
-          "fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lift transition-all hover:-translate-y-0.5 hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 sm:bottom-6 sm:right-6",
+          "fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-lift transition-all hover:-translate-y-0.5 hover:bg-brand-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 sm:bottom-6 sm:right-6",
           open && "rotate-0",
         )}
       >
@@ -821,7 +822,7 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
                         : "rounded-bl-md bg-white text-navy-700",
                     )}
                   >
-                    {m.text}
+                    {m.from === "bot" ? deDash(m.text) : m.text}
                   </div>
 
                   {/* Action buttons */}
@@ -875,7 +876,7 @@ export function ChatWidget({ defaultOpen = false }: { defaultOpen?: boolean }) {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type your message…"
               aria-label="Type your message"
-              className="min-w-0 flex-1 rounded-xl border border-navy-200 px-3.5 py-2.5 text-sm text-navy-900 outline-none placeholder:text-navy-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              className="min-w-0 flex-1 rounded-xl border border-navy-200 px-3.5 py-2.5 text-sm text-navy-900 outline-hidden placeholder:text-navy-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
             />
             <button
               type="submit"

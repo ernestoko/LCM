@@ -62,7 +62,7 @@ export function MarketingNav() {
         <nav className="flex h-16 items-center justify-between gap-4 lg:h-20" aria-label="Primary">
           <Link
             href="/"
-            className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+            className="rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             aria-label="Liberty & Liberty Logistics home"
           >
             <LibertyWordmark />
@@ -75,7 +75,7 @@ export function MarketingNav() {
                 <Link
                   href={link.href}
                   className={cn(
-                    "relative rounded-lg px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2",
+                    "relative rounded-lg px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2",
                     isActive(link.href)
                       ? "text-brand-700"
                       : "text-navy-700 hover:text-navy-900",
@@ -99,20 +99,20 @@ export function MarketingNav() {
           <div className="hidden items-center gap-2 lg:flex">
             <Link
               href="/track"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-navy-200 px-3.5 py-2 text-sm font-semibold text-navy-800 transition-colors hover:border-brand-400 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-navy-200 px-3.5 py-2 text-sm font-semibold text-navy-800 transition-colors hover:border-brand-400 hover:text-brand-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
               <PackageSearch className="h-4 w-4" aria-hidden="true" />
               Track
             </Link>
             <Link
               href="/login"
-              className="rounded-xl px-3.5 py-2 text-sm font-semibold text-navy-700 transition-colors hover:bg-navy-100 hover:text-navy-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+              className="rounded-xl px-3.5 py-2 text-sm font-semibold text-navy-700 transition-colors hover:bg-navy-100 hover:text-navy-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
               Sign in
             </Link>
             <Link
               href="/contact"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-card transition-all hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-card transition-all hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card-hover focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
               Get a Quote
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -123,7 +123,7 @@ export function MarketingNav() {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="inline-flex items-center justify-center rounded-lg p-2 text-navy-800 transition-colors hover:bg-navy-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 lg:hidden"
+            className="inline-flex items-center justify-center rounded-lg p-2 text-navy-800 transition-colors hover:bg-navy-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 lg:hidden"
             aria-expanded={open}
             aria-controls="mobile-menu"
             aria-label={open ? "Close menu" : "Open menu"}

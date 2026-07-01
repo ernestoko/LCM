@@ -84,7 +84,7 @@ export function IntakeForm({
   const seaCbm = totalCbm(seaCargo);
   const hasSeaCargo = seaCbm > 0 || seaCargo.units.length > 0;
   const measured = isSea ? hasSeaCargo : hasWeight;
-  const canSubmit = hasPhoto && measured && !uploading && !saving;
+  const canSubmit = hasPhoto && measured && contentsConfirmed && !uploading && !saving;
 
   const blockMessage = !hasPhoto
     ? "At least one package photo is required before intake can be completed."
@@ -92,7 +92,9 @@ export function IntakeForm({
       ? isSea
         ? "Add measured cargo (CBM) or at least one standard unit before completing intake."
         : "A package weight (lb) greater than zero is required before intake can be completed."
-      : null;
+      : !contentsConfirmed
+        ? "Confirm the declared contents against the package inspection before completing intake."
+        : null;
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;

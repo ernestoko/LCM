@@ -32,3 +32,6 @@ export { CoverageStrip } from "./CoverageStrip";
 export { LogoCloud } from "./LogoCloud";
 export { CargoUnits } from "./CargoUnits";
 export { DeliveryBand } from "./DeliveryBand";
+
+// Legal / policy pages
+export { PolicyPage, type PolicySection, type PolicyPageProps } from "./PolicyPage";
